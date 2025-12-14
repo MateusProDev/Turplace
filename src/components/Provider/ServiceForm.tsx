@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { db } from "../../utils/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { uploadToCloudinary } from "../../utils/cloudinary";
@@ -6,6 +7,7 @@ import { useAuth } from "../../hooks/useAuth";
 
 export default function ServiceForm() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState({ title: "", category: "", city: "", description: "", whatsapp: "" });
   const [images, setImages] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
@@ -25,6 +27,7 @@ export default function ServiceForm() {
     });
     setLoading(false);
     alert("Serviço cadastrado! Aguarde aprovação.");
+    navigate('/provider');
   };
 
   return (

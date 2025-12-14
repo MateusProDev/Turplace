@@ -1,3 +1,16 @@
+node_modules/
+.env
+dist/
+build/
+.vercel/
+/.idea
+.DS_Store
+coverage/
+
+# Service account keys (don't commit)
+*.firebase-adminsdk-*.json
+turplace-*-firebase-adminsdk-*.json
+
 # Logs
 logs
 *.log
