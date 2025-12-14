@@ -17,6 +17,12 @@ export default function ServiceForm() {
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     setLoading(true);
+    if (!user) {
+      setLoading(false);
+      alert('Você precisa estar logado para cadastrar um serviço.');
+      navigate('/login');
+      return;
+    }
     const imageUrls = await Promise.all(images.map(uploadToCloudinary));
     await addDoc(collection(db, "services"), {
       ...form,
