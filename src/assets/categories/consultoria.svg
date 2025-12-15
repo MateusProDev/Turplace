@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#g)" />
+  <g fill="#ffffff" font-family="Segoe UI, Roboto, Arial" text-anchor="middle">
+    <text x="50%" y="50%" font-size="48" font-weight="700">Consultoria</text>
+    <text x="50%" y="62%" font-size="20" opacity="0.9">Serviços de consultoria</text>
+  </g>
+</svg>

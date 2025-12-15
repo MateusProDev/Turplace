@@ -3,6 +3,19 @@ import { useEffect, useState } from "react";
 import { Menu, X, ChevronDown } from "lucide-react";
 import logo from '../assets/logosemfundo.png';
 import iconLogo from '../assets/iconlogo.png';
+import passeioImg from '../assets/categories/passeio.svg';
+import guiasImg from '../assets/categories/guias.svg';
+import transporteImg from '../assets/categories/transporte.svg';
+import gastronomiaImg from '../assets/categories/gastronomia.svg';
+import hospedagemImg from '../assets/categories/hospedagem.svg';
+import fotografiaImg from '../assets/categories/fotografia.svg';
+import aventuraImg from '../assets/categories/aventura.svg';
+import culturaImg from '../assets/categories/cultura.svg';
+import artesanatoImg from '../assets/categories/artesanato.svg';
+import turismoImg from '../assets/categories/turismo.svg';
+import experienciasImg from '../assets/categories/experiencias.svg';
+import consultoriaImg from '../assets/categories/consultoria.svg';
+import designerImg from '../assets/categories/designer.svg';
 import { getCategoriesWithProducts } from "../utils/getCategoriesWithProducts";
 import { 
   MapPin, 
@@ -26,7 +39,6 @@ import {
   Building,
   CheckCircle,
   Award,
-  Heart,
   MessageCircle,
   Filter,
   ArrowUpRight,
@@ -47,19 +59,19 @@ interface CategoryData {
 // Mapeamento de ícones para categorias
 const getCategoryIcon = (category: string) => {
   const categoryMap: Record<string, React.ReactNode> = {
-    'passeio': <Compass className="w-8 h-8" />,
-    'guias': <Users2 className="w-8 h-8" />,
-    'transporte': <Car className="w-8 h-8" />,
-    'gastronomia': <Coffee className="w-8 h-8" />,
-    'hospedagem': <Building className="w-8 h-8" />,
-    'fotografia': <Camera className="w-8 h-8" />,
-    'aventura': <Zap className="w-8 h-8" />,
-    'cultura': <Sparkles className="w-8 h-8" />,
-    'artesanato': <Target className="w-8 h-8" />,
-    'turismo': <MapPin className="w-8 h-8" />,
-    'experiencias': <Briefcase className="w-8 h-8" />,
-    'consultoria': <BarChart3 className="w-8 h-8" />,
-    'designer': <Award className="w-8 h-8" />,
+    'passeio': <Compass className="w-6 h-6" />,
+    'guias': <Users2 className="w-6 h-6" />,
+    'transporte': <Car className="w-6 h-6" />,
+    'gastronomia': <Coffee className="w-6 h-6" />,
+    'hospedagem': <Building className="w-6 h-6" />,
+    'fotografia': <Camera className="w-6 h-6" />,
+    'aventura': <Zap className="w-6 h-6" />,
+    'cultura': <Sparkles className="w-6 h-6" />,
+    'artesanato': <Target className="w-6 h-6" />,
+    'turismo': <MapPin className="w-6 h-6" />,
+    'experiencias': <Briefcase className="w-6 h-6" />,
+    'consultoria': <BarChart3 className="w-6 h-6" />,
+    'designer': <Award className="w-6 h-6" />,
   };
 
   const normalize = (str: string) => 
@@ -73,25 +85,26 @@ const getCategoryIcon = (category: string) => {
     }
   }
   
-  return <Briefcase className="w-8 h-8" />;
+  return <Briefcase className="w-6 h-6" />;
 };
 
-// Cores de fundo profissionais para categorias
+
+// Cores de fundo profissionais para categorias (padronizadas para o azul do site)
 const getCategoryBackground = (category: string) => {
-  const backgrounds: Record<string, { gradient: string, light: string }> = {
-    'passeio': { gradient: 'from-blue-500 to-indigo-600', light: 'bg-blue-50' },
-    'guias': { gradient: 'from-emerald-500 to-teal-600', light: 'bg-emerald-50' },
-    'transporte': { gradient: 'from-amber-500 to-orange-600', light: 'bg-amber-50' },
-    'gastronomia': { gradient: 'from-rose-500 to-pink-600', light: 'bg-rose-50' },
-    'hospedagem': { gradient: 'from-violet-500 to-purple-600', light: 'bg-violet-50' },
-    'fotografia': { gradient: 'from-fuchsia-500 to-purple-600', light: 'bg-fuchsia-50' },
-    'aventura': { gradient: 'from-green-500 to-emerald-600', light: 'bg-green-50' },
-    'cultura': { gradient: 'from-indigo-500 to-blue-600', light: 'bg-indigo-50' },
-    'artesanato': { gradient: 'from-orange-500 to-amber-600', light: 'bg-orange-50' },
-    'turismo': { gradient: 'from-cyan-500 to-blue-600', light: 'bg-cyan-50' },
-    'experiencias': { gradient: 'from-rose-500 to-red-600', light: 'bg-rose-50' },
-    'consultoria': { gradient: 'from-slate-600 to-gray-700', light: 'bg-slate-50' },
-    'designer': { gradient: 'from-purple-500 to-indigo-600', light: 'bg-purple-50' },
+  const backgrounds: Record<string, { gradient: string, light: string, dark: string }> = {
+    'passeio': { gradient: siteGradient, light: 'bg-blue-50', dark: 'bg-blue-100' },
+    'guias': { gradient: siteGradient, light: 'bg-blue-50', dark: 'bg-blue-100' },
+    'transporte': { gradient: siteGradient, light: 'bg-blue-50', dark: 'bg-blue-100' },
+    'gastronomia': { gradient: siteGradient, light: 'bg-blue-50', dark: 'bg-blue-100' },
+    'hospedagem': { gradient: siteGradient, light: 'bg-blue-50', dark: 'bg-blue-100' },
+    'fotografia': { gradient: siteGradient, light: 'bg-blue-50', dark: 'bg-blue-100' },
+    'aventura': { gradient: siteGradient, light: 'bg-blue-50', dark: 'bg-blue-100' },
+    'cultura': { gradient: siteGradient, light: 'bg-blue-50', dark: 'bg-blue-100' },
+    'artesanato': { gradient: siteGradient, light: 'bg-blue-50', dark: 'bg-blue-100' },
+    'turismo': { gradient: siteGradient, light: 'bg-blue-50', dark: 'bg-blue-100' },
+    'experiencias': { gradient: siteGradient, light: 'bg-blue-50', dark: 'bg-blue-100' },
+    'consultoria': { gradient: siteGradient, light: 'bg-blue-50', dark: 'bg-blue-100' },
+    'designer': { gradient: siteGradient, light: 'bg-blue-50', dark: 'bg-blue-100' },
   };
 
   const normalize = (str: string) => 
@@ -105,8 +118,76 @@ const getCategoryBackground = (category: string) => {
     }
   }
   
-  return { gradient: 'from-slate-600 to-gray-700', light: 'bg-slate-50' };
+  return { gradient: 'from-slate-600 to-gray-700', light: 'bg-slate-50', dark: 'bg-slate-100' };
 };
+
+// Category image tags used for placeholder images (shared)
+const CATEGORY_IMAGE_TAGS: Record<string, string> = {
+  passeio: 'sightseeing,tour,landmark',
+  guias: 'tourguide,guide,local',
+  transporte: 'vehicle,transport,bus,car',
+  gastronomia: 'food,restaurant,cuisine',
+  hospedagem: 'hotel,accommodation,lodging',
+  fotografia: 'camera,photography,photoshoot',
+  aventura: 'adventure,hiking,outdoors',
+  cultura: 'culture,museum,heritage',
+  artesanato: 'crafts,handmade,artisan',
+  turismo: 'travel,tourism,destination',
+  experiencias: 'experience,event,activity',
+  consultoria: 'consulting,business,advisor',
+  designer: 'camera,design,creative'
+};
+
+// Retorna uma imagem temática para cada categoria.
+// Tenta usar o Unsplash Source para imagens mais consistentes e de melhor qualidade.
+const CATEGORY_ASSETS: Record<string, string> = {
+  passeio: passeioImg,
+  guias: guiasImg,
+  transporte: transporteImg,
+  gastronomia: gastronomiaImg,
+  hospedagem: hospedagemImg,
+  fotografia: fotografiaImg,
+  aventura: aventuraImg,
+  cultura: culturaImg,
+  artesanato: artesanatoImg,
+  turismo: turismoImg,
+  experiencias: experienciasImg,
+  consultoria: consultoriaImg,
+  designer: designerImg,
+};
+
+const getCategoryImageUrl = (category: string) => {
+  const normalize = (str: string) => str.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+  const key = Object.keys(CATEGORY_IMAGE_TAGS).find(k => normalize(category).includes(k));
+
+  if (key && CATEGORY_ASSETS[key]) {
+    return CATEGORY_ASSETS[key];
+  }
+
+  // Fallback to Unsplash if no local asset exists
+  const categoryName = normalize(category).split(/\s+/).join(',');
+  const tag = key ? CATEGORY_IMAGE_TAGS[key] : 'travel';
+  const query = `${categoryName},${tag}`;
+  return `https://source.unsplash.com/800x600/?${encodeURIComponent(query)}`;
+};
+
+// Thumbnail fallback para produtos (pequeno, tag-based com seed pelo id)
+const getProductImageUrl = (category: string, id: string, label?: string) => {
+  const normalizeCategory = (str: string) => str.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+  const keys = Object.keys(CATEGORY_IMAGE_TAGS);
+  const found = keys.find(k => normalizeCategory(category).includes(k));
+  const tag = found ? CATEGORY_IMAGE_TAGS[found] : 'product';
+  const catTag = tag.split(',')[0];
+  const categoryName = normalizeCategory(category).split(/\s+/)[0];
+  const labelPart = label ? `,${label.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().split(/\s+/)[0]}` : '';
+  const thumbTag = `${categoryName},${catTag}${labelPart}`;
+
+  // Use Unsplash small size for thumbnails
+  return `https://source.unsplash.com/64x64/?${encodeURIComponent(thumbTag)}`;
+};
+
+// Site default gradient (azul do site)
+const siteGradient = 'from-blue-600 to-cyan-500';
 
 export default function Landing() {
   const [categories, setCategories] = useState<CategoryData[]>([]);
@@ -241,7 +322,7 @@ export default function Landing() {
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full blur-3xl"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full blur-3xl"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full blur-3xl"></div>
         </div>
 
         <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8">
@@ -256,7 +337,7 @@ export default function Landing() {
                 O <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Marketplace</span> Profissional
                 <br />
                 <span className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-light text-gray-300 mt-4 block">
-                  para o Turismo Local
+                  Para o Turismo Local
                 </span>
               </h1>
               
@@ -294,7 +375,7 @@ export default function Landing() {
                 { value: '100+', label: 'Prestadores Ativos', icon: <Users2 className="text-cyan-400" />, color: 'from-cyan-500 to-blue-600' },
                 { value: '200+', label: 'Experiências Únicas', icon: <Compass className="text-emerald-400" />, color: 'from-emerald-500 to-teal-600' },
                 { value: '50+', label: 'Agências Parceiras', icon: <Building className="text-amber-400" />, color: 'from-amber-500 to-orange-600' },
-                { value: '15+', label: 'Cidades Ativas', icon: <MapPin className="text-rose-400" />, color: 'from-rose-500 to-pink-600' }
+                { value: '15+', label: 'Cidades Ativas', icon: <MapPin className="text-blue-400" />, color: siteGradient }
               ].map((stat, idx) => (
                 <div 
                   key={idx}
@@ -323,7 +404,7 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Categories Section - Professional */}
+      {/* Categories Section - Horizontal Rectangular Layout */}
       <section className="py-16 sm:py-24 bg-gradient-to-b from-white to-gray-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center mb-16">
@@ -370,126 +451,161 @@ export default function Landing() {
             </div>
           ) : (
             <>
-              {/* Grid de Categorias - Primeira Linha */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                {categories.slice(0, 3).map((cat) => {
+              {/* Masonry Grid Layout - Rectangular Horizontal Cards */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {categories.map((cat) => {
                   const bg = getCategoryBackground(cat.category);
+                  
                   return (
-                    <div 
+                    <Link
                       key={cat.category}
-                      className="group relative overflow-hidden rounded-3xl bg-white border border-gray-200 hover:border-gray-300 shadow-xl hover:shadow-2xl transition-all duration-500"
+                      to={`/catalog?category=${encodeURIComponent(cat.category)}`}
+                      className={`group relative overflow-hidden rounded-2xl transition-all duration-500 hover:shadow-2xl hover:scale-[1.02] bg-white shadow-lg h-56 md:h-64`}
                     >
-                      {/* Header Gradient */}
-                      <div className={`h-2 bg-gradient-to-r ${bg.gradient}`}></div>
+                      {/* Background gradient subtle */}
+                      <div className={`absolute inset-0 bg-gradient-to-r ${siteGradient} opacity-25 group-hover:opacity-40 transition-opacity duration-500`}></div>
                       
-                      <div className="p-8">
-                        {/* Categoria Header */}
-                        <div className="flex items-start justify-between mb-6">
-                          <div className="flex items-center gap-4">
-                            <div className={`p-4 rounded-2xl ${bg.light}`}>
-                              <div className={`text-gradient bg-gradient-to-r ${bg.gradient} bg-clip-text text-transparent`}>
+                      {/* Content container */}
+                      <div className="relative h-full flex items-center">
+                        {/* Category image on left */}
+                        <div className={`h-full w-1/3 flex-shrink-0 relative overflow-hidden`}>
+                          {cat.products[0]?.imageUrl ? (
+                            <img 
+                              src={cat.products[0].imageUrl} 
+                              alt={cat.category}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                            />
+                          ) : (
+                            <img
+                              src={getCategoryImageUrl(cat.category)}
+                              alt={cat.category}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 filter brightness-90"
+                            />
+                          )}
+                          {/* Overlay gradient */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-transparent opacity-30"></div>
+                          
+                          {/* Badge in corner */}
+                          <div className="absolute top-4 left-4">
+                            <div className={`p-2 rounded-lg ${bg.light} backdrop-blur-sm`}>
+                              <div className={`text-gradient bg-gradient-to-r ${siteGradient} bg-clip-text text-transparent`}>
                                 {getCategoryIcon(cat.category)}
                               </div>
                             </div>
+                          </div>
+                        </div>
+                        
+                        {/* Content on right */}
+                        <div className={`flex-1 p-6 pr-6 flex flex-col justify-center`}>
+                          <div className="flex items-start justify-between mb-2">
                             <div>
-                              <h3 className="text-2xl font-bold text-gray-900 group-hover:text-gray-800 transition-colors">
+                              <h3 className={`text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r ${siteGradient}`}>
                                 {cat.category}
                               </h3>
-                              <div className="flex items-center gap-3 mt-2">
+                              <div className="flex items-center gap-3 mt-1">
                                 <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">
                                   {cat.products.length} serviços
                                 </span>
                                 <div className="flex items-center gap-1 text-amber-500">
-                                  <Star size={14} fill="currentColor" />
-                                  <Star size={14} fill="currentColor" />
-                                  <Star size={14} fill="currentColor" />
-                                  <Star size={14} fill="currentColor" />
-                                  <Star size={14} fill="currentColor" />
+                                  <Star size={12} fill="currentColor" />
+                                  <Star size={12} fill="currentColor" />
+                                  <Star size={12} fill="currentColor" />
+                                  <Star size={12} fill="currentColor" />
+                                  <Star size={12} fill="currentColor" />
                                 </div>
                               </div>
                             </div>
+                            <ArrowRight className="text-gray-400 group-hover:text-blue-500 transform group-hover:translate-x-2 transition-all flex-shrink-0" size={20} />
                           </div>
-                          <ArrowRight className="text-gray-400 group-hover:text-blue-500 transform group-hover:translate-x-2 transition-all" size={24} />
-                        </div>
-                        
-                        {/* Produtos em Destaque */}
-                        <div className="mb-6">
-                          <h4 className="text-sm font-semibold text-gray-700 mb-4">Serviços em Destaque</h4>
-                          <div className="space-y-3">
-                            {cat.products.slice(0, 2).map((prod) => (
-                              <div 
-                                key={prod.id}
-                                className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl hover:bg-white hover:shadow-md transition-all group/item"
-                              >
-                                <div className={`w-12 h-12 rounded-xl ${bg.light} flex items-center justify-center`}>
-                                  <span className={`font-bold text-lg bg-gradient-to-r ${bg.gradient} bg-clip-text text-transparent`}>
-                                    {prod.name?.charAt(0) || prod.title?.charAt(0) || 'P'}
-                                  </span>
+                          
+                          {/* Product preview */}
+                          <div className="mt-4">
+                            <div className="flex items-center -space-x-3">
+                              {cat.products.slice(0, 4).map((prod, prodIndex) => (
+                                <div 
+                                  key={prod.id}
+                                  className="w-10 h-10 rounded-full border-2 border-white bg-white shadow-lg flex items-center justify-center overflow-hidden"
+                                  style={{ zIndex: 4 - prodIndex }}
+                                  title={prod.name || prod.title || 'Serviço'}
+                                >
+                                      {prod.imageUrl ? (
+                                        <img 
+                                          src={prod.imageUrl} 
+                                          alt={prod.name || prod.title || ''}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      ) : (
+                                        <img
+                                          src={getProductImageUrl(cat.category, prod.id, prod.name || prod.title)}
+                                          alt={prod.name || prod.title || 'Serviço'}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      )}
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                  <h5 className="font-semibold text-gray-900 truncate">
-                                    {prod.name || prod.title || "Serviço Profissional"}
-                                  </h5>
-                                  <div className="flex items-center justify-between mt-1">
-                                    {typeof prod.price === 'number' && !isNaN(prod.price) ? (
-                                      <span className="text-lg font-bold text-green-600">
-                                        R$ {prod.price.toFixed(2)}
-                                      </span>
-                                    ) : (
-                                      <span className="text-sm text-gray-500">Sob consulta</span>
-                                    )}
-                                    <Heart size={16} className="text-gray-400 group-hover/item:text-rose-500 transition-colors" />
+                              ))}
+                              {cat.products.length > 4 && (
+                                <div className="w-10 h-10 rounded-full border-2 border-white bg-gray-800 flex items-center justify-center text-xs font-bold text-white shadow-lg">
+                                  +{cat.products.length - 4}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Price info */}
+                          <div className="mt-4 flex items-center justify-between">
+                            {(() => {
+                              const validPrices = cat.products
+                                .map(p => typeof p.price === 'number' && !isNaN(p.price) && p.price > 0 ? p.price : null)
+                                .filter((v): v is number => v !== null);
+                              
+                              if (validPrices.length > 0) {
+                                const minPrice = Math.min(...validPrices);
+                                return (
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-500">A partir de</span>
+                                    <span className="text-lg font-bold text-green-600">R$ {minPrice.toFixed(2)}</span>
                                   </div>
-                                </div>
-                              </div>
-                            ))}
+                                );
+                              }
+                              return <span className="text-sm text-gray-500">Valores sob consulta</span>;
+                            })()}
+                            
+                            <div className="flex items-center gap-2">
+                              <TrendingUp size={14} className="text-green-500" />
+                              <span className="text-xs text-gray-600">Alta procura</span>
+                            </div>
                           </div>
                         </div>
-                        
-                        {/* CTA */}
-                        <Link
-                          to={`/catalog?category=${encodeURIComponent(cat.category)}`}
-                          className={`block w-full py-4 text-center font-semibold rounded-xl bg-gradient-to-r ${bg.gradient} text-white hover:shadow-lg transition-all hover:scale-[1.02]`}
-                        >
-                          Explorar Categoria
-                        </Link>
                       </div>
-                    </div>
+                      
+                      {/* Hover effect overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/0 to-white/5 opacity-0 group-hover:opacity-40 transition-opacity duration-500"></div>
+                    </Link>
                   );
                 })}
               </div>
               
-              {/* Segunda Linha (se houver mais categorias) */}
-              {categories.length > 3 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {categories.slice(3, 6).map((cat) => {
-                    const bg = getCategoryBackground(cat.category);
-                    return (
-                      <Link 
-                        key={cat.category}
-                        to={`/catalog?category=${encodeURIComponent(cat.category)}`}
-                        className="group bg-white rounded-2xl border border-gray-200 hover:border-gray-300 p-6 hover:shadow-xl transition-all"
-                      >
-                        <div className="flex items-center gap-4 mb-4">
-                          <div className={`p-3 rounded-xl ${bg.light}`}>
-                            <div className={`text-gradient bg-gradient-to-r ${bg.gradient} bg-clip-text text-transparent`}>
-                              {getCategoryIcon(cat.category)}
-                            </div>
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-bold text-gray-900">{cat.category}</h3>
-                            <p className="text-sm text-gray-600">{cat.products.length} serviços</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                          <span className="text-blue-600 font-medium">Ver serviços</span>
-                          <ArrowRight className="text-blue-600 transform group-hover:translate-x-2 transition-transform" size={16} />
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
+              {/* Alternative Grid Layout for smaller screens */}
+              <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:hidden gap-4">
+                {categories.slice(0, 4).map((cat) => {
+                  return (
+                    <Link
+                      key={cat.category}
+                      to={`/catalog?category=${encodeURIComponent(cat.category)}`}
+                      className="group bg-white rounded-xl p-4 shadow-md hover:shadow-lg transition-all flex items-center gap-4"
+                    >
+                      <div className={`w-16 h-16 rounded-lg bg-gradient-to-br ${siteGradient} bg-opacity-10 flex items-center justify-center flex-shrink-0`}>
+                        <div className={`text-gradient bg-gradient-to-r ${siteGradient} bg-clip-text text-transparent`}>{getCategoryIcon(cat.category)}</div>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-bold text-gray-900">{cat.category}</h3>
+                        <p className="text-sm text-gray-600">{cat.products.length} serviços</p>
+                      </div>
+                      <ArrowRight className="text-gray-400 group-hover:text-blue-500 transform group-hover:translate-x-1 transition-transform" size={16} />
+                    </Link>
+                  );
+                })}
+              </div>
               
               {/* Ver todas as categorias */}
               {categories.length > 0 && (
@@ -543,13 +659,13 @@ export default function Landing() {
                 gradient: "from-emerald-50 to-teal-50",
                 color: "emerald"
               },
-              {
-                icon: <Camera className="text-purple-600" size={32} />,
+                {
+                icon: <Camera className="text-blue-600" size={32} />,
                 title: "Para Criadores",
                 description: "Monetize seu conhecimento local com conteúdo exclusivo e parcerias estratégicas.",
                 features: ["Conteúdo Premium", "Comunidade Ativa", "Monetização Flexível"],
-                gradient: "from-purple-50 to-pink-50",
-                color: "purple"
+                gradient: "from-blue-50 to-cyan-50",
+                color: "blue"
               }
             ].map((item, index) => (
               <div 
@@ -629,18 +745,18 @@ export default function Landing() {
                 gradient: "from-amber-500 to-orange-500"
               },
               {
-                icon: <Building className="text-purple-600" size={28} />,
+                icon: <Building className="text-blue-600" size={28} />,
                 title: "Hospedagem",
                 description: "Hotéis boutique, pousadas charmosas e acomodações premium.",
                 stats: "50+ parcerias",
-                gradient: "from-purple-500 to-pink-500"
+                gradient: "from-blue-600 to-cyan-500"
               },
               {
-                icon: <Camera className="text-rose-600" size={28} />,
+                icon: <Camera className="text-indigo-600" size={28} />,
                 title: "Fotografia",
                 description: "Fotógrafos profissionais, tours fotográficos e cobertura de eventos.",
                 stats: "30+ especialistas",
-                gradient: "from-rose-500 to-red-500"
+                gradient: "from-blue-600 to-cyan-500"
               },
               {
                 icon: <Users2 className="text-indigo-600" size={28} />,
