@@ -343,7 +343,7 @@ export default function ProviderDashboard() {
                     Novo Serviço
                   </Link>
                   <Link 
-                    to="/dashboard" 
+                    to="/profile/settings" 
                     className="px-5 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition flex items-center gap-2"
                   >
                     <Settings size={18} />
