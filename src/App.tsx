@@ -10,7 +10,6 @@ import ServiceDetail from './pages/ServiceDetail';
 import RequireAuth from './components/Auth/RequireAuth';
 import ProviderDashboard from './pages/ProviderDashboard';
 import HowItWorks from './pages/HowItWorks';
-import Pricing from './pages/Pricing';
 import Partnerships from './pages/Partnerships';
 import Contact from './pages/Contact';
 
@@ -29,7 +28,6 @@ function App() {
         <Route path="/service/:id" element={<ServiceDetail />} />
         <Route path="/admin" element={<RequireAuth><AdminDashboard /></RequireAuth>} />
         <Route path="/how-it-works" element={<HowItWorks />} />
-        <Route path="/pricing" element={<Pricing />} />
         <Route path="/partnerships" element={<Partnerships />} />
         <Route path="/contact" element={<Contact />} />
       </Routes>

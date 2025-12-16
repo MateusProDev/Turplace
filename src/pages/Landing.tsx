@@ -1,21 +1,7 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Menu, X, ChevronDown } from "lucide-react";
-import logo from '../assets/logosemfundo.png';
 import iconLogo from '../assets/iconlogo.png';
-import passeioImg from '../assets/categories/passeio.svg';
-import guiasImg from '../assets/categories/guias.svg';
-import transporteImg from '../assets/categories/transporte.svg';
-import gastronomiaImg from '../assets/categories/gastronomia.svg';
-import hospedagemImg from '../assets/categories/hospedagem.svg';
-import fotografiaImg from '../assets/categories/fotografia.svg';
-import aventuraImg from '../assets/categories/aventura.svg';
-import culturaImg from '../assets/categories/cultura.svg';
-import artesanatoImg from '../assets/categories/artesanato.svg';
-import turismoImg from '../assets/categories/turismo.svg';
-import experienciasImg from '../assets/categories/experiencias.svg';
-import consultoriaImg from '../assets/categories/consultoria.svg';
-import designerImg from '../assets/categories/designer.svg';
 import { getCategoriesWithProducts } from "../utils/getCategoriesWithProducts";
 import { 
   MapPin, 
@@ -29,7 +15,6 @@ import {
   Car,
   Coffee,
   Compass,
-  ArrowRight,
   ChevronRight,
   Sparkles,
   Zap,
@@ -41,6 +26,7 @@ import {
   Award,
   MessageCircle,
   Filter,
+  ArrowRight,
   ArrowUpRight,
   ExternalLink
 } from "lucide-react";
@@ -90,100 +76,47 @@ const getCategoryIcon = (category: string) => {
 
 
 // Cores de fundo profissionais para categorias (padronizadas para o azul do site)
-const getCategoryBackground = (category: string) => {
-  const backgrounds: Record<string, { gradient: string, light: string, dark: string }> = {
-    'passeio': { gradient: siteGradient, light: 'bg-blue-50', dark: 'bg-blue-100' },
-    'guias': { gradient: siteGradient, light: 'bg-blue-50', dark: 'bg-blue-100' },
-    'transporte': { gradient: siteGradient, light: 'bg-blue-50', dark: 'bg-blue-100' },
-    'gastronomia': { gradient: siteGradient, light: 'bg-blue-50', dark: 'bg-blue-100' },
-    'hospedagem': { gradient: siteGradient, light: 'bg-blue-50', dark: 'bg-blue-100' },
-    'fotografia': { gradient: siteGradient, light: 'bg-blue-50', dark: 'bg-blue-100' },
-    'aventura': { gradient: siteGradient, light: 'bg-blue-50', dark: 'bg-blue-100' },
-    'cultura': { gradient: siteGradient, light: 'bg-blue-50', dark: 'bg-blue-100' },
-    'artesanato': { gradient: siteGradient, light: 'bg-blue-50', dark: 'bg-blue-100' },
-    'turismo': { gradient: siteGradient, light: 'bg-blue-50', dark: 'bg-blue-100' },
-    'experiencias': { gradient: siteGradient, light: 'bg-blue-50', dark: 'bg-blue-100' },
-    'consultoria': { gradient: siteGradient, light: 'bg-blue-50', dark: 'bg-blue-100' },
-    'designer': { gradient: siteGradient, light: 'bg-blue-50', dark: 'bg-blue-100' },
-  };
+// A implementação getCategoryBackground foi removida porque não estava sendo utilizada;
+// reintroduza a função quando precisar mapear backgrounds por categoria.
 
-  const normalize = (str: string) => 
-    str.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
-  
-  const normalizedCategory = normalize(category);
-  
-  for (const key in backgrounds) {
-    if (normalizedCategory.includes(key)) {
-      return backgrounds[key];
-    }
-  }
-  
-  return { gradient: 'from-slate-600 to-gray-700', light: 'bg-slate-50', dark: 'bg-slate-100' };
-};
 
-// Category image tags used for placeholder images (shared)
-const CATEGORY_IMAGE_TAGS: Record<string, string> = {
-  passeio: 'sightseeing,tour,landmark',
-  guias: 'tourguide,guide,local',
-  transporte: 'vehicle,transport,bus,car',
-  gastronomia: 'food,restaurant,cuisine',
-  hospedagem: 'hotel,accommodation,lodging',
-  fotografia: 'camera,photography,photoshoot',
-  aventura: 'adventure,hiking,outdoors',
-  cultura: 'culture,museum,heritage',
-  artesanato: 'crafts,handmade,artisan',
-  turismo: 'travel,tourism,destination',
-  experiencias: 'experience,event,activity',
-  consultoria: 'consulting,business,advisor',
-  designer: 'camera,design,creative'
-};
-
-// Retorna uma imagem temática para cada categoria.
-// Tenta usar o Unsplash Source para imagens mais consistentes e de melhor qualidade.
-const CATEGORY_ASSETS: Record<string, string> = {
-  passeio: passeioImg,
-  guias: guiasImg,
-  transporte: transporteImg,
-  gastronomia: gastronomiaImg,
-  hospedagem: hospedagemImg,
-  fotografia: fotografiaImg,
-  aventura: aventuraImg,
-  cultura: culturaImg,
-  artesanato: artesanatoImg,
-  turismo: turismoImg,
-  experiencias: experienciasImg,
-  consultoria: consultoriaImg,
-  designer: designerImg,
-};
-
+// Retorna uma imagem temática para cada categoria usando Unsplash (imagens gratuitas)
 const getCategoryImageUrl = (category: string) => {
   const normalize = (str: string) => str.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
-  const key = Object.keys(CATEGORY_IMAGE_TAGS).find(k => normalize(category).includes(k));
+  const normalizedCategory = normalize(category);
+  
+  // Mapeamento direto para URLs do Unsplash com imagens específicas para cada categoria
+  const categoryImages: Record<string, string> = {
+    'passeio': 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&h=600&fit=crop',
+    'guias': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop',
+    'transporte': 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&h=600&fit=crop',
+    'gastronomia': 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&h=600&fit=crop',
+    'hospedagem': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&h=600&fit=crop',
+    'fotografia': 'https://images.unsplash.com/photo-1452587925148-ce544e77e70d?w=800&h=600&fit=crop',
+    'aventura': 'https://images.unsplash.com/photo-1464207687429-7505649dae38?w=800&h=600&fit=crop',
+    'cultura': 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=800&h=600&fit=crop',
+    'artesanato': 'https://images.unsplash.com/photo-1452860606245-08befc0ff44b?w=800&h=600&fit=crop',
+    'turismo': 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&h=600&fit=crop',
+    'experiencias': 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&h=600&fit=crop',
+    'consultoria': 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=600&fit=crop',
+    'designer': 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&h=600&fit=crop'
+  };
 
-  if (key && CATEGORY_ASSETS[key]) {
-    return CATEGORY_ASSETS[key];
+  // Encontra a categoria correspondente
+  for (const key in categoryImages) {
+    if (normalizedCategory.includes(key)) {
+      return categoryImages[key];
+    }
   }
 
-  // Fallback to Unsplash if no local asset exists
-  const categoryName = normalize(category).split(/\s+/).join(',');
-  const tag = key ? CATEGORY_IMAGE_TAGS[key] : 'travel';
-  const query = `${categoryName},${tag}`;
-  return `https://source.unsplash.com/800x600/?${encodeURIComponent(query)}`;
+  // Fallback genérico para turismo
+  return 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&h=600&fit=crop';
 };
 
-// Thumbnail fallback para produtos (pequeno, tag-based com seed pelo id)
-const getProductImageUrl = (category: string, id: string, label?: string) => {
-  const normalizeCategory = (str: string) => str.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
-  const keys = Object.keys(CATEGORY_IMAGE_TAGS);
-  const found = keys.find(k => normalizeCategory(category).includes(k));
-  const tag = found ? CATEGORY_IMAGE_TAGS[found] : 'product';
-  const catTag = tag.split(',')[0];
-  const categoryName = normalizeCategory(category).split(/\s+/)[0];
-  const labelPart = label ? `,${label.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase().split(/\s+/)[0]}` : '';
-  const thumbTag = `${categoryName},${catTag}${labelPart}`;
-
-  // Use Unsplash small size for thumbnails
-  return `https://source.unsplash.com/64x64/?${encodeURIComponent(thumbTag)}`;
+// Thumbnail fallback para produtos (pequeno, usando Lorem Picsum para consistência)
+const getProductImageUrl = (_category: string, id: string, _label?: string) => {
+  // Use Lorem Picsum com seed baseado no ID para imagens consistentes por produto
+  return `https://picsum.photos/seed/${encodeURIComponent(id)}/64/64`;
 };
 
 // Site default gradient (azul do site)
@@ -234,12 +167,6 @@ export default function Landing() {
               >
                 Como Funciona
               </Link>
-              <Link 
-                to="/pricing" 
-                className={`font-medium transition-colors ${scrolled ? 'text-gray-700 hover:text-blue-600' : 'text-white/90 hover:text-white'}`}
-              >
-                Planos
-              </Link>
               <div className="flex items-center gap-4">
                 <Link 
                   to="/login" 
@@ -286,13 +213,6 @@ export default function Landing() {
                   onClick={() => setMenuOpen(false)}
                 >
                   Como Funciona
-                </Link>
-                <Link 
-                  to="/pricing" 
-                  className="block px-4 py-3 text-gray-700 font-medium hover:bg-blue-50 rounded-xl transition-colors"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Planos
                 </Link>
                 <div className="pt-4 border-t border-gray-100 space-y-3">
                   <Link 
@@ -370,12 +290,12 @@ export default function Landing() {
             </div>
             
             {/* Stats - Professional Design */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto mb-24">
               {[
-                { value: '100+', label: 'Prestadores Ativos', icon: <Users2 className="text-cyan-400" />, color: 'from-cyan-500 to-blue-600' },
-                { value: '200+', label: 'Experiências Únicas', icon: <Compass className="text-emerald-400" />, color: 'from-emerald-500 to-teal-600' },
-                { value: '50+', label: 'Agências Parceiras', icon: <Building className="text-amber-400" />, color: 'from-amber-500 to-orange-600' },
-                { value: '15+', label: 'Cidades Ativas', icon: <MapPin className="text-blue-400" />, color: siteGradient }
+                { value: '25+', label: 'Prestadores Ativos', icon: <Users2 className="text-cyan-400" />, color: 'from-cyan-500 to-blue-600' },
+                { value: '45+', label: 'Experiências Únicas', icon: <Compass className="text-emerald-400" />, color: 'from-emerald-500 to-teal-600' },
+                { value: '12+', label: 'Agências Parceiras', icon: <Building className="text-amber-400" />, color: 'from-amber-500 to-orange-600' },
+                { value: '8+', label: 'Cidades Ativas', icon: <MapPin className="text-blue-400" />, color: siteGradient }
               ].map((stat, idx) => (
                 <div 
                   key={idx}
@@ -396,7 +316,7 @@ export default function Landing() {
         </div>
         
         {/* Scroll Indicator */}
-        <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 animate-bounce">
+        <div className="absolute bottom-5 left-1/2 transform -translate-x-1/2 animate-bounce">
           <div className="flex flex-col items-center gap-2">
             <span className="text-white/60 text-sm font-medium">Explore mais</span>
             <ChevronDown className="text-white/60" size={28} />
@@ -454,7 +374,6 @@ export default function Landing() {
               {/* Masonry Grid Layout - Rectangular Horizontal Cards */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {categories.map((cat) => {
-                  const bg = getCategoryBackground(cat.category);
                   
                   return (
                     <Link
@@ -485,14 +404,6 @@ export default function Landing() {
                           {/* Overlay gradient */}
                           <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-transparent opacity-30"></div>
                           
-                          {/* Badge in corner */}
-                          <div className="absolute top-4 left-4">
-                            <div className={`p-2 rounded-lg ${bg.light} backdrop-blur-sm`}>
-                              <div className={`text-gradient bg-gradient-to-r ${siteGradient} bg-clip-text text-transparent`}>
-                                {getCategoryIcon(cat.category)}
-                              </div>
-                            </div>
-                          </div>
                         </div>
                         
                         {/* Content on right */}
@@ -860,8 +771,9 @@ export default function Landing() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12 mb-16">
             {/* Brand */}
             <div>
-              <div className="flex items-center mb-6">
-                <img src={logo} alt="Turplace" className="h-12 w-auto" />
+              <div className="flex items-center gap-3 mb-6">
+                <img src={iconLogo} alt="Turplace" className="h-16 w-auto" />
+                <span className="text-xl font-bold text-white">Turplace</span>
               </div>
               <p className="text-gray-400 mb-8">
                 O marketplace premium para o turismo local. Conectando profissionais e experiências únicas.
