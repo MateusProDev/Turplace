@@ -6,7 +6,7 @@ import {
   Search, 
   MapPin, 
   Tag, 
-  DollarSign, 
+  DollarSign,  
   Image as ImageIcon, 
   Filter, 
   X, 
