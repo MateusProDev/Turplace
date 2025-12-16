@@ -1,0 +1,42 @@
+[
+  {
+    "planId": "free",
+    "stripeProductId": "prod_TcD5BlvVW7yXDQ",
+    "stripePriceId": "price_1SeyezKlR2RHdJ4pFFVMA5fb",
+    "name": "Free",
+    "commissionPercent": 15,
+    "features": [
+      "Sem destaque",
+      "Sem analytics"
+    ],
+    "price_cents": 0,
+    "createdAt": "2025-12-16T13:51:30.317Z"
+  },
+  {
+    "planId": "professional",
+    "stripeProductId": "prod_TcD5tDMGDeijyC",
+    "stripePriceId": "price_1Seyf0KlR2RHdJ4ptJNmAuKi",
+    "name": "Profissional",
+    "commissionPercent": 8,
+    "features": [
+      "Destaque no catálogo",
+      "Perfil verificado"
+    ],
+    "price_cents": 990,
+    "createdAt": "2025-12-16T13:51:31.248Z"
+  },
+  {
+    "planId": "premium",
+    "stripeProductId": "prod_TcD5orvNfZFAmn",
+    "stripePriceId": "price_1Seyf1KlR2RHdJ4psFoH3WrA",
+    "name": "Premium",
+    "commissionPercent": 5,
+    "features": [
+      "Topo da categoria",
+      "Leads prioritários",
+      "Analytics avançado"
+    ],
+    "price_cents": 1990,
+    "createdAt": "2025-12-16T13:51:32.193Z"
+  }
+]

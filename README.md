@@ -90,6 +90,22 @@ export default defineConfig([
 3. Rode `npm run dev` para iniciar o frontend.
 4. Faça deploy no Vercel para produção.
 
----
 
 MVP pronto para validação!
+
+## Estratégia de Planos (Monetização)
+
+Oferecemos planos pensados para prestadores que preferem pagar um valor fixo/benefício em vez de uma comissão alta:
+
+- Free — Comissão: 15% — Sem destaque, Sem analytics
+- Profissional — Comissão: 8% — Destaque no catálogo, Perfil verificado
+- Premium — Comissão: 5% — Topo da categoria, Leads prioritários, Analytics avançado
+
+Copy sugerida para o site:
+
+> Você só paga quando vende.
+> A Turplace cobra uma pequena comissão para manter a plataforma segura, promover seu serviço e conectar você com agências qualificadas.
+>
+> Simples. Justo. Aceitável.
+
+Para criar os planos no Stripe e gravar seus IDs no Firestore (ou arquivo local), veja `README_STRIPE.md` e execute o script `npm run create:stripe-plans` após configurar `.env`.
