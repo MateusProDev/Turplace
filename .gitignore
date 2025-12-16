@@ -1,5 +1,12 @@
 node_modules/
+# Environment files
 .env
+.env.*
+.env.local
+.env.development
+.env.production
+.env.test
+.env.*.local
 dist/
 build/
 .vercel/
@@ -24,6 +31,15 @@ node_modules
 dist
 dist-ssr
 *.local
+
+# OS files
+Thumbs.db
+ehthumbs.db
+Icon?
+
+# PowerShell history/session
+ConsoleHost_history.txt
+
 
 # Editor directories and files
 .vscode/*
