@@ -7,6 +7,10 @@ export default async function handler(req, res) {
   const base = parts.join('/') || 'index'
 
   const candidates = [
+    `../server/api/${base}.js`,
+    `../server/api/${base}.cjs`,
+    `../server/api/${base}/index.js`,
+    `../server/api/${base}/index.cjs`,
     `./${base}.js`,
     `./${base}.cjs`,
     `./${base}/index.js`,
