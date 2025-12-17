@@ -7,6 +7,10 @@ const db = initFirestore();
 module.exports = async (req, res) => {
   console.log('[debug] create-subscription-session invoked', { method: req.method, headers: Object.keys(req.headers || {}) });
   try {
+    // Allow simple GET for healthcheck/debug in prod (helps detect 404 routing issues)
+    if (req.method === 'GET') {
+      return res.status(200).json({ ok: true, route: '/api/create-subscription-session', method: 'GET', msg: 'Function is deployed' });
+    }
     if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
     const { priceId, customerEmail, userId } = req.body;

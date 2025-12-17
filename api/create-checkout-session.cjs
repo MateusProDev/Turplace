@@ -7,6 +7,10 @@ const db = initFirestore();
 module.exports = async (req, res) => {
   console.log('[debug] create-checkout-session invoked', { method: req.method, headers: Object.keys(req.headers || {}) });
   try {
+    // Allow GET for healthcheck/debug
+    if (req.method === 'GET') {
+      return res.status(200).json({ ok: true, route: '/api/create-checkout-session', method: 'GET', msg: 'Function is deployed' });
+    }
     if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
     const { serviceId, agencyId, quantity = 1 } = req.body;
