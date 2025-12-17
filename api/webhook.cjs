@@ -1,5 +1,5 @@
 const Stripe = require('stripe');
-const initFirestore = require('./_lib/firebaseAdmin');
+const initFirestore = require('./_lib/firebaseAdmin.cjs');
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const db = initFirestore();
 

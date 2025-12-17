@@ -1,10 +1,11 @@
 const Stripe = require('stripe');
-const initFirestore = require('./_lib/firebaseAdmin');
+const initFirestore = require('./_lib/firebaseAdmin.cjs');
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const db = initFirestore();
 
 module.exports = async (req, res) => {
+  console.log('[debug] create-checkout-session invoked', { method: req.method, headers: Object.keys(req.headers || {}) });
   try {
     if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 

@@ -254,11 +254,11 @@ export default function Landing() {
               </div>
               
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-8 leading-tight">
-                O <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Marketplace</span> Profissional
+                O <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Marketplace</span> Profissional Para o Turismo Local
                 <br />
-                <span className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-light text-gray-300 mt-4 block">
+                {/* <span className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-light text-gray-300 mt-4 block">
                   Para o Turismo Local
-                </span>
+                </span> */}
               </h1>
               
               <p className="text-lg sm:text-xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
@@ -797,7 +797,6 @@ export default function Landing() {
               <ul className="space-y-4">
                 <li><Link to="/dashboard" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2">Cadastrar serviços <ArrowRight size={14} /></Link></li>
                 <li><Link to="/how-it-works" className="text-gray-400 hover:text-white transition-colors">Como funciona</Link></li>
-                <li><Link to="/pricing" className="text-gray-400 hover:text-white transition-colors">Planos Premium</Link></li>
                 <li><Link to="/success" className="text-gray-400 hover:text-white transition-colors">Casos de Sucesso</Link></li>
               </ul>
             </div>

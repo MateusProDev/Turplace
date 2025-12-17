@@ -20,6 +20,7 @@ import {
   Settings,
   Eye
 } from "lucide-react";
+import Pricing from "./Pricing";
 
 export default function ProviderDashboard() {
   const { user } = useAuth();
@@ -34,6 +35,7 @@ export default function ProviderDashboard() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [currentTab, setCurrentTab] = useState<'services' | 'profile' | 'plans'>('services');
 
   // Carregar perfil do usuário
   useEffect(() => {
@@ -196,8 +198,41 @@ export default function ProviderDashboard() {
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex gap-8">
+            <button
+              onClick={() => setCurrentTab('services')}
+              className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
+                currentTab === 'services' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Serviços
+            </button>
+            <button
+              onClick={() => setCurrentTab('profile')}
+              className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
+                currentTab === 'profile' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Perfil
+            </button>
+            <button
+              onClick={() => setCurrentTab('plans')}
+              className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
+                currentTab === 'plans' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Planos
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {currentTab === 'services' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Coluna da Esquerda - Perfil */}
           <div className="lg:col-span-1 space-y-6">
             {/* Card Perfil */}
@@ -463,6 +498,102 @@ export default function ProviderDashboard() {
             </div>
           </div>
         </div>
+        )}
+
+        {currentTab === 'profile' && (
+          <div className="max-w-2xl mx-auto">
+            {/* Card Perfil */}
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <div className="relative mb-6">
+                <div className="w-32 h-32 mx-auto rounded-full overflow-hidden border-4 border-white shadow-lg">
+                  <img
+                    src={photo || "/src/assets/logosemfundo.png"}
+                    alt="Foto do perfil"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <button
+                  className="absolute bottom-2 right-1/2 transform translate-x-16 bg-blue-600 text-white rounded-full p-2 shadow-lg hover:bg-blue-700 transition"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Alterar foto"
+                >
+                  <Camera size={16} />
+                </button>
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  className="hidden"
+                  onChange={handlePhotoChange}
+                />
+              </div>
+
+              {editMode ? (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Nome Completo
+                    </label>
+                    <input
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                      value={name}
+                      onChange={e => setName(e.target.value)}
+                      placeholder="Seu nome completo"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Bio / Sobre você
+                    </label>
+                    <textarea
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition min-h-[100px] resize-none"
+                      value={bio}
+                      onChange={e => setBio(e.target.value)}
+                      placeholder="Conte um pouco sobre sua experiência..."
+                      maxLength={500}
+                    />
+                    <div className="text-xs text-gray-500 text-right mt-1">
+                      {bio.length}/500 caracteres
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={handleNameSave}
+                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                    >
+                      <CheckCircle size={18} />
+                      Salvar
+                    </button>
+                    <button 
+                      onClick={() => setEditMode(false)}
+                      className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition flex items-center justify-center gap-2"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{name || "Nome não definido"}</h3>
+                  <p className="text-gray-600 mb-4">{bio || "Adicione uma bio para contar sobre sua experiência."}</p>
+                  <button 
+                    onClick={() => setEditMode(true)}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition flex items-center gap-2 mx-auto"
+                  >
+                    <Edit2 size={18} />
+                    Editar Perfil
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {currentTab === 'plans' && (
+          <div className="max-w-6xl mx-auto">
+            <Pricing />
+          </div>
+        )}
       </div>
 
       <ConfirmModal
