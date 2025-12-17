@@ -20,12 +20,23 @@ app.use((req, res, next) => {
 const createSub = require(path.join(__dirname, '..', 'api', 'create-subscription-session.cjs'));
 const createCheckout = require(path.join(__dirname, '..', 'api', 'create-checkout-session.cjs'));
 const webhook = require(path.join(__dirname, '..', 'api', 'webhook.cjs'));
+// mount dev-only endpoint if present
+let devApply = null;
+try {
+  devApply = require(path.join(__dirname, '..', 'api', 'dev', 'apply-plan.cjs'));
+} catch (e) {
+  // ignore if not present
+}
 
 app.post('/api/create-subscription-session', (req, res) => createSub(req, res));
 app.post('/api/create-checkout-session', (req, res) => createCheckout(req, res));
 
 // webhook needs raw body for stripe signature verification
 app.post('/api/webhook', bodyParser.raw({ type: 'application/json' }), (req, res) => webhook(req, res));
+
+if (devApply) {
+  app.all('/api/dev/apply-plan', (req, res) => devApply(req, res));
+}
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {

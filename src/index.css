@@ -1,6 +1,57 @@
+/* stylelint-disable */
+/* Tailwind CSS directives - processed by PostCSS */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* stylelint-enable */
+
+/* Dashboard Customization Variables */
+:root {
+  --dashboard-primary: #3B82F6;
+  --dashboard-secondary: #1E40AF;
+  --dashboard-background: #EFF6FF;
+  --dashboard-font-family: 'Inter', sans-serif;
+  --dashboard-font-size: 16px;
+}
+
+/* Apply dashboard customizations */
+.dashboard-custom {
+  background-color: var(--dashboard-background) !important;
+  font-family: var(--dashboard-font-family) !important;
+  font-size: var(--dashboard-font-size) !important;
+}
+
+.dashboard-custom .bg-blue-600 {
+  background-color: var(--dashboard-primary) !important;
+}
+
+.dashboard-custom .bg-blue-700 {
+  background-color: var(--dashboard-secondary) !important;
+}
+
+.dashboard-custom .text-blue-600 {
+  color: var(--dashboard-primary) !important;
+}
+
+.dashboard-custom .text-blue-700 {
+  color: var(--dashboard-secondary) !important;
+}
+
+.dashboard-custom .border-blue-600 {
+  border-color: var(--dashboard-primary) !important;
+}
+
+.dashboard-custom .border-blue-500 {
+  border-color: var(--dashboard-primary) !important;
+}
+
+.dashboard-custom .hover\:bg-blue-50:hover {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+.dashboard-custom .hover\:bg-blue-700:hover {
+  background-color: var(--dashboard-secondary) !important;
+}
 
 h1 {
   font-size: 3.2em;

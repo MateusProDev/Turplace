@@ -9,15 +9,33 @@ module.exports = async (req, res) => {
   try {
     if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
-    const { priceId, customerEmail } = req.body;
+    const { priceId, customerEmail, userId } = req.body;
     if (!priceId) return res.status(400).json({ error: 'priceId required' });
 
     // Create a lightweight subscription order record (optional)
     const orderRef = db.collection('orders').doc();
+    // Try to enrich order with plan price from Firestore (if available)
+    let amount = null;
+    try {
+      const planSnap = await db.collection('plans').where('stripePriceId', '==', priceId).limit(1).get();
+      if (!planSnap.empty) {
+        const pd = planSnap.docs[0].data();
+        amount = pd.price_cents || null;
+      } else {
+        const planDoc = await db.collection('plans').doc(priceId).get();
+        if (planDoc.exists) amount = planDoc.data().price_cents || null;
+      }
+    } catch (e) {
+      console.warn('Failed to resolve plan amount from Firestore:', e && e.message ? e.message : e);
+    }
+
     const order = {
       type: 'subscription',
       priceId,
+      stripePriceId: priceId,
       customerEmail: customerEmail || null,
+      userId: userId || null,
+      amount: amount,
       status: 'pending',
       createdAt: new Date().toISOString(),
     };
@@ -29,7 +47,7 @@ module.exports = async (req, res) => {
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/cancel`,
-      metadata: { orderId: orderRef.id },
+      metadata: { orderId: orderRef.id, userId: userId || '', customerEmail: customerEmail || '' },
     };
 
   const session = await stripe.checkout.sessions.create(sessionParams);

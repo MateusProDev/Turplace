@@ -90,6 +90,108 @@ module.exports = async (req, res) => {
         await orderRef.update(update);
         console.log(`[${now()}] Order ${orderId} updated successfully`);
 
+        // Se for um pedido de assinatura, aplicar o plano ao usuário automaticamente
+        try {
+          if (order.type === 'subscription') {
+            console.log(`[${now()}] Order ${orderId} is a subscription order — applying plan to user`);
+
+            // Tenta encontrar o plano no Firestore pela stripePriceId (campo salvo pelos scripts de criação de planos)
+            const plansQuery = await db.collection('plans').where('stripePriceId', '==', order.priceId).limit(1).get();
+            let planDoc = null;
+            if (!plansQuery.empty) planDoc = plansQuery.docs[0];
+            else {
+              // fallback: também tenta buscar por priceId direto
+              const altQuery = await db.collection('plans').where('priceId', '==', order.priceId).limit(1).get();
+              if (!altQuery.empty) planDoc = altQuery.docs[0];
+            }
+
+            if (!planDoc) {
+              // fallback: tenta usar plano 'free' se existir
+              console.warn(`[${now()}] Plano não encontrado para priceId=${order.priceId}; attempting fallback to 'free'`);
+              const freeDoc = await db.collection('plans').doc('free').get();
+              if (freeDoc.exists) {
+                planDoc = freeDoc;
+                console.log(`[${now()}] Fallback: using 'free' plan`);
+              } else {
+                console.warn(`[${now()}] Fallback 'free' plan not found — skipping plan application.`);
+              }
+            }
+            if (planDoc) {
+              const planData = planDoc.data();
+              const newPlanId = planDoc.id;
+
+              // Determina o usuário alvo: prioridade para order.userId, senão procura por email
+              let targetUid = order.userId || null;
+              if (!targetUid && order.customerEmail) {
+                const usersQuery = await db.collection('users').where('email', '==', order.customerEmail).limit(1).get();
+                if (!usersQuery.empty) targetUid = usersQuery.docs[0].id;
+              }
+
+              if (!targetUid) {
+                console.warn(`[${now()}] Não foi possível resolver usuário para order ${orderId} (userId/email ausente).`);
+              } else {
+                // prevent double-application: check if plan already applied
+                const currentUserSnap = await db.collection('users').doc(targetUid).get();
+                const currentUser = currentUserSnap.exists ? currentUserSnap.data() : {};
+                if (currentUser && currentUser.planId === newPlanId && currentUser.planActivatedAt) {
+                  console.log(`[${now()}] User ${targetUid} already on plan ${newPlanId} — skipping apply`);
+                  // mark order as planApplied for completeness
+                  await orderRef.update({ planApplied: true, planAppliedAt: new Date().toISOString() });
+                  return res.json({ received: true });
+                }
+                const userRef = db.collection('users').doc(targetUid);
+                const userSnap = await userRef.get();
+                const userData = userSnap.exists ? userSnap.data() : {};
+                const oldPlanId = userData && userData.planId ? userData.planId : null;
+
+                // Tenta obter dados da subscription (periodo) do Stripe
+                let planExpiresAt = null;
+                if (session.subscription) {
+                  try {
+                    const sub = await stripe.subscriptions.retrieve(session.subscription);
+                    if (sub && sub.current_period_end) planExpiresAt = new Date(sub.current_period_end * 1000).toISOString();
+                  } catch (e) {
+                    console.warn(`[${now()}] Falha ao buscar subscription ${session.subscription}: ${e && e.message ? e.message : e}`);
+                  }
+                }
+
+                // Grava histórico do plano antes de alterar
+                try {
+                  const histRef = userRef.collection('planHistory').doc();
+                  await histRef.set({
+                    oldPlanId,
+                    newPlanId,
+                    changedAt: new Date().toISOString(),
+                    orderId,
+                    source: 'stripe',
+                    amount: order.amount || null,
+                  });
+                  console.log(`[${now()}] Plan history recorded for user ${targetUid}`);
+                } catch (e) {
+                  console.warn(`[${now()}] Failed to write plan history for user ${targetUid}: ${e && e.message ? e.message : e}`);
+                }
+
+                // Atualiza o documento do usuário com novo plano e taxas/limites extraídos do documento do plano
+                const userUpdate = {
+                  planId: newPlanId,
+                  planActivatedAt: new Date().toISOString(),
+                  planExpiresAt: planExpiresAt || null,
+                  platformFeePercent: planData.commissionPercent || null,
+                  planFeatures: planData.features || null,
+                };
+                // usar set merge para criar o doc se por algum motivo não existir
+                await userRef.set(userUpdate, { merge: true });
+                console.log(`[${now()}] User ${targetUid} updated with new plan ${newPlanId}`);
+
+                // Atualiza a order com referência ao subscription (se houver)
+                await orderRef.update({ subscriptionId: session.subscription || null, planApplied: true });
+              }
+            }
+          }
+        } catch (errApply) {
+          console.error(`[${now()}] Erro ao aplicar plano automatico para order ${orderId}: ${errApply && errApply.stack ? errApply.stack : errApply}`);
+        }
+
         break;
       }
       case 'payment_intent.succeeded': {

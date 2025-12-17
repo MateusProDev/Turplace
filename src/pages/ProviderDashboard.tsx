@@ -18,7 +18,10 @@ import {
   Plus,
   ExternalLink,
   Settings,
-  Eye
+  Eye,
+  User,
+  CreditCard,
+  BarChart3
 } from "lucide-react";
 import Pricing from "./Pricing";
 
@@ -36,6 +39,36 @@ export default function ProviderDashboard() {
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [currentTab, setCurrentTab] = useState<'services' | 'profile' | 'plans'>('services');
+
+  // Load dashboard settings on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('dashboardSettings');
+    if (saved) {
+      try {
+        const settings = JSON.parse(saved);
+        applyDashboardSettings(settings);
+      } catch (error) {
+        console.error('Erro ao carregar configurações salvas:', error);
+      }
+    }
+  }, []);
+
+  const applyDashboardSettings = (settings: any) => {
+    const root = document.documentElement;
+    if (settings.primaryColor) root.style.setProperty('--dashboard-primary', settings.primaryColor);
+    if (settings.secondaryColor) root.style.setProperty('--dashboard-secondary', settings.secondaryColor);
+    if (settings.backgroundColor) root.style.setProperty('--dashboard-background', settings.backgroundColor);
+    if (settings.fontFamily) {
+      root.style.setProperty('--dashboard-font-family', settings.fontFamily);
+      document.body.style.fontFamily = settings.fontFamily;
+    }
+    if (settings.fontSize) {
+      const fontSizeMap = { small: '14px', medium: '16px', large: '18px' } as const;
+      const key = settings.fontSize as keyof typeof fontSizeMap;
+      const value = fontSizeMap[key] ?? fontSizeMap.medium;
+      root.style.setProperty('--dashboard-font-size', value);
+    }
+  };
 
   // Carregar perfil do usuário
   useEffect(() => {
@@ -171,61 +204,76 @@ export default function ProviderDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-50 dashboard-custom">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Briefcase className="text-blue-600" size={24} />
+          <div className="flex flex-col gap-4 py-6">
+            {/* Top Row - Title and Actions */}
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
+                  <BarChart3 className="text-white" size={28} />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+                  <p className="text-gray-600">Gerencie seus serviços, perfil e planos</p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-                <p className="text-sm text-gray-600">Gerencie seus serviços e perfil</p>
+              <div className="flex items-center gap-3">
+                <Link
+                  to="/catalog"
+                  className="px-4 py-2.5 border border-blue-600 text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
+                >
+                  <Eye size={18} />
+                  Ver Catálogo
+                </Link>
+                <Link 
+                  to="/dashboard/service/new" 
+                  className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-lg font-semibold hover:from-emerald-700 hover:to-emerald-800 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
+                >
+                  <Plus size={18} />
+                  Novo Serviço
+                </Link>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <Link
-                to="/catalog"
-                className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition flex items-center gap-2"
-              >
-                <Eye size={18} />
-                Ver Catálogo
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Tabs */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-8">
-            <button
-              onClick={() => setCurrentTab('services')}
-              className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
-                currentTab === 'services' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Serviços
-            </button>
-            <button
-              onClick={() => setCurrentTab('profile')}
-              className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
-                currentTab === 'profile' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Perfil
-            </button>
-            <button
-              onClick={() => setCurrentTab('plans')}
-              className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors ${
-                currentTab === 'plans' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              Planos
-            </button>
+            {/* Bottom Row - Tabs */}
+            <div className="flex gap-1 -mb-px">
+              <button
+                onClick={() => setCurrentTab('services')}
+                className={`flex items-center gap-3 py-3 px-6 border-b-2 font-semibold text-sm transition-all duration-200 rounded-t-lg ${
+                  currentTab === 'services' 
+                    ? 'border-blue-600 text-blue-600 bg-blue-50' 
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Briefcase size={20} />
+                Serviços
+              </button>
+              <button
+                onClick={() => setCurrentTab('profile')}
+                className={`flex items-center gap-3 py-3 px-6 border-b-2 font-semibold text-sm transition-all duration-200 rounded-t-lg ${
+                  currentTab === 'profile' 
+                    ? 'border-blue-600 text-blue-600 bg-blue-50' 
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <User size={20} />
+                Perfil
+              </button>
+              <button
+                onClick={() => setCurrentTab('plans')}
+                className={`flex items-center gap-3 py-3 px-6 border-b-2 font-semibold text-sm transition-all duration-200 rounded-t-lg ${
+                  currentTab === 'plans' 
+                    ? 'border-blue-600 text-blue-600 bg-blue-50' 
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <CreditCard size={20} />
+                Planos
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -316,6 +364,23 @@ export default function ProviderDashboard() {
                     <span className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
                       {profile?.role === "provider" ? "Prestador" : profile?.role || "Usuário"}
                     </span>
+
+                    {/* Plano atual do usuário */}
+                    <div className="mt-4 p-3 bg-gray-50 rounded-lg text-sm">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="font-semibold text-gray-800">Plano atual</div>
+                        <div className="text-xs text-gray-600">{profile?.planActivatedAt ? new Date(profile.planActivatedAt).toLocaleDateString() : '—'}</div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="text-sm text-gray-700 font-medium">{profile?.planId || 'free'}</div>
+                        <div className="px-2 py-0.5 bg-white border rounded text-xs text-gray-600">Taxa: {profile?.platformFeePercent ? `${profile.platformFeePercent}%` : '—'}</div>
+                      </div>
+                      {profile?.planFeatures && (
+                        <div className="mt-3 text-xs text-gray-600">
+                          {Array.isArray(profile.planFeatures) ? profile.planFeatures.slice(0,3).join(' • ') : String(profile.planFeatures)}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   
                   {bio && (
@@ -371,15 +436,8 @@ export default function ProviderDashboard() {
                 </div>
                 <div className="flex gap-3">
                   <Link 
-                    to="/dashboard/service/new" 
-                    className="px-5 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-lg font-semibold hover:from-emerald-700 hover:to-emerald-800 transition flex items-center gap-2 shadow-lg"
-                  >
-                    <Plus size={20} />
-                    Novo Serviço
-                  </Link>
-                  <Link 
                     to="/profile/settings" 
-                    className="px-5 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition flex items-center gap-2"
+                    className="px-5 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
                   >
                     <Settings size={18} />
                     Configurações

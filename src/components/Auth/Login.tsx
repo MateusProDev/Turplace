@@ -52,6 +52,7 @@ export default function Login() {
           name,
           email,
           role: "prestador",
+          planId: "free",
           createdAt: serverTimestamp(),
         });
       }
@@ -81,6 +82,7 @@ export default function Login() {
             name: result.user.displayName,
             email: result.user.email,
             role: "prestador",
+            planId: "free",
             createdAt: serverTimestamp(),
           },
           { merge: true }
