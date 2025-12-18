@@ -12,6 +12,7 @@ import ProviderDashboard from './pages/ProviderDashboard';
 import HowItWorks from './pages/HowItWorks';
 import Partnerships from './pages/Partnerships';
 import Contact from './pages/Contact';
+import Wallet from './pages/Wallet';
 
 function App() {
   const { user } = useAuth();
@@ -30,6 +31,7 @@ function App() {
         <Route path="/how-it-works" element={<HowItWorks />} />
         <Route path="/partnerships" element={<Partnerships />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/wallet" element={<RequireAuth><Wallet /></RequireAuth>} />
       </Routes>
     </BrowserRouter>
   );
