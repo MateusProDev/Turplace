@@ -2,6 +2,7 @@ const Stripe = require('stripe');
 const initFirestore = require('./_lib/firebaseAdmin.cjs');
 
 module.exports = async (req, res) => {
+  console.log('[create-checkout-session] Entrada', { method: req.method, url: req.url, body: req.body });
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const db = initFirestore();
   console.log('[debug] create-checkout-session invoked', { method: req.method, headers: Object.keys(req.headers || {}), body: req.body });
@@ -99,9 +100,10 @@ module.exports = async (req, res) => {
     await orderRef.update({ stripeSessionId: session.id });
     console.log('[create-checkout-session] Ordem atualizada com sessionId', { orderId: orderRef.id, sessionId: session.id });
 
+    console.log('[create-checkout-session] Saída com sucesso', { sessionId: session.id });
     return res.status(200).json({ sessionId: session.id });
   } catch (err) {
-    console.error('[create-checkout-session] Erro geral', err);
+    console.error('[create-checkout-session] Saída com erro', err);
     return res.status(500).json({ error: err.message || 'Internal error' });
   }
 };

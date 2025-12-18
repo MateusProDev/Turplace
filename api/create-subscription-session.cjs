@@ -2,6 +2,7 @@ const Stripe = require('stripe');
 const initFirestore = require('./_lib/firebaseAdmin.cjs');
 
 module.exports = async (req, res) => {
+  console.log('[create-subscription-session] Entrada', { method: req.method, url: req.url, body: req.body });
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const db = initFirestore();
   console.log('[debug] create-subscription-session invoked', { method: req.method, headers: Object.keys(req.headers || {}), body: req.body });
@@ -70,9 +71,10 @@ module.exports = async (req, res) => {
     await orderRef.update({ stripeSessionId: session.id });
     console.log('[create-subscription-session] Ordem atualizada com sessionId', { orderId: orderRef.id, sessionId: session.id });
 
+    console.log('[create-subscription-session] Saída com sucesso', { sessionId: session.id, checkoutUrl: session.url, orderId: orderRef.id });
     return res.status(200).json({ sessionId: session.id, checkoutUrl: session.url, orderId: orderRef.id });
   } catch (err) {
-    console.error('[create-subscription-session] Erro geral', err);
+    console.error('[create-subscription-session] Saída com erro', err);
     return res.status(500).json({ error: err.message || 'Internal error' });
   }
 };

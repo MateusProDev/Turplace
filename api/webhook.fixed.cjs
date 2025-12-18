@@ -6,6 +6,7 @@ function now() { return new Date().toISOString(); }
 function safePrint(obj) { try { return JSON.stringify(obj, null, 2); } catch (e) { return String(obj); } }
 
 module.exports = async (req, res) => {
+  console.log('[webhook] Entrada', { method: req.method, url: req.url, headers: req.headers });
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const db = initFirestore();
   const sig = req.headers['stripe-signature'];
@@ -85,9 +86,10 @@ module.exports = async (req, res) => {
         }
       }
     }
+    console.log('[webhook] Saída com sucesso', { eventType: event && event.type });
     res.json({ received: true });
   } catch (err) {
-    console.error('[webhook] Erro ao processar evento', err);
+    console.error('[webhook] Saída com erro', err);
     res.status(500).send('Internal error');
   }
 };
