@@ -1,7 +1,7 @@
-const initFirestore = require('../_lib/firebaseAdmin.cjs');
+import initFirestore from '../_lib/firebaseAdmin.js';
 
 // Dev-only endpoint: apply plan for an orderId. Only enabled when NOT in production.
-module.exports = async (req, res) => {
+export default async (req, res) => {
   if (process.env.NODE_ENV === 'production') return res.status(403).send('Not allowed in production');
   try {
     const { orderId } = req.method === 'GET' ? req.query : req.body;

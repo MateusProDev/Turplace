@@ -1,7 +1,7 @@
-const Stripe = require('stripe');
-const initFirestore = require('./_lib/firebaseAdmin.cjs');
+import Stripe from 'stripe';
+import initFirestore from './_lib/firebaseAdmin.js';
 
-module.exports = async (req, res) => {
+export default async (req, res) => {
   console.log('[create-checkout-session] Entrada', { method: req.method, url: req.url, body: req.body });
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const db = initFirestore();

@@ -26,4 +26,4 @@ function initFirebase() {
   return admin.firestore();
 }
 
-module.exports = initFirebase;
+export default initFirebase;
