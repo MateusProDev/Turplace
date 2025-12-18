@@ -40,9 +40,10 @@ export default async (req, res) => {
     // Create new Express account with minimal configuration
     const account = await stripe.accounts.create({
       type: 'express',
-      country: 'BR', // Back to Brazil now that we know the issue
+      country: 'BR',
       email: userData.email,
       capabilities: {
+        card_payments: { requested: true },
         transfers: { requested: true },
       },
     });
