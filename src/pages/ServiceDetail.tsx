@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { 
   doc, 
   getDoc, 
+  getDocs,
   addDoc, 
   collection, 
   serverTimestamp,
@@ -17,14 +18,14 @@ import {
   Clock, 
   Users, 
   Shield, 
-  Star, 
   ChevronLeft,
   Share2,
   Eye,
   MessageCircle,
   CheckCircle,
   AlertCircle,
-  DollarSign
+  DollarSign,
+  Briefcase
 } from "lucide-react";
 
 interface ServiceData {
@@ -47,9 +48,18 @@ interface ServiceData {
   views?: number;
 }
 
+interface ProviderMiniProfile {
+  name: string;
+  email: string;
+  photoURL?: string;
+  since?: string;
+  totalServices?: number;
+}
+
 export default function ServiceDetail() {
   const { id } = useParams();
   const [service, setService] = useState<ServiceData | null>(null);
+  const [provider, setProvider] = useState<ProviderMiniProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [contacting, setContacting] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -59,22 +69,39 @@ export default function ServiceDetail() {
 
   useEffect(() => {
     if (!id) return;
-    
     const loadService = async () => {
       try {
         setLoading(true);
         const ref = doc(db, "services", id);
         const snap = await getDoc(ref);
-        
         if (snap.exists()) {
-          const data = { 
-            id: snap.id, 
-            ...snap.data() 
-          } as ServiceData;
-          
+          const data = { id: snap.id, ...snap.data() } as ServiceData;
           setService(data);
           setViews(data.views || 0);
-          
+          // Buscar mini perfil do provider
+          if (data.ownerId) {
+            const userRef = doc(db, "users", data.ownerId);
+            const userSnap = await getDoc(userRef);
+            let totalServices = 0;
+            if (userSnap.exists()) {
+              // Buscar quantos serviços esse provider tem
+              const servicesSnap = await getDocs(collection(db, "services"));
+              totalServices = servicesSnap.docs.filter((s: any) => s.data().ownerId === data.ownerId).length;
+              setProvider({
+                name: userSnap.data().name || data.ownerName,
+                email: userSnap.data().email || data.ownerEmail,
+                photoURL: userSnap.data().photoURL || '',
+                since: userSnap.data().createdAt ? new Date(userSnap.data().createdAt.seconds * 1000).getFullYear().toString() : undefined,
+                totalServices
+              });
+            } else {
+              setProvider({
+                name: data.ownerName,
+                email: data.ownerEmail,
+                totalServices: 1
+              });
+            }
+          }
           // Incrementar visualizações
           await updateDoc(ref, {
             views: increment(1),
@@ -90,7 +117,6 @@ export default function ServiceDetail() {
         setLoading(false);
       }
     };
-    
     loadService();
   }, [id]);
 
@@ -461,22 +487,32 @@ export default function ServiceDetail() {
               </div>
             </div>
 
-            {/* Card do Prestador */}
-            {service.ownerName && (
+            {/* Mini Perfil do Prestador */}
+            {provider && (
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Sobre o prestador</h3>
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-2xl font-bold text-blue-600">
-                      {service.ownerName.charAt(0)}
-                    </span>
-                  </div>
+                  {provider.photoURL ? (
+                    <img src={provider.photoURL} alt={provider.name} className="w-16 h-16 rounded-full object-cover border-2 border-blue-200" />
+                  ) : (
+                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-2xl font-bold text-blue-600">
+                        {provider.name.charAt(0)}
+                      </span>
+                    </div>
+                  )}
                   <div>
-                    <h4 className="font-bold text-gray-900">{service.ownerName}</h4>
-                    <p className="text-sm text-gray-600">{service.ownerEmail}</p>
+                    <h4 className="font-bold text-gray-900">{provider.name}</h4>
+                    <p className="text-sm text-gray-600">{provider.email}</p>
+                    {provider.since && (
+                      <span className="inline-block bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-xs font-medium mt-1">No marketplace desde {provider.since}</span>
+                    )}
                   </div>
                 </div>
-                
+                <div className="flex items-center gap-2 text-gray-600 mb-2">
+                  <Briefcase size={16} className="text-blue-500" />
+                  <span className="text-sm">{provider.totalServices || 1} serviço{provider.totalServices === 1 ? '' : 's'} publicado{provider.totalServices === 1 ? '' : 's'} no marketplace</span>
+                </div>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 text-gray-600">
                     <CheckCircle size={16} className="text-green-500" />
@@ -485,10 +521,6 @@ export default function ServiceDetail() {
                   <div className="flex items-center gap-2 text-gray-600">
                     <MessageCircle size={16} className="text-blue-500" />
                     <span className="text-sm">Responde rapidamente</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Star size={16} className="text-yellow-500" />
-                    <span className="text-sm">Participa do marketplace desde 2024</span>
                   </div>
                 </div>
               </div>
