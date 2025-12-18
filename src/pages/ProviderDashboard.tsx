@@ -6,6 +6,7 @@ import Logout from "../components/Auth/Logout";
 import { uploadToCloudinary } from "../utils/cloudinary";
 import { Link, useNavigate } from "react-router-dom";
 import ConfirmModal from "../components/Provider/ConfirmModal";
+import logoSemFundo from "../assets/logosemfundo.png";
 import { 
   Edit2, 
   Trash2, 
@@ -288,7 +289,7 @@ export default function ProviderDashboard() {
               <div className="relative mb-6">
                 <div className="w-32 h-32 mx-auto rounded-full overflow-hidden border-4 border-white shadow-lg">
                   <img
-                    src={photo || "/src/assets/logosemfundo.png"}
+                    src={photo || logoSemFundo}
                     alt="Foto do perfil"
                     className="w-full h-full object-cover"
                   />
@@ -565,7 +566,7 @@ export default function ProviderDashboard() {
               <div className="relative mb-6">
                 <div className="w-32 h-32 mx-auto rounded-full overflow-hidden border-4 border-white shadow-lg">
                   <img
-                    src={photo || "/src/assets/logosemfundo.png"}
+                    src={photo || logoSemFundo}
                     alt="Foto do perfil"
                     className="w-full h-full object-cover"
                   />

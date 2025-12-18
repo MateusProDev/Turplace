@@ -5,6 +5,7 @@ import { db } from '../utils/firebase';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import { useNavigate } from 'react-router-dom';
 import { Save, Palette, Type, User, Settings, ArrowLeft } from 'lucide-react';
+import logoSemFundo from '../assets/logosemfundo.png';
 
 interface DashboardSettings {
   primaryColor: string;
@@ -270,7 +271,7 @@ export default function ProfileSettings() {
                 <div className="relative">
                   <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg">
                     <img
-                      src={photo || "/src/assets/logosemfundo.png"}
+                      src={photo || logoSemFundo}
                       alt="Foto do perfil"
                       className="w-full h-full object-cover"
                     />
