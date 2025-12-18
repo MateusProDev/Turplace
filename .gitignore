@@ -8,6 +8,7 @@ node_modules/
 .env.test
 .env.*.local
 dist/
+serviceAccount.json
 build/
 .vercel/
 /.idea
