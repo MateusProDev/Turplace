@@ -21,6 +21,7 @@ export default async (req, res) => {
 
     for (const doc of ordersSnapshot.docs) {
       const order = doc.data();
+      if (!order.serviceId) continue; // Skip subscription orders
       // Buscar service para obter providerId
       const serviceDoc = await db.collection('services').doc(order.serviceId).get();
       if (!serviceDoc.exists || serviceDoc.data().ownerId !== userId) continue;
@@ -32,8 +33,13 @@ export default async (req, res) => {
       const providerDoc = await db.collection('users').doc(userId).get();
       const provider = providerDoc.data();
       const planId = provider?.planId || 'free';
-      const planDoc = await db.collection('plans').doc(planId).get();
-      const commissionPercent = planDoc.exists ? planDoc.data().commissionPercent : 15;
+      // Hardcoded commissions since plans are static
+      const commissions = {
+        free: 12,
+        professional: 8,
+        premium: 3.99
+      };
+      const commissionPercent = commissions[planId] || 15;
 
       const commission = (amount * commissionPercent) / 100;
       totalCommissions += commission;
@@ -58,6 +64,7 @@ export default async (req, res) => {
     const pendingSales = [];
     for (const doc of pendingSnapshot.docs) {
       const order = doc.data();
+      if (!order.serviceId) continue; // Skip subscription orders
       const serviceDoc = await db.collection('services').doc(order.serviceId).get();
       if (!serviceDoc.exists || serviceDoc.data().ownerId !== userId) continue;
 
