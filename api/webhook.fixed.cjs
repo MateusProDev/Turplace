@@ -1,13 +1,13 @@
 const Stripe = require('stripe');
 const initFirestore = require('./_lib/firebaseAdmin.cjs');
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-const db = initFirestore();
 
 function now() { return new Date().toISOString(); }
 
 function safePrint(obj) { try { return JSON.stringify(obj, null, 2); } catch (e) { return String(obj); } }
 
 module.exports = async (req, res) => {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+  const db = initFirestore();
   const sig = req.headers['stripe-signature'];
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 

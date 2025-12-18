@@ -1,10 +1,9 @@
 const Stripe = require('stripe');
 const initFirestore = require('./_lib/firebaseAdmin.cjs');
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-const db = initFirestore();
-
 module.exports = async (req, res) => {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+  const db = initFirestore();
   console.log('[debug] create-checkout-session invoked', { method: req.method, headers: Object.keys(req.headers || {}) });
   try {
     // Allow GET for healthcheck/debug
