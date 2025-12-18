@@ -101,19 +101,28 @@ export default function ProfileSettings() {
     setMessage('');
 
     try {
+      console.log('Iniciando conexão com Stripe...');
       const response = await fetch('/api/create-stripe-account', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.uid }),
       });
 
-      if (!response.ok) throw new Error('Erro ao conectar conta Stripe');
+      console.log('Resposta da API:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao conectar conta Stripe');
+      }
 
       const { url } = await response.json();
-      window.location.href = url; // Redirect to Stripe onboarding
+      console.log('URL de onboarding:', url);
+
+      // Redirect to Stripe onboarding
+      window.location.href = url;
     } catch (error) {
       console.error('Erro ao conectar Stripe:', error);
-      setMessage('Erro ao conectar conta Stripe. Tente novamente.');
+      setMessage(`Erro ao conectar conta Stripe: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     } finally {
       setLoading(false);
     }

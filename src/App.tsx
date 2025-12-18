@@ -1,5 +1,5 @@
 import ProfileSettings from './pages/ProfileSettings';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Landing from './pages/Landing';
 import Catalog from './pages/Catalog';
 import Login from './components/Auth/Login';
@@ -21,6 +21,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/catalog" element={<Catalog />} />
+        <Route path="/profile" element={<Navigate to="/profile/settings" replace />} />
         <Route path="/profile/settings" element={<ProfileSettings />} />
         <Route path="/login" element={user ? <RequireAuth><ProviderDashboard /></RequireAuth> : <Login />} />
         <Route path="/dashboard" element={<RequireAuth><ServiceForm /></RequireAuth>} />

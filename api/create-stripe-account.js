@@ -20,8 +20,8 @@ export default async (req, res) => {
       // Already connected, create account link for dashboard
       const accountLink = await stripe.accountLinks.create({
         account: userData.stripeAccountId,
-        refresh_url: `${process.env.FRONTEND_URL}/profile`,
-        return_url: `${process.env.FRONTEND_URL}/profile`,
+        refresh_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/profile/settings`,
+        return_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/profile/settings`,
         type: 'account_onboarding',
       });
       return res.json({ url: accountLink.url });
@@ -46,8 +46,8 @@ export default async (req, res) => {
     // Create account link for onboarding
     const accountLink = await stripe.accountLinks.create({
       account: account.id,
-      refresh_url: `${process.env.FRONTEND_URL}/profile`,
-      return_url: `${process.env.FRONTEND_URL}/profile`,
+      refresh_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/profile/settings`,
+      return_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/profile/settings`,
       type: 'account_onboarding',
     });
 

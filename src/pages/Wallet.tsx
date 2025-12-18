@@ -229,10 +229,10 @@ const Wallet = () => {
         ) : (
           <div>
             <p className="mb-4">Para sacar dinheiro, conecte sua conta Stripe ou cadastre sua chave PIX no perfil.</p>
-            <Link to="/profile" className="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 mr-4">
+            <Link to="/profile/settings" className="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 mr-4">
               Conectar Stripe
             </Link>
-            <Link to="/profile" className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700">
+            <Link to="/profile/settings" className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700">
               Cadastrar PIX
             </Link>
           </div>
