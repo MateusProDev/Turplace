@@ -400,7 +400,7 @@ export default function ProfileSettings() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Conta Stripe para Recebimentos
               </label>
-              {stripeAccountId ? (
+              {stripeAccountId && stripeAccountId.trim() !== '' ? (
                 <div className="space-y-3">
                   <div className="p-4 bg-green-100 text-green-700 rounded-lg border border-green-200">
                     Conta Stripe conectada com sucesso!
