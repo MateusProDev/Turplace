@@ -125,11 +125,14 @@ export default function ProfileSettings() {
     setMessage('');
 
     try {
+      console.log('Salvando perfil...');
       let photoURL = photo;
       if (photoFile) {
+        console.log('Fazendo upload da foto...');
         photoURL = await uploadToCloudinary(photoFile);
       }
 
+      console.log('Atualizando Firestore...');
       await updateDoc(doc(db, 'users', user.uid), {
         name: name.trim(),
         bio: bio.trim(),
@@ -138,6 +141,7 @@ export default function ProfileSettings() {
         updatedAt: new Date(),
       });
 
+      console.log('Perfil salvo com sucesso!');
       setMessage('Perfil salvo com sucesso!');
       setTimeout(() => setMessage(''), 3000);
     } catch (error) {

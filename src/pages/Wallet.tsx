@@ -27,6 +27,7 @@ interface WalletData {
   pendingAmount: number;
   sales: Sale[];
   pendingSales: PendingSale[];
+  stripeAccountId: string;
   chavePix: string;
 }
 
@@ -40,6 +41,7 @@ const Wallet = () => {
     pendingAmount: 0,
     sales: [],
     pendingSales: [],
+    stripeAccountId: '',
     chavePix: '',
   });
   const [loading, setLoading] = useState(true);
@@ -82,18 +84,18 @@ const Wallet = () => {
     }
   }, [user]);
 
-  const handleWithdraw = async (amount: number) => {
+  const handleWithdraw = async (amount: number, method: 'stripe' | 'pix') => {
     if (!user?.uid || amount <= 0) return;
     setLoading(true);
     try {
       const response = await fetch('/api/payout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.uid, amount }),
+        body: JSON.stringify({ userId: user.uid, amount, method }),
       });
       if (!response.ok) throw new Error('Erro ao processar saque');
       const { delayHours } = await response.json();
-      alert(`Saque solicitado com sucesso! O dinheiro será enviado via PIX em aproximadamente ${delayHours} horas.`);
+      alert(`Saque solicitado com sucesso! O dinheiro será enviado ${method === 'stripe' ? 'via Stripe' : 'via PIX'} em aproximadamente ${delayHours} horas.`);
       // Refresh data
       window.location.reload();
     } catch (error) {
@@ -199,24 +201,39 @@ const Wallet = () => {
 
       {/* Withdrawal Section */}
       <div className="mt-8 bg-white p-6 rounded-lg shadow">
-        <h2 className="text-2xl font-bold mb-4">Sacar Dinheiro via PIX</h2>
-        {data.chavePix ? (
+        <h2 className="text-2xl font-bold mb-4">Sacar Dinheiro</h2>
+        {data.stripeAccountId ? (
+          <div>
+            <p className="mb-2">Conta Stripe conectada</p>
+            <p className="mb-4">Saldo disponível: R$ {data.availableBalance.toFixed(2)}</p>
+            <button
+              onClick={() => handleWithdraw(data.availableBalance, 'stripe')}
+              disabled={data.availableBalance <= 0 || loading}
+              className="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 disabled:opacity-50 mr-4"
+            >
+              Sacar via Stripe
+            </button>
+          </div>
+        ) : data.chavePix ? (
           <div>
             <p className="mb-2">Chave PIX: {data.chavePix}</p>
             <p className="mb-4">Saldo disponível: R$ {data.availableBalance.toFixed(2)}</p>
             <button
-              onClick={() => handleWithdraw(data.availableBalance)}
+              onClick={() => handleWithdraw(data.availableBalance, 'pix')}
               disabled={data.availableBalance <= 0 || loading}
               className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50"
             >
-              Sacar Tudo
+              Sacar via PIX
             </button>
           </div>
         ) : (
           <div>
-            <p className="mb-4">Para sacar dinheiro, cadastre sua chave PIX no perfil.</p>
-            <Link to="/profile" className="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700">
-              Cadastrar Chave PIX
+            <p className="mb-4">Para sacar dinheiro, conecte sua conta Stripe ou cadastre sua chave PIX no perfil.</p>
+            <Link to="/profile" className="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 mr-4">
+              Conectar Stripe
+            </Link>
+            <Link to="/profile" className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700">
+              Cadastrar PIX
             </Link>
           </div>
         )}
