@@ -25,6 +25,7 @@ import {
   BarChart3
 } from "lucide-react";
 import Pricing from "./Pricing";
+import Wallet from "./Wallet";
 
 export default function ProviderDashboard() {
   const { user } = useAuth();
@@ -39,7 +40,7 @@ export default function ProviderDashboard() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [currentTab, setCurrentTab] = useState<'services' | 'profile' | 'plans'>('services');
+  const [currentTab, setCurrentTab] = useState<'services' | 'profile' | 'plans' | 'wallet'>('services');
 
   // Load dashboard settings on mount
   useEffect(() => {
@@ -209,70 +210,81 @@ export default function ProviderDashboard() {
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-4 py-6">
+          <div className="flex flex-col gap-4 py-4 sm:py-6">
             {/* Top Row - Title and Actions */}
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
-                  <BarChart3 className="text-white" size={28} />
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="p-2 sm:p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg">
+                  <BarChart3 className="text-white" size={24} />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-                  <p className="text-gray-600">Gerencie seus serviços, perfil e planos</p>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard</h1>
+                  <p className="text-gray-600 text-sm sm:text-base">Gerencie seus serviços, perfil e planos</p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
                 <Link
                   to="/catalog"
-                  className="px-4 py-2.5 border border-blue-600 text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
+                  className="px-3 sm:px-4 py-2 sm:py-2.5 border border-blue-600 text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md text-sm sm:text-base"
                 >
-                  <Eye size={18} />
+                  <Eye size={16} />
                   Ver Catálogo
                 </Link>
                 <Link 
                   to="/dashboard/service/new" 
-                  className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-lg font-semibold hover:from-emerald-700 hover:to-emerald-800 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md"
+                  className="px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-lg font-semibold hover:from-emerald-700 hover:to-emerald-800 transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md text-sm sm:text-base"
                 >
-                  <Plus size={18} />
+                  <Plus size={16} />
                   Novo Serviço
                 </Link>
               </div>
             </div>
 
             {/* Bottom Row - Tabs */}
-            <div className="flex gap-1 -mb-px">
+            <div className="flex flex-wrap gap-1 -mb-px overflow-x-auto">
               <button
                 onClick={() => setCurrentTab('services')}
-                className={`flex items-center gap-3 py-3 px-6 border-b-2 font-semibold text-sm transition-all duration-200 rounded-t-lg ${
+                className={`flex items-center gap-2 sm:gap-3 py-2 sm:py-3 px-3 sm:px-6 border-b-2 font-semibold text-xs sm:text-sm transition-all duration-200 rounded-t-lg whitespace-nowrap ${
                   currentTab === 'services' 
                     ? 'border-blue-600 text-blue-600 bg-blue-50' 
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <Briefcase size={20} />
+                <Briefcase size={18} />
                 Serviços
               </button>
               <button
                 onClick={() => setCurrentTab('profile')}
-                className={`flex items-center gap-3 py-3 px-6 border-b-2 font-semibold text-sm transition-all duration-200 rounded-t-lg ${
+                className={`flex items-center gap-2 sm:gap-3 py-2 sm:py-3 px-3 sm:px-6 border-b-2 font-semibold text-xs sm:text-sm transition-all duration-200 rounded-t-lg whitespace-nowrap ${
                   currentTab === 'profile' 
                     ? 'border-blue-600 text-blue-600 bg-blue-50' 
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <User size={20} />
+                <User size={18} />
                 Perfil
               </button>
               <button
                 onClick={() => setCurrentTab('plans')}
-                className={`flex items-center gap-3 py-3 px-6 border-b-2 font-semibold text-sm transition-all duration-200 rounded-t-lg ${
+                className={`flex items-center gap-2 sm:gap-3 py-2 sm:py-3 px-3 sm:px-6 border-b-2 font-semibold text-xs sm:text-sm transition-all duration-200 rounded-t-lg whitespace-nowrap ${
                   currentTab === 'plans' 
                     ? 'border-blue-600 text-blue-600 bg-blue-50' 
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <CreditCard size={20} />
+                <CreditCard size={18} />
                 Planos
+              </button>
+              <button
+                onClick={() => setCurrentTab('wallet')}
+                className={`flex items-center gap-2 sm:gap-3 py-2 sm:py-3 px-3 sm:px-6 border-b-2 font-semibold text-xs sm:text-sm transition-all duration-200 rounded-t-lg whitespace-nowrap ${
+                  currentTab === 'wallet' 
+                    ? 'border-blue-600 text-blue-600 bg-blue-50' 
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <BarChart3 size={18} />
+                Carteira
               </button>
             </div>
           </div>
@@ -466,7 +478,7 @@ export default function ProviderDashboard() {
                   </Link>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {services.map(service => {
                     const statusBadge = getStatusBadge(service.status);
                     return (
@@ -475,19 +487,23 @@ export default function ProviderDashboard() {
                         className="bg-white border border-gray-200 rounded-xl p-4 hover:border-blue-300 hover:shadow-md transition cursor-pointer group"
                         onClick={() => navigate(`/service/${service.id}`)}
                       >
-                        <div className="flex justify-between items-start mb-3">
-                          <div className="flex-1">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 gap-2">
+                          <div className="flex-1 min-w-0">
                             <h3 className="font-bold text-lg text-gray-900 group-hover:text-blue-700 transition line-clamp-1">
                               {service.title}
                             </h3>
-                            <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
-                              <Briefcase size={12} />
-                              <span>{service.category}</span>
-                              <MapPin size={12} className="ml-2" />
-                              <span>{service.city}</span>
+                            <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 mt-1">
+                              <div className="flex items-center gap-1">
+                                <Briefcase size={12} />
+                                <span className="truncate">{service.category}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <MapPin size={12} />
+                                <span className="truncate">{service.city}</span>
+                              </div>
                             </div>
                           </div>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusBadge.color}`}>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${statusBadge.color}`}>
                             {statusBadge.text}
                           </span>
                         </div>
@@ -497,25 +513,25 @@ export default function ProviderDashboard() {
                         </p>
                         
                         {service.images && service.images.length > 0 && (
-                          <div className="flex gap-2 mb-4">
+                          <div className="flex gap-2 mb-4 overflow-x-auto">
                             {service.images.slice(0, 3).map((img: string, i: number) => (
                               <img 
                                 key={i} 
                                 src={img} 
                                 alt={`Serviço ${i + 1}`}
-                                className="w-16 h-16 object-cover rounded-lg border"
+                                className="w-16 h-16 object-cover rounded-lg border flex-shrink-0"
                               />
                             ))}
                             {service.images.length > 3 && (
-                              <div className="w-16 h-16 bg-gray-100 rounded-lg border flex items-center justify-center text-gray-500 text-xs">
+                              <div className="w-16 h-16 bg-gray-100 rounded-lg border flex items-center justify-center text-gray-500 text-xs flex-shrink-0">
                                 +{service.images.length - 3}
                               </div>
                             )}
                           </div>
                         )}
                         
-                        <div className="flex justify-between items-center pt-4 border-t border-gray-100">
-                          <div className="flex gap-2">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-4 border-t border-gray-100 gap-2">
+                          <div className="flex flex-wrap gap-2">
                             <button
                               className="px-3 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 text-xs font-semibold transition flex items-center gap-1"
                               onClick={(e) => {
@@ -539,7 +555,7 @@ export default function ProviderDashboard() {
                             </button>
                           </div>
                           <button
-                            className="px-3 py-1 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs font-semibold transition flex items-center gap-1"
+                            className="px-3 py-1 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs font-semibold transition flex items-center gap-1 w-full sm:w-auto justify-center"
                             onClick={(e) => {
                               e.stopPropagation();
                               navigate(`/service/${service.id}`);
@@ -651,6 +667,12 @@ export default function ProviderDashboard() {
         {currentTab === 'plans' && (
           <div className="max-w-6xl mx-auto">
             <Pricing />
+          </div>
+        )}
+
+        {currentTab === 'wallet' && (
+          <div className="max-w-6xl mx-auto">
+            <Wallet />
           </div>
         )}
       </div>
