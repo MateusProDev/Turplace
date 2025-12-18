@@ -3,7 +3,7 @@
 module.exports = {
   'create-subscription-session': require('./create-subscription-session.cjs'),
   'create-checkout-session': require('./create-checkout-session.cjs'),
-  'webhook': require('./webhook.fixed.cjs'),
+  'webhook': require('./webhook.cjs'),
   'dev/apply-plan': require('./dev/apply-plan.cjs'),
-  'status': require('./status.js')
+  'status': require('./status.cjs')
 }
