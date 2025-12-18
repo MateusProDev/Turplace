@@ -28,7 +28,7 @@ import Pricing from "./Pricing";
 import Wallet from "./Wallet";
 
 export default function ProviderDashboard() {
-  const { user } = useAuth();
+  const { user, userData } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [services, setServices] = useState<any[]>([]);
   const [editMode, setEditMode] = useState(false);
@@ -223,6 +223,14 @@ export default function ProviderDashboard() {
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                {userData?.isAdmin && (
+                  <Link
+                    to="/admin"
+                    className="px-3 sm:px-4 py-2 sm:py-2.5 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md text-sm sm:text-base"
+                  >
+                    Admin
+                  </Link>
+                )}
                 <Link
                   to="/catalog"
                   className="px-3 sm:px-4 py-2 sm:py-2.5 border border-blue-600 text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md text-sm sm:text-base"

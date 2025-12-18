@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { Loader } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface Sale {
   id: string;
@@ -26,6 +27,7 @@ interface WalletData {
   pendingAmount: number;
   sales: Sale[];
   pendingSales: PendingSale[];
+  chavePix: string;
 }
 
 const Wallet = () => {
@@ -37,7 +39,8 @@ const Wallet = () => {
     availableBalance: 0,
     pendingAmount: 0,
     sales: [],
-    pendingSales: []
+    pendingSales: [],
+    chavePix: '',
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -78,6 +81,28 @@ const Wallet = () => {
         .finally(() => setLoading(false));
     }
   }, [user]);
+
+  const handleWithdraw = async (amount: number) => {
+    if (!user?.uid || amount <= 0) return;
+    setLoading(true);
+    try {
+      const response = await fetch('/api/payout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.uid, amount }),
+      });
+      if (!response.ok) throw new Error('Erro ao processar saque');
+      const { delayHours } = await response.json();
+      alert(`Saque solicitado com sucesso! O dinheiro será enviado via PIX em aproximadamente ${delayHours} horas.`);
+      // Refresh data
+      window.location.reload();
+    } catch (error) {
+      console.error('Erro no saque:', error);
+      alert('Erro ao solicitar saque. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (error) return <div>{error}</div>;
 
@@ -170,6 +195,31 @@ const Wallet = () => {
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Withdrawal Section */}
+      <div className="mt-8 bg-white p-6 rounded-lg shadow">
+        <h2 className="text-2xl font-bold mb-4">Sacar Dinheiro via PIX</h2>
+        {data.chavePix ? (
+          <div>
+            <p className="mb-2">Chave PIX: {data.chavePix}</p>
+            <p className="mb-4">Saldo disponível: R$ {data.availableBalance.toFixed(2)}</p>
+            <button
+              onClick={() => handleWithdraw(data.availableBalance)}
+              disabled={data.availableBalance <= 0 || loading}
+              className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50"
+            >
+              Sacar Tudo
+            </button>
+          </div>
+        ) : (
+          <div>
+            <p className="mb-4">Para sacar dinheiro, cadastre sua chave PIX no perfil.</p>
+            <Link to="/profile" className="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700">
+              Cadastrar Chave PIX
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );

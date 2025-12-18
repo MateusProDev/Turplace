@@ -77,14 +77,33 @@ export default async (req, res) => {
       });
     }
 
+    // Buscar payouts pendentes
+    const payoutsSnapshot = await db.collection('payouts')
+      .where('userId', '==', userId)
+      .where('status', '==', 'pending')
+      .get();
+
+    let withdrawnAmount = 0;
+    payoutsSnapshot.forEach(doc => {
+      withdrawnAmount += doc.data().amount || 0;
+    });
+
+    const availableBalance = totalReceived - withdrawnAmount;
+
+    // Get user data for stripe account
+    const userDoc = await db.collection('users').doc(userId).get();
+    const userData = userDoc.data();
+    const chavePix = userData?.chavePix || '';
+
     res.json({
       totalSales,
       totalCommissions,
       totalReceived,
-      availableBalance: totalReceived, // Simplificado, assumir tudo disponível
+      availableBalance,
       pendingAmount,
       sales,
       pendingSales,
+      chavePix,
     });
   } catch (err) {
     console.error('[wallet] Error:', err);

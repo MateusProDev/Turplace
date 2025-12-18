@@ -45,6 +45,8 @@ export default function ProfileSettings() {
   const [bio, setBio] = useState('');
   const [photo, setPhoto] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
+  const [chavePix, setChavePix] = useState('');
 
   // Dashboard settings state
   const [dashboardSettings, setDashboardSettings] = useState<DashboardSettings>({
@@ -67,6 +69,8 @@ export default function ProfileSettings() {
           setName(data.name || '');
           setBio(data.bio || '');
           setPhoto(data.photoURL || null);
+          setStripeAccountId(data.stripeAccountId || null);
+          setChavePix(data.chavePix || '');
 
           // Load dashboard settings
           if (data.dashboardSettings) {
@@ -91,6 +95,30 @@ export default function ProfileSettings() {
     }
   };
 
+  const handleConnectStripe = async () => {
+    if (!user) return;
+    setLoading(true);
+    setMessage('');
+
+    try {
+      const response = await fetch('/api/create-stripe-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.uid }),
+      });
+
+      if (!response.ok) throw new Error('Erro ao conectar conta Stripe');
+
+      const { url } = await response.json();
+      window.location.href = url; // Redirect to Stripe onboarding
+    } catch (error) {
+      console.error('Erro ao conectar Stripe:', error);
+      setMessage('Erro ao conectar conta Stripe. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSaveProfile = async () => {
     if (!user) return;
     setLoading(true);
@@ -98,7 +126,6 @@ export default function ProfileSettings() {
 
     try {
       let photoURL = photo;
-
       if (photoFile) {
         photoURL = await uploadToCloudinary(photoFile);
       }
@@ -107,6 +134,7 @@ export default function ProfileSettings() {
         name: name.trim(),
         bio: bio.trim(),
         photoURL,
+        chavePix: chavePix.trim(),
         updatedAt: new Date(),
       });
 
@@ -328,6 +356,58 @@ export default function ProfileSettings() {
               <div className="text-xs text-gray-500 text-right mt-1">
                 {bio.length}/500 caracteres
               </div>
+            </div>
+
+            {/* Chave PIX */}
+            <div className="mb-8">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Chave PIX
+              </label>
+              <input
+                type="text"
+                value={chavePix}
+                onChange={(e) => setChavePix(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                placeholder="Sua chave PIX (CPF, email, telefone, etc.)"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Necessária para receber pagamentos via PIX.
+              </p>
+            </div>
+
+            {/* Stripe Account */}
+            <div className="mb-8">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Conta Stripe para Recebimentos
+              </label>
+              {stripeAccountId ? (
+                <div className="p-4 bg-green-100 text-green-700 rounded-lg border border-green-200">
+                  Conta Stripe conectada com sucesso!
+                </div>
+              ) : (
+                <button
+                  onClick={handleConnectStripe}
+                  disabled={loading}
+                  className="w-full bg-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-purple-700 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {loading ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                      </svg>
+                      Conectando...
+                    </>
+                  ) : (
+                    <>
+                      Conectar Conta Stripe
+                    </>
+                  )}
+                </button>
+              )}
+              <p className="text-xs text-gray-500 mt-2">
+                Conecte sua conta Stripe para receber pagamentos dos seus serviços.
+              </p>
             </div>
 
             <button
