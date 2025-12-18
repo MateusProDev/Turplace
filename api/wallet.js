@@ -93,7 +93,7 @@ export default async (req, res) => {
     // Get user data for stripe account
     const userDoc = await db.collection('users').doc(userId).get();
     const userData = userDoc.data();
-    const stripeAccountId = userData?.stripeAccountId || '';
+    const stripeAccountId = userData?.stripeAccountId || null;
     const chavePix = userData?.chavePix || '';
 
     res.json({

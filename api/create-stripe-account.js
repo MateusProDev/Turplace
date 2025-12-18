@@ -23,7 +23,7 @@ export default async (req, res) => {
     const userData = userDoc.data();
     console.log('[create-stripe-account] User data:', { email: userData.email, hasStripeId: !!userData.stripeAccountId });
     
-    if (userData.stripeAccountId) {
+    if (userData.stripeAccountId && userData.stripeAccountId.trim() !== '') {
       console.log('[create-stripe-account] User already has Stripe account, creating link');
       // Already connected, create account link for dashboard
       const accountLink = await stripe.accountLinks.create({

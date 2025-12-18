@@ -27,7 +27,7 @@ interface WalletData {
   pendingAmount: number;
   sales: Sale[];
   pendingSales: PendingSale[];
-  stripeAccountId: string;
+  stripeAccountId: string | null;
   chavePix: string;
 }
 
@@ -41,7 +41,7 @@ const Wallet = () => {
     pendingAmount: 0,
     sales: [],
     pendingSales: [],
-    stripeAccountId: '',
+    stripeAccountId: null,
     chavePix: '',
   });
   const [loading, setLoading] = useState(true);
@@ -202,7 +202,7 @@ const Wallet = () => {
       {/* Withdrawal Section */}
       <div className="mt-8 bg-white p-6 rounded-lg shadow">
         <h2 className="text-2xl font-bold mb-4">Sacar Dinheiro</h2>
-        {data.stripeAccountId ? (
+        {data.stripeAccountId && data.stripeAccountId.trim() !== '' ? (
           <div>
             <p className="mb-2">Conta Stripe conectada</p>
             <p className="mb-4">Saldo disponível: R$ {data.availableBalance.toFixed(2)}</p>
