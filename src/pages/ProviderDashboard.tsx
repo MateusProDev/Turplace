@@ -261,17 +261,17 @@ export default function ProviderDashboard() {
                 <Briefcase size={18} />
                 Serviços
               </button>
-              <button
-                onClick={() => setCurrentTab('profile')}
-                className={`flex items-center gap-2 sm:gap-3 py-2 sm:py-3 px-3 sm:px-6 border-b-2 font-semibold text-xs sm:text-sm transition-all duration-200 rounded-t-lg whitespace-nowrap ${
-                  currentTab === 'profile' 
-                    ? 'border-blue-600 text-blue-600 bg-blue-50' 
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <User size={18} />
-                Perfil
-              </button>
+                <button
+                  onClick={() => navigate('/profile/settings')}
+                  className={`flex items-center gap-2 sm:gap-3 py-2 sm:py-3 px-3 sm:px-6 border-b-2 font-semibold text-xs sm:text-sm transition-all duration-200 rounded-t-lg whitespace-nowrap ${
+                    window.location.pathname === '/profile/settings'
+                      ? 'border-blue-600 text-blue-600 bg-blue-50'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <User size={18} />
+                  Perfil Completo
+                </button>
               <button
                 onClick={() => setCurrentTab('plans')}
                 className={`flex items-center gap-2 sm:gap-3 py-2 sm:py-3 px-3 sm:px-6 border-b-2 font-semibold text-xs sm:text-sm transition-all duration-200 rounded-t-lg whitespace-nowrap ${
