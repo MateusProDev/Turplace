@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getAuth, connectAuthEmulator, setPersistence, browserLocalPersistence } from "firebase/auth";
+import { getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -15,3 +15,17 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+
+// Configure Firebase Auth for better compatibility
+auth.useDeviceLanguage();
+
+// Set persistence to local (default)
+setPersistence(auth, browserLocalPersistence).catch((error) => {
+  console.warn('Firebase Auth persistence error:', error);
+});
+
+// Configure auth domain for production
+if (!import.meta.env.DEV) {
+  // Ensure we're using the correct auth domain
+  console.log('Firebase Auth domain:', auth.app.options.authDomain);
+}

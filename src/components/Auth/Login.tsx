@@ -14,6 +14,10 @@ import {
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 const googleProvider = new GoogleAuthProvider();
+// Configure Google provider
+googleProvider.setCustomParameters({
+  prompt: 'select_account'
+});
 
 
 export default function Login() {
@@ -74,8 +78,12 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
+      console.log("Login.tsx: Iniciando signInWithPopup");
       const result = await signInWithPopup(auth, googleProvider);
+      console.log("Login.tsx: signInWithPopup sucesso", result.user.email);
+
       if (result.user) {
+        console.log("Login.tsx: Salvando dados do usuário no Firestore");
         await setDoc(
           doc(db, "users", result.user.uid),
           {
@@ -88,10 +96,28 @@ export default function Login() {
           },
           { merge: true }
         );
+        console.log("Login.tsx: Dados salvos com sucesso");
       }
       // O redirecionamento será feito pelo efeito do useAuth
     } catch (err: any) {
-      setError("Falha ao entrar com Google: " + err.message);
+      console.error("Login.tsx: Erro no Google login", err);
+
+      // Tratamento específico de erros do Firebase Auth
+      let errorMessage = "Falha ao entrar com Google";
+
+      if (err.code === 'auth/popup-closed-by-user') {
+        errorMessage = "Login cancelado pelo usuário";
+      } else if (err.code === 'auth/popup-blocked') {
+        errorMessage = "Popup bloqueado pelo navegador. Permita popups para este site.";
+      } else if (err.code === 'auth/cancelled-popup-request') {
+        errorMessage = "Login cancelado";
+      } else if (err.code === 'auth/network-request-failed') {
+        errorMessage = "Erro de rede. Verifique sua conexão.";
+      } else if (err.message) {
+        errorMessage += ": " + err.message;
+      }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
