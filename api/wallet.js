@@ -29,7 +29,7 @@ export default async (req, res) => {
       totalSales += amount;
 
       // Calcular comissão baseada no plano do provider
-      const providerDoc = await db.collection('providers').doc(userId).get();
+      const providerDoc = await db.collection('users').doc(userId).get();
       const provider = providerDoc.data();
       const planId = provider?.planId || 'free';
       const planDoc = await db.collection('plans').doc(planId).get();
