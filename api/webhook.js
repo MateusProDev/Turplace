@@ -85,6 +85,44 @@ module.exports = async (req, res) => {
           console.warn('[webhook] Plano não encontrado para assinatura', { priceId: order.priceId });
         }
       }
+    } else if (event.type === 'invoice.payment_succeeded') {
+      const invoice = event.data.object;
+      console.log('[webhook] invoice.payment_succeeded', { invoiceId: invoice.id, subscriptionId: invoice.subscription });
+      if (invoice.subscription) {
+        // Pagamento recorrente bem-sucedido para assinatura
+        const subId = invoice.subscription;
+        // Buscar usuário pela subscriptionId no Firestore (assumindo que armazenamos)
+        const ordersQuery = await db.collection('orders').where('subscriptionId', '==', subId).limit(1).get();
+        if (!ordersQuery.empty) {
+          const orderDoc = ordersQuery.docs[0];
+          const order = orderDoc.data();
+          const userId = order.userId;
+          if (userId) {
+            // Atualizar último pagamento ou status
+            const userRef = db.collection('users').doc(userId);
+            await userRef.set({ lastPaymentAt: new Date().toISOString(), subscriptionStatus: 'active' }, { merge: true });
+            console.log('[webhook] Pagamento recorrente confirmado', { userId, subId });
+          }
+        }
+      }
+    } else if (event.type === 'invoice.payment_failed') {
+      const invoice = event.data.object;
+      console.log('[webhook] invoice.payment_failed', { invoiceId: invoice.id, subscriptionId: invoice.subscription });
+      if (invoice.subscription) {
+        const subId = invoice.subscription;
+        const ordersQuery = await db.collection('orders').where('subscriptionId', '==', subId).limit(1).get();
+        if (!ordersQuery.empty) {
+          const orderDoc = ordersQuery.docs[0];
+          const order = orderDoc.data();
+          const userId = order.userId;
+          if (userId) {
+            // Marcar como falha ou suspenso
+            const userRef = db.collection('users').doc(userId);
+            await userRef.set({ subscriptionStatus: 'past_due', lastFailedPaymentAt: new Date().toISOString() }, { merge: true });
+            console.log('[webhook] Pagamento recorrente falhou', { userId, subId });
+          }
+        }
+      }
     }
     console.log('[webhook] Saída com sucesso', { eventType: event && event.type });
     res.json({ received: true });
