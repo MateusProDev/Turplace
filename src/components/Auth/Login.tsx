@@ -1,8 +1,8 @@
 
 import { useState } from "react";
-// import { useEffect } from "react";
-// import { useAuth } from "../../hooks/useAuth";
-// import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useAuth } from "../../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 import { auth, db } from "../../utils/firebase";
 import logoSemFundo from "../../assets/logosemfundo.png";
 import {
@@ -27,20 +27,17 @@ export default function Login() {
   const [isLogin, setIsLogin] = useState(true);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  // const navigate = useNavigate();
-  // const { user } = useAuth();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   // Log para depuração
   // console.log("Login.tsx: user:", user);
   // Redireciona se já estiver autenticado
-  // useEffect(() => {
-  //   if (user) {
-  //     console.log("Login.tsx: Redirecionando para /provider");
-  //     navigate("/provider", { replace: true });
-  //   }
-  // }, [user, navigate]);
-  // if (user) {
-  //   return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
-  // }
+  useEffect(() => {
+    if (user) {
+      console.log("Login.tsx: Redirecionando para /provider");
+      navigate("/provider", { replace: true });
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: any) => {
     console.log("Login.tsx: handleSubmit chamado", { isLogin, email });
@@ -61,7 +58,7 @@ export default function Login() {
           createdAt: serverTimestamp(),
         });
       }
-      // O redirecionamento será feito pelo efeito do useAuth
+      navigate("/provider");
     } catch (err: any) {
       if (err.code === "auth/email-already-in-use") {
         setError("E-mail já cadastrado. Tente fazer login ou use o botão 'Entrar com Google'.");
@@ -98,7 +95,7 @@ export default function Login() {
         );
         console.log("Login.tsx: Dados salvos com sucesso");
       }
-      // O redirecionamento será feito pelo efeito do useAuth
+      navigate("/provider");
     } catch (err: any) {
       console.error("Login.tsx: Erro no Google login", err);
 
