@@ -1,13 +1,6 @@
-// Minimal webhook stub (syntactically valid)
-module.exports = async function (req, res) {
-  // The real implementation is in api/webhook.fixed.cjs
-  res.json({ ok: true, source: 'webhook.stub' });
-};
-              return String(obj);
-            }
-          }
-
-          module.exports = async (req, res) => {
+return String(obj);
+        
+        module.exports = async (req, res) => {
             const sig = req.headers['stripe-signature'];
             const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
