@@ -1,34 +1,7 @@
 {
   "version": 2,
-  "builds": [
-    { "src": "api/create-subscription-session.cjs", "use": "@vercel/node" },
-    { "src": "api/create-checkout-session.cjs", "use": "@vercel/node" },
-    { "src": "api/webhook.cjs", "use": "@vercel/node" },
-    { "src": "api/status.cjs", "use": "@vercel/node" },
-    { "src": "api/dev/apply-plan.cjs", "use": "@vercel/node" },
-    { "src": "package.json", "use": "@vercel/static-build", "config": { "distDir": "dist" } }
-  ],
-  "routes": [
-    { "src": "/api/create-subscription-session", "dest": "/api/create-subscription-session.cjs" },
-    { "src": "/api/create-checkout-session", "dest": "/api/create-checkout-session.cjs" },
-    { "src": "/api/webhook", "dest": "/api/webhook.cjs" },
-    { "src": "/api/status", "dest": "/api/status.cjs" },
-    { "src": "/api/dev/apply-plan", "dest": "/api/dev/apply-plan.cjs" }
-  ],
   "functions": {
-    "api/create-subscription-session.cjs": {
-      "maxDuration": 10
-    },
-    "api/create-checkout-session.cjs": {
-      "maxDuration": 10
-    },
-    "api/webhook.cjs": {
-      "maxDuration": 10
-    },
-    "api/status.cjs": {
-      "maxDuration": 10
-    },
-    "api/dev/apply-plan.cjs": {
+    "api/**/*.cjs": {
       "maxDuration": 10
     }
   }
