@@ -35,9 +35,15 @@ const Wallet = () => {
   useEffect(() => {
     if (user?.uid) {
       fetch(`/api/wallet?userId=${user.uid}`)
-        .then(res => res.json())
+        .then(res => {
+          if (!res.ok) throw new Error('Failed to fetch wallet data');
+          return res.json();
+        })
         .then(setData)
-        .catch(console.error)
+        .catch(err => {
+          console.error(err);
+          setData(null);
+        })
         .finally(() => setLoading(false));
     }
   }, [user]);
