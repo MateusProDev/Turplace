@@ -8,5 +8,13 @@
   "routes": [
     { "src": "/api/status", "dest": "/api/status.cjs" },
     { "src": "/api/(.*)", "dest": "/api/[...slug].cjs" }
-  ]
+  ],
+  "functions": {
+    "api/[...slug].cjs": {
+      "maxDuration": 10
+    },
+    "api/status.cjs": {
+      "maxDuration": 10
+    }
+  }
 }
