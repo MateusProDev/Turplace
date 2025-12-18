@@ -24,15 +24,15 @@ const PLANS = [
   },
   {
     id: 'professional',
-    name: 'Profissional',
-    priceText: 'R$9,90 / mês',
+    name: 'Pro',
+    priceText: 'R$9,99 / mês',
     priceId: 'price_1Seyf0KlR2RHdJ4ptJNmAuKi',
-    commission: '7%',
+    commission: '8%',
     icon: Star,
     color: 'blue',
     description: 'Para profissionais estabelecidos',
     features: [
-      'Taxa reduzida de 7% por transação',
+      'Taxa reduzida de 8% por transação',
       'Destaque no catálogo',
       'Perfil verificado',
       'Até 20 serviços cadastrados',
@@ -44,14 +44,14 @@ const PLANS = [
   {
     id: 'premium',
     name: 'Premium',
-    priceText: 'R$19,90 / mês',
+    priceText: 'R$19,99 / mês',
     priceId: 'price_1Seyf1KlR2RHdJ4psFoH3WrA',
-    commission: '4%',
+    commission: '3,99%',
     icon: Crown,
     color: 'purple',
     description: 'Máximo desempenho',
     features: [
-      'Taxa mínima de 4% por transação',
+      'Taxa mínima de 3,99% por transação',
       'Topo da categoria',
       'Leads prioritários',
       'Até 100 serviços cadastrados',
@@ -150,19 +150,31 @@ export default function Pricing() {
                 <div className="text-sm text-gray-600">Plano Free</div>
               </div>
               <div className="text-center p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
-                <div className="text-3xl font-bold text-blue-600 mb-2">7%</div>
-                <div className="text-sm text-blue-600">Plano Profissional</div>
-                <div className="text-xs text-blue-500 mt-1">Economia de 5%</div>
+                <div className="text-3xl font-bold text-blue-600 mb-2">8%</div>
+                <div className="text-sm text-blue-600">Plano Pro</div>
+                <div className="text-xs text-blue-500 mt-1">Economia de 4%</div>
               </div>
               <div className="text-center p-4 bg-purple-50 rounded-lg border-2 border-purple-200">
-                <div className="text-3xl font-bold text-purple-600 mb-2">4%</div>
+                <div className="text-3xl font-bold text-purple-600 mb-2">3,99%</div>
                 <div className="text-sm text-purple-600">Plano Premium</div>
-                <div className="text-xs text-purple-500 mt-1">Economia de 8%</div>
+                <div className="text-xs text-purple-500 mt-1">Economia de 8,01%</div>
               </div>
             </div>
             <p className="text-sm text-gray-500 mt-4">
-              * Taxas calculadas sobre o valor de cada transação realizada na plataforma
+              * Taxas calculadas sobre o valor de cada transação realizada na plataforma<br/>
+              <strong>Sem taxa fixa por venda. Sem surpresa. Sem letra miúda.</strong>
             </p>
+            <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
+              <h3 className="text-lg font-semibold text-green-800 mb-2">Comparação com o Mercado</h3>
+              <p className="text-sm text-green-700">
+                Hotmart/Eduzz: ~11% a 14%<br/>
+                Turplace Pro: ~12,4%<br/>
+                Turplace Premium: ~8,3% ✅
+              </p>
+              <p className="text-xs text-green-600 mt-2">
+                Para venda de R$100 no cartão, incluindo taxa do Stripe (~2,9% + R$0,30).
+              </p>
+            </div>
           </div>
         </div>
 

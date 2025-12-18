@@ -5,6 +5,8 @@
  *   node scripts/initFirestore.cjs [adminUid] [adminEmail]
  */
 
+require('dotenv').config();
+
 const admin = require('firebase-admin');
 
 const svcPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;

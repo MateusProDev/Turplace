@@ -34,23 +34,23 @@ async function createProductsAndPrices() {
     {
       id: 'free',
       name: 'Free',
-      commissionPercent: 15,
+      commissionPercent: 12,
       features: ['Sem destaque', 'Sem analytics'],
       price_cents: 0,
     },
     {
       id: 'professional',
-      name: 'Profissional',
+      name: 'Pro',
       commissionPercent: 8,
       features: ['Destaque no catálogo', 'Perfil verificado'],
-      price_cents: 990,
+      price_cents: 999,
     },
     {
       id: 'premium',
       name: 'Premium',
-      commissionPercent: 5,
+      commissionPercent: 3.99,
       features: ['Topo da categoria', 'Leads prioritários', 'Analytics avançado'],
-      price_cents: 1990,
+      price_cents: 1999,
     },
   ];
 
