@@ -1,4 +1,4 @@
-const initFirestore = require('./_lib/firebaseAdmin.cjs');
+const initFirestore = require('../_lib/firebaseAdmin.cjs');
 
 // Dev-only endpoint: apply plan for an orderId. Only enabled when NOT in production.
 module.exports = async (req, res) => {
