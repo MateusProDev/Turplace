@@ -1,5 +1,5 @@
 const Stripe = require('stripe');
-const initFirestore = require('./_lib/firebaseAdmin.js');
+const initFirestore = require('./_lib/firebaseAdmin.cjs');
 
 module.exports = async (req, res) => {
   console.log('[create-checkout-session] Entrada', { method: req.method, url: req.url, body: req.body });

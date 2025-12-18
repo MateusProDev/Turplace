@@ -1,5 +1,5 @@
 const Stripe = require('stripe');
-const initFirestore = require('./_lib/firebaseAdmin.js');
+const initFirestore = require('./_lib/firebaseAdmin.cjs');
 
 function now() { return new Date().toISOString(); }
 
