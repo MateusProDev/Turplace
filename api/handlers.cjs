@@ -5,5 +5,5 @@ module.exports = {
   'create-checkout-session': require('../server/api/create-checkout-session.cjs'),
   'webhook': require('../server/api/webhook.cjs'),
   'dev/apply-plan': require('../server/api/dev/apply-plan.cjs'),
-  'status': require('./status.cjs')
+  'status': require('./status.js')
 }
