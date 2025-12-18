@@ -4,7 +4,7 @@ const initFirestore = require('./_lib/firebaseAdmin.cjs');
 module.exports = async (req, res) => {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const db = initFirestore();
-  console.log('[debug] create-checkout-session invoked', { method: req.method, headers: Object.keys(req.headers || {}) });
+  console.log('[debug] create-checkout-session invoked', { method: req.method, headers: Object.keys(req.headers || {}), body: req.body });
   try {
     // Allow GET for healthcheck/debug
     if (req.method === 'GET') {
@@ -13,17 +13,26 @@ module.exports = async (req, res) => {
     if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
     const { serviceId, agencyId, quantity = 1 } = req.body;
-    if (!serviceId) return res.status(400).json({ error: 'serviceId required' });
+    if (!serviceId) {
+      console.warn('[create-checkout-session] serviceId não informado');
+      return res.status(400).json({ error: 'serviceId required' });
+    }
 
     // Busca o serviço
     const serviceSnap = await db.collection('services').doc(serviceId).get();
-    if (!serviceSnap.exists) return res.status(404).json({ error: 'Service not found' });
+    if (!serviceSnap.exists) {
+      console.warn('[create-checkout-session] Serviço não encontrado', { serviceId });
+      return res.status(404).json({ error: 'Service not found' });
+    }
     const service = serviceSnap.data();
 
     // Busca provider
     const providerId = service.providerId;
     const providerSnap = await db.collection('providers').doc(providerId).get();
-    if (!providerSnap.exists) return res.status(404).json({ error: 'Provider not found' });
+    if (!providerSnap.exists) {
+      console.warn('[create-checkout-session] Provider não encontrado', { providerId });
+      return res.status(404).json({ error: 'Provider not found' });
+    }
     const provider = providerSnap.data();
 
     // Recupera plan do provider (padrão free se não existir)
@@ -31,11 +40,13 @@ module.exports = async (req, res) => {
     const planSnap = await db.collection('plans').doc(planId).get();
     const plan = planSnap.exists ? planSnap.data() : null;
     const commissionPercent = plan ? plan.commissionPercent : 15;
+    console.log('[create-checkout-session] Plano e comissão', { planId, commissionPercent });
 
     // Calcula valores
     const unitAmount = Math.round((service.price || 0) * 100); // em centavos
     const totalAmount = unitAmount * quantity;
     const commissionAmount = Math.round(totalAmount * (commissionPercent / 100));
+    console.log('[create-checkout-session] Valores calculados', { unitAmount, totalAmount, commissionAmount });
 
     // Cria order no Firestore
     const orderRef = db.collection('orders').doc();
@@ -51,6 +62,7 @@ module.exports = async (req, res) => {
       createdAt: new Date().toISOString(),
     };
     await orderRef.set(order);
+    console.log('[create-checkout-session] Ordem criada', { orderId: orderRef.id, order });
 
     // Cria Checkout Session com Connect se provider tiver connectedAccountId
     const lineItems = [
@@ -74,14 +86,22 @@ module.exports = async (req, res) => {
       };
     }
 
-    const session = await stripe.checkout.sessions.create(sessionCreateParams);
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create(sessionCreateParams);
+      console.log('[create-checkout-session] Sessão Stripe criada', { sessionId: session.id });
+    } catch (err) {
+      console.error('[create-checkout-session] Erro ao criar sessão Stripe', err);
+      throw err;
+    }
 
     // Salva sessionId na ordem
     await orderRef.update({ stripeSessionId: session.id });
+    console.log('[create-checkout-session] Ordem atualizada com sessionId', { orderId: orderRef.id, sessionId: session.id });
 
     return res.status(200).json({ sessionId: session.id });
   } catch (err) {
-    console.error(err);
+    console.error('[create-checkout-session] Erro geral', err);
     return res.status(500).json({ error: err.message || 'Internal error' });
   }
 };

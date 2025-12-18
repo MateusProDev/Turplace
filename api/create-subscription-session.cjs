@@ -4,7 +4,7 @@ const initFirestore = require('./_lib/firebaseAdmin.cjs');
 module.exports = async (req, res) => {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const db = initFirestore();
-  console.log('[debug] create-subscription-session invoked', { method: req.method, headers: Object.keys(req.headers || {}) });
+  console.log('[debug] create-subscription-session invoked', { method: req.method, headers: Object.keys(req.headers || {}), body: req.body });
   try {
     // Allow simple GET for healthcheck/debug in prod (helps detect 404 routing issues)
     if (req.method === 'GET') {
@@ -13,7 +13,10 @@ module.exports = async (req, res) => {
     if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
     const { priceId, customerEmail, userId } = req.body;
-    if (!priceId) return res.status(400).json({ error: 'priceId required' });
+    if (!priceId) {
+      console.warn('[create-subscription-session] priceId não informado');
+      return res.status(400).json({ error: 'priceId required' });
+    }
 
     // Create a lightweight subscription order record (optional)
     const orderRef = db.collection('orders').doc();
@@ -28,8 +31,9 @@ module.exports = async (req, res) => {
         const planDoc = await db.collection('plans').doc(priceId).get();
         if (planDoc.exists) amount = planDoc.data().price_cents || null;
       }
+      console.log('[create-subscription-session] Valor do plano resolvido', { priceId, amount });
     } catch (e) {
-      console.warn('Failed to resolve plan amount from Firestore:', e && e.message ? e.message : e);
+      console.warn('[create-subscription-session] Falha ao resolver valor do plano:', e && e.message ? e.message : e);
     }
 
     const order = {
@@ -43,6 +47,7 @@ module.exports = async (req, res) => {
       createdAt: new Date().toISOString(),
     };
     await orderRef.set(order);
+    console.log('[create-subscription-session] Ordem de assinatura criada', { orderId: orderRef.id, order });
 
     const sessionParams = {
       mode: 'subscription',
@@ -53,13 +58,21 @@ module.exports = async (req, res) => {
       metadata: { orderId: orderRef.id, userId: userId || '', customerEmail: customerEmail || '' },
     };
 
-    const session = await stripe.checkout.sessions.create(sessionParams);
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create(sessionParams);
+      console.log('[create-subscription-session] Sessão Stripe criada', { sessionId: session.id, url: session.url });
+    } catch (err) {
+      console.error('[create-subscription-session] Erro ao criar sessão Stripe', err);
+      throw err;
+    }
 
     await orderRef.update({ stripeSessionId: session.id });
+    console.log('[create-subscription-session] Ordem atualizada com sessionId', { orderId: orderRef.id, sessionId: session.id });
 
     return res.status(200).json({ sessionId: session.id, checkoutUrl: session.url, orderId: orderRef.id });
   } catch (err) {
-    console.error('create-subscription-session error', err);
+    console.error('[create-subscription-session] Erro geral', err);
     return res.status(500).json({ error: err.message || 'Internal error' });
   }
 };
