@@ -202,29 +202,33 @@ const Wallet = () => {
       {/* Withdrawal Section */}
       <div className="mt-8 bg-white p-6 rounded-lg shadow">
         <h2 className="text-2xl font-bold mb-4">Sacar Dinheiro</h2>
-        {data.stripeAccountId && data.stripeAccountId.trim() !== '' ? (
+        {(data.stripeAccountId && data.stripeAccountId.trim() !== '') || data.chavePix ? (
           <div>
-            <p className="mb-2">Conta Stripe conectada</p>
+            {data.stripeAccountId && data.stripeAccountId.trim() !== '' && (
+              <>
+                <p className="mb-2">Conta Stripe conectada</p>
+                <button
+                  onClick={() => handleWithdraw(data.availableBalance, 'stripe')}
+                  disabled={data.availableBalance <= 0 || loading}
+                  className="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 disabled:opacity-50 mr-4"
+                >
+                  Sacar via Stripe
+                </button>
+              </>
+            )}
+            {data.chavePix && (
+              <>
+                <p className="mb-2">Chave PIX: {data.chavePix}</p>
+                <button
+                  onClick={() => handleWithdraw(data.availableBalance, 'pix')}
+                  disabled={data.availableBalance <= 0 || loading}
+                  className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50"
+                >
+                  Sacar via PIX
+                </button>
+              </>
+            )}
             <p className="mb-4">Saldo disponível: R$ {data.availableBalance.toFixed(2)}</p>
-            <button
-              onClick={() => handleWithdraw(data.availableBalance, 'stripe')}
-              disabled={data.availableBalance <= 0 || loading}
-              className="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 disabled:opacity-50 mr-4"
-            >
-              Sacar via Stripe
-            </button>
-          </div>
-        ) : data.chavePix ? (
-          <div>
-            <p className="mb-2">Chave PIX: {data.chavePix}</p>
-            <p className="mb-4">Saldo disponível: R$ {data.availableBalance.toFixed(2)}</p>
-            <button
-              onClick={() => handleWithdraw(data.availableBalance, 'pix')}
-              disabled={data.availableBalance <= 0 || loading}
-              className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50"
-            >
-              Sacar via PIX
-            </button>
           </div>
         ) : (
           <div>
