@@ -18,6 +18,15 @@ export default async function handler(req, res) {
     console.warn('[...slug] handlers.cjs load error', err && err.code ? err.code : String(err))
   }
 
+  // runtime/environment info for debugging
+  try {
+    console.log('[...slug] process.cwd=', process.cwd())
+    console.log('[...slug] node version=', process.version)
+    console.log('[...slug] req.url=', req.url, 'method=', req.method, 'host=', req.headers && req.headers.host)
+  } catch (e) {
+    console.warn('[...slug] runtime info error', e && e.message)
+  }
+
   const candidates = [
     `../server/api/${base}.js`,
     `../server/api/${base}.cjs`,
@@ -33,6 +42,13 @@ export default async function handler(req, res) {
   for (const p of candidates) {
     try {
       console.log('[...slug] trying require', p)
+      // attempt to resolve first to get clearer diagnostics
+      try {
+        const resolved = require.resolve(p)
+        console.log('[...slug] require.resolve OK', p, resolved)
+      } catch (rsErr) {
+        console.log('[...slug] require.resolve FAILED', p, rsErr && rsErr.code ? rsErr.code : rsErr && rsErr.message)
+      }
       const mod = require(p)
       const fn = mod && (mod.default || mod.handler || mod)
       if (typeof fn === 'function') {
