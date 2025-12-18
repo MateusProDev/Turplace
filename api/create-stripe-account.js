@@ -37,13 +37,12 @@ export default async (req, res) => {
     }
 
     console.log('[create-stripe-account] Creating new Express account for:', userData.email);
-    // Create new Express account
+    // Create new Express account with minimal configuration
     const account = await stripe.accounts.create({
       type: 'express',
-      country: 'BR', // Assuming Brazil
+      country: 'BR',
       email: userData.email,
       capabilities: {
-        card_payments: { requested: true },
         transfers: { requested: true },
       },
     });
@@ -74,7 +73,37 @@ export default async (req, res) => {
       param: err.param,
       stack: err.stack
     });
-    res.status(500).json({ 
+
+    // Handle specific Stripe errors
+    if (err.type === 'StripeInvalidRequestError') {
+      return res.status(400).json({
+        error: 'Invalid request to Stripe',
+        details: process.env.NODE_ENV === 'development' ? err.message : 'Check your Stripe configuration'
+      });
+    }
+
+    if (err.type === 'StripeAPIError') {
+      return res.status(502).json({
+        error: 'Stripe API error',
+        details: process.env.NODE_ENV === 'development' ? err.message : 'Stripe service temporarily unavailable'
+      });
+    }
+
+    if (err.type === 'StripeConnectionError') {
+      return res.status(503).json({
+        error: 'Connection error with Stripe',
+        details: 'Unable to connect to Stripe servers'
+      });
+    }
+
+    if (err.type === 'StripeAuthenticationError') {
+      return res.status(401).json({
+        error: 'Stripe authentication failed',
+        details: 'Invalid Stripe API key'
+      });
+    }
+
+    res.status(500).json({
       error: 'Internal error',
       details: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
