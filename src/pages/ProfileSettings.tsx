@@ -66,11 +66,6 @@ export default function ProfileSettings() {
         const userDoc = await getDoc(doc(db, 'users', user.uid));
         if (userDoc.exists()) {
           const data = userDoc.data();
-          console.log('Dados do usuário carregados:', {
-            name: data.name,
-            stripeAccountId: data.stripeAccountId,
-            chavePix: data.chavePix
-          });
           setName(data.name || '');
           setBio(data.bio || '');
           setPhoto(data.photoURL || null);
