@@ -1,7 +1,8 @@
-import { createRequire } from 'module'
+const { createRequire } = require('module')
 const require = createRequire(import.meta.url)
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
+  console.log('[...slug] handler chamado', { url: req.url, slug: req.query && req.query.slug });
   const slug = req.query.slug || []
   const parts = Array.isArray(slug) ? slug : [slug]
   const base = parts.join('/') || 'index'
