@@ -132,7 +132,7 @@ export default function ServiceDetail() {
     setContacting(true);
     try {
       // Se o serviço tem preço definido, redirecionar para checkout
-      if (service.priceId || (service.billingType === 'subscription' && service.priceMonthly) || (service.billingType === 'one-time' && service.price)) {
+      if (service.price || service.priceMonthly) {
         // Registrar interesse
         await addDoc(collection(db, "leads"), {
           serviceId: service.id,
@@ -426,10 +426,10 @@ export default function ServiceDetail() {
             <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-6">
               <div className="text-center mb-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  {service.priceId || service.price || service.priceMonthly ? "Comprar Agora" : "Contratar Serviço"}
+                  {service.price || service.priceMonthly ? "Pagar Agora" : "Contratar Serviço"}
                 </h3>
                 <p className="text-gray-600">
-                  {service.priceId || service.price || service.priceMonthly 
+                  {service.price || service.priceMonthly 
                     ? "Pagamento seguro pela plataforma" 
                     : "Entre em contato para contratar este serviço"}
                 </p>
@@ -455,12 +455,12 @@ export default function ServiceDetail() {
                 {contacting ? (
                   <>
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-                    {service.priceId || service.price || service.priceMonthly ? "Processando..." : "Conectando..."}
+                    {service.price || service.priceMonthly ? "Processando..." : "Conectando..."}
                   </>
                 ) : (
                   <>
                     <Phone size={24} />
-                    {service.priceId || service.price || service.priceMonthly ? "Comprar Agora" : "Contratar Serviço"}
+                    {service.price || service.priceMonthly ? "Pagar Agora" : "Contratar Serviço"}
                   </>
                 )}
               </button>
@@ -483,7 +483,7 @@ export default function ServiceDetail() {
               <div className="text-center">
                 <p className="text-sm text-gray-500">
                   <Shield className="inline-block w-4 h-4 mr-1" />
-                  {service.priceId || service.price || service.priceMonthly 
+                  {service.price || service.priceMonthly 
                     ? "Pagamento processado de forma segura pela plataforma"
                     : "Entre em contato de forma segura através da plataforma"}
                 </p>
