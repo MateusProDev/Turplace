@@ -1,5 +1,5 @@
 import ProfileSettings from './pages/ProfileSettings';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import Landing from './pages/Landing';
 import Catalog from './pages/Catalog';
 import Login from './components/Auth/Login';
@@ -14,6 +14,8 @@ import Partnerships from './pages/Partnerships';
 import Contact from './pages/Contact';
 import Wallet from './pages/Wallet';
 import Checkout from './pages/Checkout';
+import ServiceDiagnostics from './pages/ServiceDiagnostics';
+import Success from './pages/Success';
 
 function App() {
   const { user } = useAuth();
@@ -30,6 +32,9 @@ function App() {
         <Route path="/provider" element={<RequireAuth><ProviderDashboard /></RequireAuth>} />
         <Route path="/service/:id" element={<ServiceDetail />} />
         <Route path="/checkout" element={<RequireAuth><Checkout /></RequireAuth>} />
+        <Route path="/success" element={<Success />} />
+        <Route path="/cancel" element={<div className="min-h-screen flex items-center justify-center"><div className="text-center"><h1 className="text-2xl font-bold text-gray-900 mb-4">Pagamento Cancelado</h1><p className="text-gray-600 mb-6">Você cancelou o pagamento. Pode tentar novamente quando quiser.</p><Link to="/catalog" className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition">Voltar ao Catálogo</Link></div></div>} />
+        <Route path="/diagnostics" element={<ServiceDiagnostics />} />
         <Route path="/admin" element={<RequireAuth><AdminDashboard /></RequireAuth>} />
         <Route path="/how-it-works" element={<HowItWorks />} />
         <Route path="/partnerships" element={<Partnerships />} />

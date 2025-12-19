@@ -4,7 +4,6 @@ import {
   doc, 
   getDoc, 
   getDocs,
-  addDoc, 
   collection, 
   serverTimestamp,
   updateDoc,
@@ -62,6 +61,11 @@ interface ProviderMiniProfile {
   totalServices?: number;
 }
 
+// Importar diagnóstico apenas em desenvolvimento
+if (import.meta.env.DEV) {
+  import("../utils/diagnoseServices");
+}
+
 export default function ServiceDetail() {
   const { id } = useParams();
   const [service, setService] = useState<ServiceData | null>(null);
@@ -74,22 +78,44 @@ export default function ServiceDetail() {
   const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      console.log("ServiceDetail: No ID provided");
+      return;
+    }
+    
+    console.log("ServiceDetail: Loading service with ID:", id);
+    
     const loadService = async () => {
       try {
         setLoading(true);
+        console.log("ServiceDetail: Creating document reference for services/", id);
         const ref = doc(db, "services", id);
+        console.log("ServiceDetail: Fetching document...");
         const snap = await getDoc(ref);
+        
         if (snap.exists()) {
-          const data = { id: snap.id, ...snap.data() } as ServiceData;
+          console.log("ServiceDetail: Document exists, data:", snap.data());
+          const rawData = snap.data();
+          
+          // Validar dados essenciais
+          if (!rawData.title || !rawData.description) {
+            console.error("ServiceDetail: Document missing required fields", rawData);
+            setError("Serviço com dados incompletos");
+            return;
+          }
+          
+          const data = { id: snap.id, ...rawData } as ServiceData;
           setService(data);
           setViews(data.views || 0);
+          
           // Buscar mini perfil do provider
           if (data.ownerId) {
+            console.log("ServiceDetail: Loading provider profile for ownerId:", data.ownerId);
             const userRef = doc(db, "users", data.ownerId);
             const userSnap = await getDoc(userRef);
             let totalServices = 0;
             if (userSnap.exists()) {
+              console.log("ServiceDetail: Provider profile found");
               // Buscar quantos serviços esse provider tem
               const servicesSnap = await getDocs(collection(db, "services"));
               totalServices = servicesSnap.docs.filter((s: any) => s.data().ownerId === data.ownerId).length;
@@ -101,6 +127,7 @@ export default function ServiceDetail() {
                 totalServices
               });
             } else {
+              console.log("ServiceDetail: Provider profile not found, using service data");
               setProvider({
                 name: data.ownerName,
                 email: data.ownerEmail,
@@ -108,51 +135,60 @@ export default function ServiceDetail() {
               });
             }
           }
+          
           // Incrementar visualizações
+          console.log("ServiceDetail: Incrementing views");
           await updateDoc(ref, {
             views: increment(1),
             lastViewed: serverTimestamp()
           });
         } else {
+          console.log("ServiceDetail: Document does not exist");
           setError("Serviço não encontrado");
         }
       } catch (err) {
-        console.error("Erro ao carregar serviço:", err);
+        console.error("ServiceDetail: Error loading service:", err);
+        const error = err as Error;
+        console.error("ServiceDetail: Error details:", {
+          message: error.message,
+          code: (error as any).code,
+          stack: error.stack
+        });
         setError("Erro ao carregar os detalhes do serviço");
       } finally {
         setLoading(false);
       }
     };
+    
     loadService();
   }, [id]);
 
   const handleContact = async () => {
     if (!service) return;
-    
+
     setContacting(true);
     try {
-      // Se o serviço tem preço definido, redirecionar para checkout
+      // Para serviços com preço, criar checkout direto sem autenticação
       if (service.price || service.priceMonthly) {
-        // Registrar interesse
-        await addDoc(collection(db, "leads"), {
-          serviceId: service.id,
-          serviceTitle: service.title,
-          ownerId: service.ownerId,
-          ownerEmail: service.ownerEmail,
-          ownerName: service.ownerName,
-          origem: "service_detail_checkout",
-          status: "interested",
-          createdAt: serverTimestamp(),
-          contactedAt: null,
-          viewed: false
+        // Criar sessão de checkout diretamente
+        const response = await fetch('/api/create-checkout-session-guest', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            serviceId: service.id,
+            successUrl: `${window.location.origin}/success?serviceId=${service.id}`,
+            cancelUrl: window.location.href
+          })
         });
 
-        // Redirecionar para checkout
-        const checkoutUrl = `/checkout?serviceId=${service.id}`;
-        setSuccess("Redirecionando para pagamento...");
-        setTimeout(() => {
-          window.location.href = checkoutUrl;
-        }, 1000);
+        if (!response.ok) {
+          throw new Error('Erro ao criar sessão de checkout');
+        }
+
+        const { url } = await response.json();
+        window.location.href = url;
       } else {
         // Para serviços sem preço, mostrar modal de contato
         setSuccess("Abrindo formulário de contato...");
@@ -163,7 +199,7 @@ export default function ServiceDetail() {
           setSuccess(null);
         }, 1000);
       }
-      
+
     } catch (err) {
       console.error("Erro ao processar contato:", err);
       setError("Erro ao processar. Tente novamente.");
