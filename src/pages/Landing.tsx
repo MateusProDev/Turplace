@@ -380,7 +380,7 @@ export default function Landing() {
           </div>
 
           {/* Grid de Conteúdos Acessados */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
             {topProducts.map((content) => (
               <Link
                 key={content.id}
@@ -389,15 +389,15 @@ export default function Landing() {
               >
                 <div className="flex flex-col">
                   {/* Imagem do Conteúdo */}
-                  <div className="relative h-56 overflow-hidden">
+                  <div className="relative h-48 overflow-hidden">
                     <img 
                       src={content.imageUrl} 
                       alt={content.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     />
                     {/* Badge */}
-                    <div className="absolute top-4 left-4">
-                      <span className={`px-3 py-1.5 text-xs font-bold text-white rounded-full ${
+                    <div className="absolute top-3 left-3">
+                      <span className={`px-2.5 py-1 text-xs font-bold text-white rounded-full ${
                         content.badge === 'Mais Procurado' ? 'bg-gradient-to-r from-amber-500 to-orange-500' :
                         content.badge === 'Em Alta' ? 'bg-gradient-to-r from-rose-500 to-pink-500' :
                         content.badge === 'Oferta Especial' ? 'bg-gradient-to-r from-emerald-500 to-teal-500' :
@@ -411,51 +411,51 @@ export default function Landing() {
                   </div>
                   
                   {/* Preço e CTA - Logo abaixo da imagem */}
-                  <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                  <div className="flex items-center justify-between p-4 border-b border-gray-100">
                     <div>
-                      <div className="text-2xl font-bold text-gray-900">
+                      <div className="text-xl font-bold text-gray-900">
                         R$ {content.price.toFixed(2).replace('.', ',')}
                       </div>
-                      <p className="text-sm text-gray-500">Valor por pessoa</p>
+                      <p className="text-xs text-gray-500">por pessoa</p>
                     </div>
                     
-                    <button className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-cyan-600 transition-all shadow-md hover:shadow-lg group/btn">
-                      <BookOpen className="w-4 h-4" />
+                    <button className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-medium rounded-lg hover:from-blue-700 hover:to-cyan-600 transition-all shadow-sm hover:shadow-md group/btn text-xs">
+                      <BookOpen className="w-3.5 h-3.5" />
                       <span>Ver detalhes</span>
-                      <ArrowRight className="w-4 h-4 opacity-0 -translate-x-2 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all" />
+                      <ArrowRight className="w-3.5 h-3.5 opacity-0 -translate-x-1 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all" />
                     </button>
                   </div>
                   
                   {/* Informações do Conteúdo */}
-                  <div className="p-6">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+                  <div className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-sm font-medium text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
                         {content.category}
                       </span>
                       <div className="flex items-center gap-1 text-amber-500">
-                        <Star className="w-4 h-4 fill-current" />
+                        <Star className="w-3.5 h-3.5 fill-current" />
                         <span className="text-sm font-bold">{content.rating}</span>
                         <span className="text-gray-400 text-xs">({content.bookings} vendas)</span>
                       </div>
                     </div>
                     
-                    <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors line-clamp-2">
+                    <h3 className="text-base font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
                       {content.title}
                     </h3>
                     
-                    <p className="text-gray-600 mb-6 line-clamp-2">
+                    <p className="text-gray-600 mb-4 line-clamp-2 text-sm">
                       Por <span className="font-medium text-gray-900">{content.author}</span>
                     </p>
                     
                     {/* Stats */}
-                    <div className="flex items-center gap-6">
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <Eye className="w-4 h-4" />
-                        <span className="text-sm font-medium">{content.views.toLocaleString()} visualizações</span>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-1 text-gray-600">
+                        <Eye className="w-3.5 h-3.5" />
+                        <span className="text-xs font-medium">{content.views.toLocaleString()}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <Heart className="w-4 h-4 text-rose-500" />
-                        <span className="text-sm font-medium">{content.bookings} reservas</span>
+                      <div className="flex items-center gap-1 text-gray-600">
+                        <Heart className="w-3.5 h-3.5 text-rose-500" />
+                        <span className="text-xs font-medium">{content.bookings}</span>
                       </div>
                     </div>
                   </div>
