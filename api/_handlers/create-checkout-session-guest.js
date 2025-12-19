@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import initFirestore from './_lib/firebaseAdmin.js';
+import initFirestore from '../_lib/firebaseAdmin.js';
 
 export default async (req, res) => {
   console.log('[create-checkout-session-guest] Entrada', { method: req.method, url: req.url, body: req.body });

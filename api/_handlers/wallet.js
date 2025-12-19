@@ -1,4 +1,4 @@
-import initFirestore from './_lib/firebaseAdmin.js';
+import initFirestore from '../_lib/firebaseAdmin.js';
 
 export default async (req, res) => {
   if (req.method !== 'GET') return res.status(405).send('Method Not Allowed');
