@@ -389,7 +389,7 @@ export default function Landing() {
               >
                 <div className="flex flex-col sm:flex-row">
                   {/* Imagem do Conteúdo */}
-                  <div className="relative h-56 sm:h-auto sm:w-2/5 overflow-hidden">
+                  <div className="relative h-56 sm:h-48 sm:w-2/5 overflow-hidden">
                     <img 
                       src={content.imageUrl} 
                       alt={content.title}
@@ -411,7 +411,7 @@ export default function Landing() {
                   </div>
                   
                   {/* Informações do Conteúdo */}
-                  <div className="sm:w-3/5 p-6 sm:p-8">
+                  <div className="flex-1 p-6 sm:p-8">
                     <div className="flex items-center gap-2 mb-3">
                       <span className="text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
                         {content.category}
