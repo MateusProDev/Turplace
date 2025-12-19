@@ -370,7 +370,7 @@ export default function Landing() {
             {/* Contador de Produtos */}
             <div className="flex items-center justify-between pt-6 border-t border-gray-200">
               <p className="text-gray-600 font-medium">
-                Mostrando <span className="text-blue-600 font-bold">5</span> produtos premium
+                Mostrando <span className="text-blue-600 font-bold">{topProducts.length}</span> produtos premium
               </p>
               <div className="flex items-center gap-2 text-gray-500">
                 <TrendingUpIcon className="w-5 h-5" />
