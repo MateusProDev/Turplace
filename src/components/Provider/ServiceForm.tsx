@@ -172,12 +172,17 @@ export default function ServiceForm({ editMode = false, serviceData, onClose }: 
     "palavrão", "ofensa", "idiota", "burro", "merda", "porra", "caralho", 
     "puta", "bosta", "fdp", "otário", "vagabundo", "lixo", "desgraça", 
     "imbecil", "palhaço", "corno", "macaco", "viado", "racista", "preconceito",
-    "shit", "fuck", "asshole", "bitch", "ass", "nigga", "nigger", "bastard"
+    "shit", "fuck", "asshole", "bitch", "nigga", "nigger", "bastard"
   ];
 
   const containsForbidden = (text: string) => {
     const lower = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    return forbiddenWords.some(w => lower.includes(w));
+    for (const word of forbiddenWords) {
+      if (lower.includes(word)) {
+        return word;
+      }
+    }
+    return null;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -189,8 +194,9 @@ export default function ServiceForm({ editMode = false, serviceData, onClose }: 
     
     // Análise de conteúdo
     const allText = `${form.title} ${form.category} ${form.city} ${form.description}`;
-    if (containsForbidden(allText)) {
-      setError("Seu anúncio contém conteúdo inadequado. Revise as informações.");
+    const forbiddenWord = containsForbidden(allText);
+    if (forbiddenWord) {
+      setError(`Seu anúncio contém conteúdo inadequado. Palavra detectada: "${forbiddenWord}". Revise as informações.`);
       return;
     }
     
