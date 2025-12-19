@@ -8,9 +8,7 @@ import {
   serverTimestamp,
   updateDoc,
   increment,
-  addDoc,
-  query,
-  where
+  addDoc
 } from "firebase/firestore";
 import { db, auth } from "../utils/firebase";
 import { 
@@ -706,7 +704,7 @@ export default function ServiceDetail() {
                         userId: auth.currentUser!.uid,
                         userName: auth.currentUser!.displayName || "Usuário Anônimo",
                         rating: userRating,
-                        comment: userReview.trim() || null,
+                        comment: userReview.trim() || undefined,
                         createdAt: serverTimestamp()
                       };
                       
