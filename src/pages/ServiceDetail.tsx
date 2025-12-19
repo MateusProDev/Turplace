@@ -738,13 +738,16 @@ export default function ServiceDetail() {
                     
                     setSubmittingReview(true);
                     try {
-                      const reviewData = {
+                      const reviewData: any = {
                         userId: auth.currentUser!.uid,
                         userName: auth.currentUser!.displayName || "Usuário Anônimo",
                         rating: userRating,
-                        comment: userReview.trim() || undefined,
                         createdAt: serverTimestamp()
                       };
+                      
+                      if (userReview.trim()) {
+                        reviewData.comment = userReview.trim();
+                      }
                       
                       await addDoc(collection(db, "services", service!.id, "reviews"), reviewData);
                       
