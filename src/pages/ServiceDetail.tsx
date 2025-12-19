@@ -46,6 +46,12 @@ interface ServiceData {
   capacity?: string;
   includes?: string[];
   views?: number;
+  productType?: string;
+  billingType?: string;
+  priceMonthly?: string;
+  stripeProductId?: string;
+  priceId?: string;
+  priceType?: string;
 }
 
 interface ProviderMiniProfile {
@@ -125,36 +131,59 @@ export default function ServiceDetail() {
     
     setContacting(true);
     try {
-      // Registrar lead
-      await addDoc(collection(db, "leads"), {
-        serviceId: service.id,
-        serviceTitle: service.title,
-        ownerId: service.ownerId,
-        ownerEmail: service.ownerEmail,
-        ownerName: service.ownerName,
-        origem: "service_detail",
-        status: "pending",
-        createdAt: serverTimestamp(),
-        contactedAt: null,
-        viewed: false
-      });
+      // Se o serviço tem preço definido, redirecionar para checkout
+      if (service.priceId || (service.billingType === 'subscription' && service.priceMonthly) || (service.billingType === 'one-time' && service.price)) {
+        // Registrar interesse
+        await addDoc(collection(db, "leads"), {
+          serviceId: service.id,
+          serviceTitle: service.title,
+          ownerId: service.ownerId,
+          ownerEmail: service.ownerEmail,
+          ownerName: service.ownerName,
+          origem: "service_detail_checkout",
+          status: "interested",
+          createdAt: serverTimestamp(),
+          contactedAt: null,
+          viewed: false
+        });
 
-      // Formatar mensagem do WhatsApp
-      const message = `Olá! Vi seu serviço "${service.title}" no Turplace e gostaria de mais informações.`;
-      const encodedMessage = encodeURIComponent(message);
-      const whatsappNumber = service.whatsapp.replace(/\D/g, '');
-      const waUrl = `https://wa.me/55${whatsappNumber}?text=${encodedMessage}`;
-      
-      setSuccess("Redirecionando para o WhatsApp...");
-      setTimeout(() => {
-        window.open(waUrl, "_blank");
-        setContacting(false);
-        setSuccess(null);
-      }, 1000);
+        // Redirecionar para checkout
+        const checkoutUrl = `/checkout?serviceId=${service.id}`;
+        setSuccess("Redirecionando para pagamento...");
+        setTimeout(() => {
+          window.location.href = checkoutUrl;
+        }, 1000);
+      } else {
+        // Fallback para WhatsApp se não houver preço
+        await addDoc(collection(db, "leads"), {
+          serviceId: service.id,
+          serviceTitle: service.title,
+          ownerId: service.ownerId,
+          ownerEmail: service.ownerEmail,
+          ownerName: service.ownerName,
+          origem: "service_detail",
+          status: "pending",
+          createdAt: serverTimestamp(),
+          contactedAt: null,
+          viewed: false
+        });
+
+        const message = `Olá! Vi seu serviço "${service.title}" no Turplace e gostaria de mais informações.`;
+        const encodedMessage = encodeURIComponent(message);
+        const whatsappNumber = service.whatsapp.replace(/\D/g, '');
+        const waUrl = `https://wa.me/55${whatsappNumber}?text=${encodedMessage}`;
+        
+        setSuccess("Redirecionando para o WhatsApp...");
+        setTimeout(() => {
+          window.open(waUrl, "_blank");
+          setContacting(false);
+          setSuccess(null);
+        }, 1000);
+      }
       
     } catch (err) {
-      console.error("Erro ao registrar lead:", err);
-      setError("Erro ao iniciar contato. Tente novamente.");
+      console.error("Erro ao processar contato:", err);
+      setError("Erro ao processar. Tente novamente.");
       setContacting(false);
     }
   };
@@ -415,12 +444,16 @@ export default function ServiceDetail() {
 
           {/* Coluna da Direita - Contato e Prestador */}
           <div className="lg:col-span-1 space-y-6">
-            {/* Card de Contato */}
+            {/* Card de Contato/Compra */}
             <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-6">
               <div className="text-center mb-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Entre em contato</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                  {service.priceId || service.price || service.priceMonthly ? "Comprar Agora" : "Entre em contato"}
+                </h3>
                 <p className="text-gray-600">
-                  Respondemos rapidamente pelo WhatsApp
+                  {service.priceId || service.price || service.priceMonthly 
+                    ? "Pagamento seguro pela plataforma" 
+                    : "Respondemos rapidamente pelo WhatsApp"}
                 </p>
               </div>
 
@@ -444,12 +477,12 @@ export default function ServiceDetail() {
                 {contacting ? (
                   <>
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-                    Conectando...
+                    {service.priceId || service.price || service.priceMonthly ? "Processando..." : "Conectando..."}
                   </>
                 ) : (
                   <>
                     <Phone size={24} />
-                    Falar no WhatsApp
+                    {service.priceId || service.price || service.priceMonthly ? "Comprar Agora" : "Falar no WhatsApp"}
                   </>
                 )}
               </button>

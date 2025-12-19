@@ -48,7 +48,10 @@ export default function ServiceForm() {
     city: "",
     description: "",
     whatsapp: "",
-    price: ""
+    price: "",
+    productType: "service", // 'service' ou 'infoproduct'
+    billingType: "one-time", // 'one-time' ou 'subscription'
+    priceMonthly: "" // para assinaturas
   });
   
   const [images, setImages] = useState<File[]>([]);
@@ -221,7 +224,35 @@ export default function ServiceForm() {
       };
       
       // Salvar no Firestore
-      await addDoc(collection(db, "services"), serviceData);
+      const docRef = await addDoc(collection(db, "services"), serviceData);
+      const serviceId = docRef.id;
+
+      // Criar produto no Stripe
+      try {
+        const stripeResponse = await fetch('/api/create-stripe-product', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            serviceId,
+            productType: form.productType,
+            billingType: form.billingType,
+            price: form.price,
+            priceMonthly: form.priceMonthly,
+            title: form.title,
+            description: form.description
+          })
+        });
+
+        if (!stripeResponse.ok) {
+          console.warn('Erro ao criar produto no Stripe:', await stripeResponse.text());
+          // Não falhar o cadastro por causa do Stripe
+        }
+      } catch (stripeError) {
+        console.warn('Erro na chamada do Stripe:', stripeError);
+        // Não falhar o cadastro
+      }
       
       // Limpar formulário
       setForm({
@@ -231,7 +262,10 @@ export default function ServiceForm() {
         city: "",
         description: "",
         whatsapp: "",
-        price: ""
+        price: "",
+        productType: "service",
+        billingType: "one-time",
+        priceMonthly: ""
       });
       setImages([]);
       setImagePreviews([]);
@@ -441,6 +475,57 @@ export default function ServiceForm() {
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
                 />
               </div>
+
+              {/* Tipo de Produto */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  📦 Tipo de Produto *
+                </label>
+                <select
+                  name="productType"
+                  value={form.productType}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                  required
+                >
+                  <option value="service">Serviço</option>
+                  <option value="infoproduct">Infoproduto</option>
+                </select>
+              </div>
+
+              {/* Tipo de Cobrança */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  💳 Tipo de Cobrança *
+                </label>
+                <select
+                  name="billingType"
+                  value={form.billingType}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                  required
+                >
+                  <option value="one-time">Pagamento Único</option>
+                  <option value="subscription">Assinatura</option>
+                </select>
+              </div>
+
+              {/* Preço Mensal (para assinaturas) */}
+              {form.billingType === 'subscription' && (
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    💰 Valor Mensal da Assinatura *
+                  </label>
+                  <input
+                    name="priceMonthly"
+                    value={form.priceMonthly}
+                    onChange={handleChange}
+                    placeholder="Ex: R$ 29,90 por mês"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                    required={form.billingType === 'subscription'}
+                  />
+                </div>
+              )}
 
               {/* Descrição */}
               <div className="md:col-span-2">

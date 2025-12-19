@@ -13,6 +13,7 @@ import HowItWorks from './pages/HowItWorks';
 import Partnerships from './pages/Partnerships';
 import Contact from './pages/Contact';
 import Wallet from './pages/Wallet';
+import Checkout from './pages/Checkout';
 
 function App() {
   const { user } = useAuth();
@@ -28,6 +29,7 @@ function App() {
         <Route path="/dashboard/service/new" element={<RequireAuth><ServiceForm /></RequireAuth>} />
         <Route path="/provider" element={<RequireAuth><ProviderDashboard /></RequireAuth>} />
         <Route path="/service/:id" element={<ServiceDetail />} />
+        <Route path="/checkout" element={<RequireAuth><Checkout /></RequireAuth>} />
         <Route path="/admin" element={<RequireAuth><AdminDashboard /></RequireAuth>} />
         <Route path="/how-it-works" element={<HowItWorks />} />
         <Route path="/partnerships" element={<Partnerships />} />
