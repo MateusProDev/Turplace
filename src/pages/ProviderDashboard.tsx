@@ -394,7 +394,17 @@ export default function ProviderDashboard() {
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="text-sm text-gray-700 font-medium">{profile?.planId || 'free'}</div>
-                        <div className="px-2 py-0.5 bg-white border rounded text-xs text-gray-600">Taxa: {profile?.platformFeePercent ? `${profile.platformFeePercent}%` : '—'}</div>
+                        <div className="px-2 py-0.5 bg-white border rounded text-xs text-gray-600">
+                          Taxa: {(() => {
+                            const planId = profile?.planId || 'free';
+                            const feeMap: { [key: string]: number } = {
+                              'free': 12,
+                              'professional': 8,
+                              'premium': 3.99
+                            };
+                            return `${feeMap[planId] || profile?.platformFeePercent || 12}%`;
+                          })()}
+                        </div>
                       </div>
                       {profile?.planFeatures && (
                         <div className="mt-3 text-xs text-gray-600">
