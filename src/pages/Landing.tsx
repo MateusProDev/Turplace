@@ -416,7 +416,9 @@ export default function Landing() {
                       <div className="text-xl font-bold text-gray-900">
                         R$ {content.price.toFixed(2).replace('.', ',')}
                       </div>
-                      <p className="text-xs text-gray-500">por pessoa</p>
+                      <p className="text-xs text-gray-500">
+                        {content.billingType === 'subscription' ? 'por mês' : 'valor único'}
+                      </p>
                     </div>
                     
                     <button className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-medium rounded-lg hover:from-blue-700 hover:to-cyan-600 transition-all shadow-sm hover:shadow-md group/btn text-xs">
