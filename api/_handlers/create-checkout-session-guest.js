@@ -121,18 +121,18 @@ export default async (req, res) => {
       ...(isSubscription ? {} : { customer_creation: 'always' }) // customer_creation só para payment mode
     };
 
-    if (provider.connectedAccountId) {
+    if (provider.stripeAccountId) {
       if (isSubscription) {
         // Para subscriptions, configurar application_fee_percent na subscription
         sessionCreateParams.subscription_data = {
           application_fee_percent: commissionPercent,
-          transfer_data: { destination: provider.connectedAccountId }
+          transfer_data: { destination: provider.stripeAccountId }
         };
       } else {
         // Para payments únicos, usar payment_intent_data
         sessionCreateParams.payment_intent_data = {
           application_fee_amount: commissionAmount,
-          transfer_data: { destination: provider.connectedAccountId }
+          transfer_data: { destination: provider.stripeAccountId }
         };
       }
     }

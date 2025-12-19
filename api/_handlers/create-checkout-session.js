@@ -79,11 +79,11 @@ export default async (req, res) => {
       metadata: { orderId: orderRef.id }
     };
 
-    if (provider.connectedAccountId) {
+    if (provider.stripeAccountId) {
       // application_fee_amount em centavos
       sessionCreateParams.payment_intent_data = {
         application_fee_amount: commissionAmount,
-        transfer_data: { destination: provider.connectedAccountId }
+        transfer_data: { destination: provider.stripeAccountId }
       };
     }
 
