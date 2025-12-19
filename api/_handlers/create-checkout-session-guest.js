@@ -53,11 +53,13 @@ export default async (req, res) => {
     const commissionPercent = plan ? plan.commissionPercent : 15;
     console.log('[create-checkout-session-guest] Plano e comissão', { planId, commissionPercent });
 
-    // Calcula valores
-    const unitAmount = Math.round((service.price || 0) * 100); // em centavos
+    // Calcula valores baseado no tipo de cobrança
+    const isSubscription = service.billingType === 'subscription' || service.priceType === 'recurring';
+    const priceValue = isSubscription ? (service.priceMonthly || service.price || 0) : (service.price || 0);
+    const unitAmount = Math.round(priceValue * 100); // em centavos
     const totalAmount = unitAmount;
     const commissionAmount = Math.round(totalAmount * (commissionPercent / 100));
-    console.log('[create-checkout-session-guest] Valores calculados', { unitAmount, totalAmount, commissionAmount });
+    console.log('[create-checkout-session-guest] Valores calculados', { isSubscription, priceValue, unitAmount, totalAmount, commissionAmount });
 
     // Cria order no Firestore
     const orderRef = db.collection('orders').doc();
@@ -71,6 +73,7 @@ export default async (req, res) => {
       status: 'pending',
       createdAt: new Date().toISOString(),
       isGuestCheckout: true,
+      isSubscription,
       serviceTitle: service.title,
       providerName: provider.name || service.ownerName,
       providerEmail: provider.email || service.ownerEmail
@@ -79,16 +82,22 @@ export default async (req, res) => {
     console.log('[create-checkout-session-guest] Ordem criada', { orderId: orderRef.id, order });
 
     // Cria Checkout Session com Connect se provider tiver connectedAccountId
+    const priceData = {
+      currency: 'brl',
+      product_data: {
+        name: service.title || 'Serviço',
+        description: service.description ? service.description.substring(0, 200) : undefined
+      },
+      unit_amount: unitAmount
+    };
+
+    if (isSubscription) {
+      priceData.recurring = { interval: 'month' };
+    }
+
     const lineItems = [
       {
-        price_data: {
-          currency: 'brl',
-          product_data: {
-            name: service.title || 'Serviço',
-            description: service.description ? service.description.substring(0, 200) : undefined
-          },
-          unit_amount: unitAmount
-        },
+        price_data: priceData,
         quantity: 1
       }
     ];
@@ -96,14 +105,15 @@ export default async (req, res) => {
     const sessionCreateParams = {
       payment_method_types: ['card'],
       line_items: lineItems,
-      mode: 'payment',
+      mode: isSubscription ? 'subscription' : 'payment',
       customer_email: undefined, // Será coletado pelo Stripe Checkout
       success_url: successUrl || `${process.env.FRONTEND_URL || 'http://localhost:5173'}/success?session_id={CHECKOUT_SESSION_ID}&order_id=${orderRef.id}`,
       cancel_url: cancelUrl || `${process.env.FRONTEND_URL || 'http://localhost:5173'}/cancel`,
       metadata: {
         orderId: orderRef.id,
         serviceId: serviceId,
-        isGuestCheckout: 'true'
+        isGuestCheckout: 'true',
+        isSubscription: isSubscription ? 'true' : 'false'
       },
       billing_address_collection: 'required',
       customer_creation: 'always' // Criar cliente automaticamente
