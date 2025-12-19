@@ -118,7 +118,7 @@ export default async (req, res) => {
         isSubscription: isSubscription ? 'true' : 'false'
       },
       billing_address_collection: 'required',
-      customer_creation: 'always' // Criar cliente automaticamente
+      ...(isSubscription ? {} : { customer_creation: 'always' }) // customer_creation só para payment mode
     };
 
     if (provider.connectedAccountId) {
