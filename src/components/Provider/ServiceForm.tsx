@@ -8,7 +8,9 @@ import {
   query, 
   where, 
   getDocs,
-  Timestamp 
+  Timestamp,
+  updateDoc,
+  doc
 } from "firebase/firestore";
 import { uploadToCloudinary } from "../../utils/cloudinary";
 import { useAuth } from "../../hooks/useAuth";
@@ -38,24 +40,30 @@ interface Service {
   createdAt: Timestamp;
 }
 
-export default function ServiceForm() {
+interface ServiceFormProps {
+  editMode?: boolean;
+  serviceData?: any;
+  onClose?: () => void;
+}
+
+export default function ServiceForm({ editMode = false, serviceData, onClose }: ServiceFormProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    title: "",
-    type: "Turismo",
-    category: "",
-    city: "",
-    description: "",
-    whatsapp: "",
-    price: "",
-    productType: "service", // 'service' ou 'infoproduct'
-    billingType: "one-time", // 'one-time' ou 'subscription'
-    priceMonthly: "" // para assinaturas
+    title: editMode && serviceData ? serviceData.title || "" : "",
+    type: editMode && serviceData ? serviceData.type || "Turismo" : "Turismo",
+    category: editMode && serviceData ? serviceData.category || "" : "",
+    city: editMode && serviceData ? serviceData.city || "" : "",
+    description: editMode && serviceData ? serviceData.description || "" : "",
+    whatsapp: editMode && serviceData ? serviceData.whatsapp || "" : "",
+    price: editMode && serviceData ? serviceData.price || "" : "",
+    productType: editMode && serviceData ? serviceData.productType || "service" : "service",
+    billingType: editMode && serviceData ? serviceData.billingType || "one-time" : "one-time",
+    priceMonthly: editMode && serviceData ? serviceData.priceMonthly || "" : ""
   });
   
   const [images, setImages] = useState<File[]>([]);
-  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>(editMode && serviceData ? serviceData.images || [] : []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -208,24 +216,40 @@ export default function ServiceForm() {
       }
       
       // Preparar dados para o Firestore
-      const serviceData = {
+      const firestoreData = {
         ...form,
         images: imageUrls,
         ownerId: user.uid,
         ownerEmail: user.email,
         ownerName: user.displayName || "Anônimo",
         status: "approved",
-        views: 0,
-        leads: 0,
-        featured: false,
-        createdAt: serverTimestamp(),
+        views: editMode && serviceData ? serviceData.views || 0 : 0,
+        leads: editMode && serviceData ? serviceData.leads || 0 : 0,
+        featured: editMode && serviceData ? serviceData.featured || false : false,
+        createdAt: editMode && serviceData ? serviceData.createdAt : serverTimestamp(),
         updatedAt: serverTimestamp(),
         price: form.price || "Sob consulta"
       };
       
       // Salvar no Firestore
-      const docRef = await addDoc(collection(db, "services"), serviceData);
-      const serviceId = docRef.id;
+      let serviceId: string;
+      
+      if (editMode && serviceData) {
+        // Atualizar serviço existente
+        await updateDoc(doc(db, "services", serviceData.id), {
+          ...form,
+          images: imageUrls,
+          updatedAt: serverTimestamp(),
+          price: form.price || "Sob consulta"
+        });
+        serviceId = serviceData.id;
+        setSuccess("Serviço atualizado com sucesso!");
+      } else {
+        // Criar novo serviço
+        const docRef = await addDoc(collection(db, "services"), firestoreData);
+        serviceId = docRef.id;
+        setSuccess("Serviço cadastrado com sucesso! Agora ele está disponível na plataforma.");
+      }
 
       // Criar produto no Stripe
       try {
@@ -254,27 +278,33 @@ export default function ServiceForm() {
         // Não falhar o cadastro
       }
       
-      // Limpar formulário
-      setForm({
-        title: "",
-        type: "Turismo",
-        category: "",
-        city: "",
-        description: "",
-        whatsapp: "",
-        price: "",
-        productType: "service",
-        billingType: "one-time",
-        priceMonthly: ""
-      });
-      setImages([]);
-      setImagePreviews([]);
+      // Limpar formulário apenas se não estiver em modo de edição
+      if (!editMode) {
+        setForm({
+          title: "",
+          type: "Turismo",
+          category: "",
+          city: "",
+          description: "",
+          whatsapp: "",
+          price: "",
+          productType: "service",
+          billingType: "one-time",
+          priceMonthly: ""
+        });
+        setImages([]);
+        setImagePreviews([]);
+      }
       
-      setSuccess("Serviço cadastrado com sucesso! Agora ele está disponível na plataforma.");
       setLoading(false);
       
       // Scroll para o topo
       window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      // Chamar onClose se existir (para fechar modal)
+      if (editMode && onClose) {
+        setTimeout(() => onClose(), 2000);
+      }
       
     } catch (err: any) {
       console.error("Erro ao cadastrar serviço:", err);
@@ -324,11 +354,14 @@ export default function ServiceForm() {
       {/* Header */}
       <div className="text-center mb-10">
         <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-          Cadastrar Novo Serviço
+          {editMode ? "Editar Serviço" : "Cadastrar Novo Serviço"}
         </h1>
         <p className="text-gray-600 max-w-2xl mx-auto">
-          Preencha os dados do seu serviço para aparecer no marketplace. 
-          <span className="text-blue-600 font-semibold"> Gratuito e sem mensalidade!</span>
+          {editMode 
+            ? "Atualize os dados do seu serviço no marketplace."
+            : "Preencha os dados do seu serviço para aparecer no marketplace."
+          }
+          {!editMode && <span className="text-blue-600 font-semibold"> Gratuito e sem mensalidade!</span>}
         </p>
       </div>
 
@@ -346,7 +379,7 @@ export default function ServiceForm() {
                 <div>
                   <p className="font-semibold text-green-800">{success}</p>
                   <p className="text-green-600 text-sm mt-1">
-                    Seu serviço já está disponível no catálogo.
+                    {editMode ? "As alterações foram salvas." : "Seu serviço já está disponível no catálogo."}
                   </p>
                 </div>
               </div>

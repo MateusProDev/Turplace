@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import Pricing from "./Pricing";
 import Wallet from "./Wallet";
+import ServiceForm from "../components/Provider/ServiceForm";
 
 export default function ProviderDashboard() {
   const { user, userData } = useAuth();
@@ -41,6 +42,8 @@ export default function ProviderDashboard() {
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [currentTab, setCurrentTab] = useState<'services' | 'profile' | 'plans' | 'wallet'>('services');
+  const [editingService, setEditingService] = useState<any>(null);
+  const [editServiceModal, setEditServiceModal] = useState(false);
 
   // Load dashboard settings on mount
   useEffect(() => {
@@ -554,7 +557,8 @@ export default function ProviderDashboard() {
                               className="px-3 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 text-xs font-semibold transition flex items-center gap-1"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                navigate(`/service/${service.id}?edit=1`);
+                                setEditingService(service);
+                                setEditServiceModal(true);
                               }}
                             >
                               <Edit2 size={12} />
@@ -702,6 +706,42 @@ export default function ProviderDashboard() {
         onCancel={() => { setModalOpen(false); setDeleteId(null); }}
         onConfirm={handleDelete}
       />
+
+      {/* Modal de Edição de Serviço */}
+      {editServiceModal && editingService && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-xl font-bold text-gray-900">Editar Serviço</h2>
+              <button
+                onClick={() => {
+                  setEditServiceModal(false);
+                  setEditingService(null);
+                }}
+                className="text-gray-400 hover:text-gray-600 transition"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              <ServiceForm
+                editMode={true}
+                serviceData={editingService}
+                onClose={() => {
+                  setEditServiceModal(false);
+                  setEditingService(null);
+                  // Recarregar serviços após edição
+                  const q = query(collection(db, "services"), where("ownerId", "==", user?.uid));
+                  getDocs(q).then(snapshot => {
+                    const servicesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    setServices(servicesData);
+                  });
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
