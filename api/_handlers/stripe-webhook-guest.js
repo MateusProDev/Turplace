@@ -29,24 +29,32 @@ export default async (req, res) => {
     switch (event.type) {
       case 'checkout.session.completed':
         const session = event.data.object;
-        console.log('[stripe-webhook] Checkout session completed', { sessionId: session.id });
+        console.log('[stripe-webhook] Checkout session completed', { sessionId: session.id, mode: session.mode });
 
         // Buscar ordem pelo metadata
         if (session.metadata && session.metadata.orderId) {
           const orderId = session.metadata.orderId;
           const isGuestCheckout = session.metadata.isGuestCheckout === 'true';
+          const isSubscription = session.metadata.isSubscription === 'true';
 
           try {
-            // Atualizar status da ordem
-            await db.collection('orders').doc(orderId).update({
-              status: 'completed',
+            const updateData = {
+              status: session.mode === 'subscription' ? 'active' : 'completed',
               paymentStatus: 'paid',
               customerEmail: session.customer_details?.email,
               customerName: session.customer_details?.name,
               paymentCompletedAt: new Date().toISOString(),
               stripeCustomerId: session.customer,
-              isGuestCheckout
-            });
+              isGuestCheckout,
+              stripeSessionId: session.id
+            };
+
+            if (session.mode === 'subscription') {
+              updateData.stripeSubscriptionId = session.subscription;
+            }
+
+            // Atualizar status da ordem
+            await db.collection('orders').doc(orderId).update(updateData);
 
             console.log('[stripe-webhook] Ordem atualizada', { orderId, status: 'completed' });
 
@@ -62,6 +70,55 @@ export default async (req, res) => {
           } catch (err) {
             console.error('[stripe-webhook] Erro ao atualizar ordem', { orderId, error: err });
           }
+        }
+        break;
+
+      case 'invoice.payment_succeeded':
+        const invoice = event.data.object;
+        console.log('[stripe-webhook] Invoice payment succeeded', { invoiceId: invoice.id, subscriptionId: invoice.subscription });
+
+        // Para pagamentos recorrentes de subscriptions
+        if (invoice.subscription) {
+          // Buscar ordem pela subscription ID
+          const ordersSnap = await db.collection('orders')
+            .where('stripeSubscriptionId', '==', invoice.subscription)
+            .limit(1)
+            .get();
+
+          if (!ordersSnap.empty) {
+            const orderDoc = ordersSnap.docs[0];
+            const orderData = orderDoc.data();
+
+            // Atualizar status do pagamento recorrente
+            await orderDoc.ref.update({
+              lastPaymentDate: new Date().toISOString(),
+              paymentStatus: 'paid',
+              // Manter status 'active' para subscriptions ativas
+            });
+
+            console.log('[stripe-webhook] Subscription payment processed', { orderId: orderDoc.id, invoiceId: invoice.id });
+          }
+        }
+        break;
+
+      case 'customer.subscription.deleted':
+        const canceledSubscription = event.data.object;
+        console.log('[stripe-webhook] Subscription canceled', { subscriptionId: canceledSubscription.id });
+
+        // Buscar e atualizar ordem quando subscription é cancelada
+        const canceledOrdersSnap = await db.collection('orders')
+          .where('stripeSubscriptionId', '==', canceledSubscription.id)
+          .limit(1)
+          .get();
+
+        if (!canceledOrdersSnap.empty) {
+          const orderDoc = canceledOrdersSnap.docs[0];
+          await orderDoc.ref.update({
+            status: 'canceled',
+            canceledAt: new Date().toISOString()
+          });
+
+          console.log('[stripe-webhook] Subscription canceled', { orderId: orderDoc.id });
         }
         break;
 

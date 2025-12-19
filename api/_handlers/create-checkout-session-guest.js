@@ -122,11 +122,19 @@ export default async (req, res) => {
     };
 
     if (provider.connectedAccountId) {
-      // application_fee_amount em centavos
-      sessionCreateParams.payment_intent_data = {
-        application_fee_amount: commissionAmount,
-        transfer_data: { destination: provider.connectedAccountId }
-      };
+      if (isSubscription) {
+        // Para subscriptions, configurar application_fee_percent na subscription
+        sessionCreateParams.subscription_data = {
+          application_fee_percent: commissionPercent,
+          transfer_data: { destination: provider.connectedAccountId }
+        };
+      } else {
+        // Para payments únicos, usar payment_intent_data
+        sessionCreateParams.payment_intent_data = {
+          application_fee_amount: commissionAmount,
+          transfer_data: { destination: provider.connectedAccountId }
+        };
+      }
     }
 
     let session;
