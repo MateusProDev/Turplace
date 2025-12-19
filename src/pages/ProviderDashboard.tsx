@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { doc, onSnapshot, collection, query, where, getDocs, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../utils/firebase";
+import { updateProfile } from "firebase/auth";
 import { useAuth } from "../hooks/useAuth";
 import Logout from "../components/Auth/Logout";
 import { uploadToCloudinary } from "../utils/cloudinary";
@@ -149,6 +150,11 @@ export default function ProviderDashboard() {
         name: name.trim(),
         bio: bio.trim(),
         updatedAt: new Date()
+      });
+      
+      // Atualizar displayName no Firebase Auth
+      await updateProfile(user, {
+        displayName: name.trim()
       });
       
       // Atualizar ownerName em todos os serviços do usuário
