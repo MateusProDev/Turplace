@@ -154,28 +154,11 @@ export default function ServiceDetail() {
           window.location.href = checkoutUrl;
         }, 1000);
       } else {
-        // Fallback para WhatsApp se não houver preço
-        await addDoc(collection(db, "leads"), {
-          serviceId: service.id,
-          serviceTitle: service.title,
-          ownerId: service.ownerId,
-          ownerEmail: service.ownerEmail,
-          ownerName: service.ownerName,
-          origem: "service_detail",
-          status: "pending",
-          createdAt: serverTimestamp(),
-          contactedAt: null,
-          viewed: false
-        });
-
-        const message = `Olá! Vi seu serviço "${service.title}" no Turplace e gostaria de mais informações.`;
-        const encodedMessage = encodeURIComponent(message);
-        const whatsappNumber = service.whatsapp.replace(/\D/g, '');
-        const waUrl = `https://wa.me/55${whatsappNumber}?text=${encodedMessage}`;
-        
-        setSuccess("Redirecionando para o WhatsApp...");
+        // Para serviços sem preço, mostrar modal de contato
+        setSuccess("Abrindo formulário de contato...");
         setTimeout(() => {
-          window.open(waUrl, "_blank");
+          // Por enquanto, vamos redirecionar para uma página de contato ou mostrar um alert
+          alert("Funcionalidade de contato será implementada em breve. Entre em contato diretamente com o prestador.");
           setContacting(false);
           setSuccess(null);
         }, 1000);
@@ -243,11 +226,6 @@ export default function ServiceDetail() {
       </div>
     );
   }
-
-  const whatsappNumber = service.whatsapp?.replace(/\D/g, '');
-  const formattedWhatsApp = whatsappNumber 
-    ? `(${whatsappNumber.substring(0,2)}) ${whatsappNumber.substring(2,7)}-${whatsappNumber.substring(7)}`
-    : "Não informado";
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
@@ -448,12 +426,12 @@ export default function ServiceDetail() {
             <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-6">
               <div className="text-center mb-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  {service.priceId || service.price || service.priceMonthly ? "Comprar Agora" : "Entre em contato"}
+                  {service.priceId || service.price || service.priceMonthly ? "Comprar Agora" : "Contratar Serviço"}
                 </h3>
                 <p className="text-gray-600">
                   {service.priceId || service.price || service.priceMonthly 
                     ? "Pagamento seguro pela plataforma" 
-                    : "Respondemos rapidamente pelo WhatsApp"}
+                    : "Entre em contato para contratar este serviço"}
                 </p>
               </div>
 
@@ -482,22 +460,12 @@ export default function ServiceDetail() {
                 ) : (
                   <>
                     <Phone size={24} />
-                    {service.priceId || service.price || service.priceMonthly ? "Comprar Agora" : "Falar no WhatsApp"}
+                    {service.priceId || service.price || service.priceMonthly ? "Comprar Agora" : "Contratar Serviço"}
                   </>
                 )}
               </button>
 
               <div className="space-y-4 mb-6">
-                <div className="border-t pt-4">
-                  <div className="flex items-center gap-2 text-gray-600 mb-2">
-                    <Phone size={18} />
-                    <span className="font-medium">WhatsApp</span>
-                  </div>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {formattedWhatsApp}
-                  </p>
-                </div>
-
                 <div className="border-t pt-4">
                   <div className="flex items-center gap-2 text-gray-600 mb-2">
                     <MapPin size={18} />
@@ -515,7 +483,9 @@ export default function ServiceDetail() {
               <div className="text-center">
                 <p className="text-sm text-gray-500">
                   <Shield className="inline-block w-4 h-4 mr-1" />
-                  Seu contato está protegido e só será compartilhado após sua autorização
+                  {service.priceId || service.price || service.priceMonthly 
+                    ? "Pagamento processado de forma segura pela plataforma"
+                    : "Entre em contato de forma segura através da plataforma"}
                 </p>
               </div>
             </div>

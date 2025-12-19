@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { db } from "../utils/firebase";
-import { collection, query, where, onSnapshot, serverTimestamp, addDoc } from "firebase/firestore";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { Link } from "react-router-dom";
 import { 
   Search, 
@@ -85,31 +85,6 @@ export default function Catalog() {
     setCategory("");
     setCity("");
     setActiveFilters({});
-  };
-
-  const createLeadAndOpen = async (service: any) => {
-    try {
-      await addDoc(collection(db, "leads"), {
-        serviceId: service.id,
-        serviceTitle: service.title,
-        ownerId: service.ownerId,
-        ownerEmail: service.ownerEmail,
-        ownerName: service.ownerName,
-        origem: "catalog",
-        status: "pending",
-        createdAt: serverTimestamp(),
-        viewed: false
-      });
-    } catch (err) {
-      console.error("Erro criando lead", err);
-    }
-    
-    const message = `Olá! Vi seu serviço "${service.title}" no Turplace e gostaria de mais informações.`;
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappNumber = service.whatsapp.replace(/\D/g, '');
-    const waUrl = `https://wa.me/55${whatsappNumber}?text=${encodedMessage}`;
-    
-    window.open(waUrl, "_blank");
   };
 
   const formatNumber = (num: number) => {
@@ -450,15 +425,15 @@ export default function Catalog() {
                       
                       {/* Botões de ação */}
                       <div className="mt-auto space-y-2">
-                        <button
-                          onClick={() => createLeadAndOpen(service)}
-                          className="w-full px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 transition flex items-center justify-center gap-2"
+                        <Link
+                          to={`/service/${service.id}`}
+                          className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition flex items-center justify-center gap-2"
                         >
-                          <Phone size={18} />
-                          Contatar agora
-                        </button>
+                          <Eye size={18} />
+                          Ver produto
+                        </Link>
                         
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 gap-2">
                           <Link
                             to={`/service/${service.id}`}
                             className="px-3 py-2 border border-blue-600 text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition flex items-center justify-center gap-2 text-sm"
@@ -466,14 +441,6 @@ export default function Catalog() {
                             <Eye size={16} />
                             Detalhes
                           </Link>
-                          
-                          <button
-                            onClick={() => createLeadAndOpen(service)}
-                            className="px-3 py-2 border border-green-600 text-green-600 rounded-lg font-medium hover:bg-green-50 transition flex items-center justify-center gap-2 text-sm"
-                          >
-                            <Phone size={16} />
-                            WhatsApp
-                          </button>
                         </div>
                       </div>
                     </div>
