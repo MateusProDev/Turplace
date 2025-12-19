@@ -55,11 +55,13 @@ export default async (req, res) => {
 
     // Calcula valores baseado no tipo de cobrança
     const isSubscription = service.billingType === 'subscription' || service.priceType === 'recurring';
-    const priceValue = isSubscription ? (service.priceMonthly || service.price || 0) : (service.price || 0);
+    const rawPrice = isSubscription ? (service.priceMonthly || service.price || 0) : (service.price || 0);
+    // Converte preço para número, lidando com formato brasileiro (vírgula como separador decimal)
+    const priceValue = typeof rawPrice === 'string' ? parseFloat(rawPrice.replace(',', '.')) : rawPrice;
     const unitAmount = Math.round(priceValue * 100); // em centavos
     const totalAmount = unitAmount;
     const commissionAmount = Math.round(totalAmount * (commissionPercent / 100));
-    console.log('[create-checkout-session-guest] Valores calculados', { isSubscription, priceValue, unitAmount, totalAmount, commissionAmount });
+    console.log('[create-checkout-session-guest] Valores calculados', { isSubscription, rawPrice, priceValue, unitAmount, totalAmount, commissionAmount });
 
     // Cria order no Firestore
     const orderRef = db.collection('orders').doc();
