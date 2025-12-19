@@ -145,30 +145,51 @@ export default function ProviderDashboard() {
   const handleNameSave = async () => {
     if (!user) return;
     
+    console.log("Salvando nome:", name.trim());
+    
+    // Mostrar loading state
+    setEditMode(true);
+    
     try {
+      // Atualizar documento do usuário
       await updateDoc(doc(db, "users", user.uid), { 
         name: name.trim(),
         bio: bio.trim(),
         updatedAt: new Date()
       });
+      console.log("Documento do usuário atualizado");
       
       // Atualizar displayName no Firebase Auth
       await updateProfile(user, {
         displayName: name.trim()
       });
+      console.log("displayName atualizado:", user.displayName);
       
-      // Atualizar ownerName em todos os serviços do usuário
+      // Atualizar ownerName em todos os serviços do usuário (em lotes para performance)
       const q = query(collection(db, "services"), where("ownerId", "==", user.uid));
       const snapshot = await getDocs(q);
-      const updatePromises = snapshot.docs.map(doc => 
-        updateDoc(doc.ref, { ownerName: name.trim() })
-      );
-      await Promise.all(updatePromises);
+      console.log("Encontrados", snapshot.docs.length, "serviços para atualizar");
       
-      setEditMode(false);
+      if (snapshot.docs.length > 0) {
+        // Processar em lotes de 10 para não sobrecarregar
+        const batchSize = 10;
+        for (let i = 0; i < snapshot.docs.length; i += batchSize) {
+          const batch = snapshot.docs.slice(i, i + batchSize);
+          const updatePromises = batch.map(doc => 
+            updateDoc(doc.ref, { ownerName: name.trim() })
+          );
+          await Promise.all(updatePromises);
+          console.log(`Lote ${Math.floor(i/batchSize) + 1} atualizado`);
+        }
+      }
+      
+      console.log("Todos os serviços atualizados");
+      alert("Perfil salvo com sucesso! O nome será atualizado nos cards em alguns segundos.");
     } catch (error) {
       console.error("Erro ao salvar perfil:", error);
       alert("Erro ao salvar perfil. Tente novamente.");
+    } finally {
+      setEditMode(false);
     }
   };
 

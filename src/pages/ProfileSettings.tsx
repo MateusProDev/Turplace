@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../utils/firebase';
+import { updateProfile } from 'firebase/auth';
 import { uploadToCloudinary } from '../utils/cloudinary';
 import { useNavigate } from 'react-router-dom';
 import { Save, Palette, Type, User, Settings, ArrowLeft } from 'lucide-react';
@@ -152,9 +153,33 @@ export default function ProfileSettings() {
         updatedAt: new Date(),
       });
 
+      // Atualizar displayName no Firebase Auth
+      await updateProfile(user, {
+        displayName: name.trim()
+      });
+      console.log('displayName atualizado');
+
+      // Atualizar ownerName em todos os serviços do usuário
+      const q = query(collection(db, "services"), where("ownerId", "==", user.uid));
+      const snapshot = await getDocs(q);
+      console.log("Encontrados", snapshot.docs.length, "serviços para atualizar");
+
+      if (snapshot.docs.length > 0) {
+        // Processar em lotes de 10 para performance
+        const batchSize = 10;
+        for (let i = 0; i < snapshot.docs.length; i += batchSize) {
+          const batch = snapshot.docs.slice(i, i + batchSize);
+          const updatePromises = batch.map(doc =>
+            updateDoc(doc.ref, { ownerName: name.trim() })
+          );
+          await Promise.all(updatePromises);
+          console.log(`Lote ${Math.floor(i/batchSize) + 1} atualizado`);
+        }
+      }
+
       console.log('Perfil salvo com sucesso!');
-      setMessage('Perfil salvo com sucesso!');
-      setTimeout(() => setMessage(''), 3000);
+      setMessage('Perfil salvo com sucesso! O nome será atualizado nos cards em alguns segundos.');
+      setTimeout(() => setMessage(''), 5000);
     } catch (error) {
       console.error('Erro ao salvar perfil:', error);
       setMessage('Erro ao salvar perfil. Tente novamente.');
