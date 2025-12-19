@@ -150,6 +150,15 @@ export default function ProviderDashboard() {
         bio: bio.trim(),
         updatedAt: new Date()
       });
+      
+      // Atualizar ownerName em todos os serviços do usuário
+      const q = query(collection(db, "services"), where("ownerId", "==", user.uid));
+      const snapshot = await getDocs(q);
+      const updatePromises = snapshot.docs.map(doc => 
+        updateDoc(doc.ref, { ownerName: name.trim() })
+      );
+      await Promise.all(updatePromises);
+      
       setEditMode(false);
     } catch (error) {
       console.error("Erro ao salvar perfil:", error);

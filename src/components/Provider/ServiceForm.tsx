@@ -252,6 +252,7 @@ export default function ServiceForm({ editMode = false, serviceData, onClose }: 
         await updateDoc(doc(db, "services", serviceData.id), {
           ...form,
           images: imageUrls,
+          ownerName: user.displayName || userData?.name || "Anônimo",
           updatedAt: serverTimestamp(),
           price: form.price || "Sob consulta"
         });
