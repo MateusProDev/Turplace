@@ -60,7 +60,7 @@ export default async (req, res) => {
       // Buscar dados do provider
       let providerData = null;
       if (orderData.providerId) {
-        const providerSnap = await db.collection('providers').doc(orderData.providerId).get();
+        const providerSnap = await db.collection('users').doc(orderData.providerId).get();
         if (providerSnap.exists) {
           providerData = { id: providerSnap.id, ...providerSnap.data() };
         }

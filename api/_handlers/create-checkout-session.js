@@ -29,7 +29,7 @@ export default async (req, res) => {
 
     // Busca provider
     const providerId = service.providerId || service.ownerId;
-    const providerSnap = await db.collection('providers').doc(providerId).get();
+    const providerSnap = await db.collection('users').doc(providerId).get();
     if (!providerSnap.exists) {
       console.warn('[create-checkout-session] Provider não encontrado', { providerId });
       return res.status(404).json({ error: 'Provider not found' });
