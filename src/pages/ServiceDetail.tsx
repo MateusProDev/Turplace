@@ -177,12 +177,21 @@ export default function ServiceDetail() {
             }
           }
           
-          // Incrementar visualizações
-          console.log("ServiceDetail: Incrementing views");
-          await updateDoc(ref, {
-            views: increment(1),
-            lastViewed: serverTimestamp()
-          });
+          // Incrementar visualizações (opcional - só se autenticado)
+          if (auth.currentUser) {
+            try {
+              console.log("ServiceDetail: Incrementing views");
+              await updateDoc(ref, {
+                views: increment(1),
+                lastViewed: serverTimestamp()
+              });
+            } catch (viewError) {
+              console.warn("ServiceDetail: Could not increment views (user not authenticated):", viewError);
+              // Não é erro crítico, continua normalmente
+            }
+          } else {
+            console.log("ServiceDetail: Skipping view increment (user not authenticated)");
+          }
           
           // Buscar avaliações
           const reviewsRef = collection(db, "services", id, "reviews");
