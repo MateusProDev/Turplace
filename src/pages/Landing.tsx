@@ -387,9 +387,9 @@ export default function Landing() {
                 to={`/product/${content.id}`}
                 className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 overflow-hidden border border-gray-100"
               >
-                <div className="flex flex-col sm:flex-row">
+                <div className="flex flex-col">
                   {/* Imagem do Conteúdo */}
-                  <div className="relative h-56 sm:h-48 sm:w-2/5 overflow-hidden">
+                  <div className="relative h-56 overflow-hidden">
                     <img 
                       src={content.imageUrl} 
                       alt={content.title}
@@ -410,8 +410,24 @@ export default function Landing() {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   </div>
                   
+                  {/* Preço e CTA - Logo abaixo da imagem */}
+                  <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                    <div>
+                      <div className="text-2xl font-bold text-gray-900">
+                        R$ {content.price.toFixed(2).replace('.', ',')}
+                      </div>
+                      <p className="text-sm text-gray-500">Valor por pessoa</p>
+                    </div>
+                    
+                    <button className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-cyan-600 transition-all shadow-md hover:shadow-lg group/btn">
+                      <BookOpen className="w-4 h-4" />
+                      <span>Ver detalhes</span>
+                      <ArrowRight className="w-4 h-4 opacity-0 -translate-x-2 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all" />
+                    </button>
+                  </div>
+                  
                   {/* Informações do Conteúdo */}
-                  <div className="flex-1 p-6 sm:p-8">
+                  <div className="p-6">
                     <div className="flex items-center gap-2 mb-3">
                       <span className="text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
                         {content.category}
@@ -432,7 +448,7 @@ export default function Landing() {
                     </p>
                     
                     {/* Stats */}
-                    <div className="flex items-center gap-6 mb-6">
+                    <div className="flex items-center gap-6">
                       <div className="flex items-center gap-2 text-gray-600">
                         <Eye className="w-4 h-4" />
                         <span className="text-sm font-medium">{content.views.toLocaleString()} visualizações</span>
@@ -441,22 +457,6 @@ export default function Landing() {
                         <Heart className="w-4 h-4 text-rose-500" />
                         <span className="text-sm font-medium">{content.bookings} reservas</span>
                       </div>
-                    </div>
-                    
-                    {/* Preço e CTA */}
-                    <div className="flex items-center justify-between pt-6 border-t border-gray-100">
-                      <div>
-                        <div className="text-2xl font-bold text-gray-900">
-                          R$ {content.price.toFixed(2).replace('.', ',')}
-                        </div>
-                        <p className="text-sm text-gray-500">Valor por pessoa</p>
-                      </div>
-                      
-                      <button className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-cyan-600 transition-all shadow-md hover:shadow-lg group/btn">
-                        <BookOpen className="w-4 h-4" />
-                        <span>Ver detalhes</span>
-                        <ArrowRight className="w-4 h-4 opacity-0 -translate-x-2 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all" />
-                      </button>
                     </div>
                   </div>
                 </div>
