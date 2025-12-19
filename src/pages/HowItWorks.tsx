@@ -12,7 +12,7 @@ import {
   MessageCircle,
   Calendar,
   CreditCard,
-  Award,
+  Award, 
   MapPin,
   Camera,
   Coffee,
