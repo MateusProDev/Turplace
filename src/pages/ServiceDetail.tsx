@@ -7,9 +7,12 @@ import {
   collection, 
   serverTimestamp,
   updateDoc,
-  increment 
+  increment,
+  addDoc,
+  query,
+  where
 } from "firebase/firestore";
-import { db } from "../utils/firebase";
+import { db, auth } from "../utils/firebase";
 import { 
   Phone, 
   MapPin, 
@@ -24,7 +27,8 @@ import {
   CheckCircle,
   AlertCircle,
   DollarSign,
-  Briefcase
+  Briefcase,
+  Star
 } from "lucide-react";
 
 interface ServiceData {
@@ -51,6 +55,17 @@ interface ServiceData {
   stripeProductId?: string;
   priceId?: string;
   priceType?: string;
+  rating?: number;
+  bookings?: number;
+}
+
+interface Review {
+  id: string;
+  userId: string;
+  userName: string;
+  rating: number;
+  comment?: string;
+  createdAt: Date;
 }
 
 interface ProviderMiniProfile {
@@ -76,6 +91,11 @@ export default function ServiceDetail() {
   const [views, setViews] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [userRating, setUserRating] = useState(0);
+  const [userReview, setUserReview] = useState('');
+  const [hasUserReviewed, setHasUserReviewed] = useState(false);
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -142,6 +162,27 @@ export default function ServiceDetail() {
             views: increment(1),
             lastViewed: serverTimestamp()
           });
+          
+          // Buscar avaliações
+          const reviewsRef = collection(db, "services", id, "reviews");
+          const reviewsSnap = await getDocs(reviewsRef);
+          const reviewsData = reviewsSnap.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            createdAt: doc.data().createdAt?.toDate() || new Date()
+          })) as Review[];
+          setReviews(reviewsData);
+          
+          // Verificar se o usuário atual já avaliou
+          const currentUser = auth.currentUser;
+          if (currentUser) {
+            const userReview = reviewsData.find(review => review.userId === currentUser.uid);
+            if (userReview) {
+              setHasUserReviewed(true);
+              setUserRating(userReview.rating);
+              setUserReview(userReview.comment || '');
+            }
+          }
         } else {
           console.log("ServiceDetail: Document does not exist");
           setError("Serviço não encontrado");
@@ -604,6 +645,156 @@ export default function ServiceDetail() {
                 </Link>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Seção de Avaliações */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="bg-white rounded-2xl shadow-lg p-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Avaliações dos Clientes</h2>
+          
+          {/* Formulário de Avaliação */}
+          {auth.currentUser && !hasUserReviewed && (
+            <div className="mb-8 p-6 bg-gray-50 rounded-xl">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Deixe sua avaliação</h3>
+              
+              {/* Estrelas */}
+              <div className="flex items-center gap-1 mb-4">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    onClick={() => setUserRating(star)}
+                    className="p-1 hover:scale-110 transition"
+                  >
+                    <Star
+                      size={24}
+                      className={`${
+                        star <= userRating
+                          ? 'text-yellow-400 fill-current'
+                          : 'text-gray-300'
+                      }`}
+                    />
+                  </button>
+                ))}
+                <span className="ml-2 text-sm text-gray-600">
+                  {userRating > 0 && `${userRating} estrela${userRating > 1 ? 's' : ''}`}
+                </span>
+              </div>
+              
+              {/* Comentário */}
+              <textarea
+                value={userReview}
+                onChange={(e) => setUserReview(e.target.value)}
+                placeholder="Conte sua experiência com este serviço (opcional)"
+                className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                rows={3}
+              />
+              
+              {/* Botão de envio */}
+              <div className="flex justify-end mt-4">
+                <button
+                  onClick={async () => {
+                    if (userRating === 0) {
+                      setError("Por favor, selecione uma avaliação em estrelas");
+                      return;
+                    }
+                    
+                    setSubmittingReview(true);
+                    try {
+                      const reviewData = {
+                        userId: auth.currentUser!.uid,
+                        userName: auth.currentUser!.displayName || "Usuário Anônimo",
+                        rating: userRating,
+                        comment: userReview.trim() || null,
+                        createdAt: serverTimestamp()
+                      };
+                      
+                      await addDoc(collection(db, "services", service!.id, "reviews"), reviewData);
+                      
+                      // Atualizar rating do serviço
+                      const newReviews = [...reviews, { ...reviewData, id: 'temp', createdAt: new Date() }];
+                      const avgRating = newReviews.reduce((sum, r) => sum + r.rating, 0) / newReviews.length;
+                      
+                      await updateDoc(doc(db, "services", service!.id), {
+                        rating: avgRating,
+                        bookings: newReviews.length
+                      });
+                      
+                      setReviews(newReviews);
+                      setHasUserReviewed(true);
+                      setSuccess("Avaliação enviada com sucesso!");
+                      
+                      // Limpar campos
+                      setUserRating(0);
+                      setUserReview('');
+                    } catch (err) {
+                      console.error("Erro ao enviar avaliação:", err);
+                      setError("Erro ao enviar avaliação. Tente novamente.");
+                    } finally {
+                      setSubmittingReview(false);
+                    }
+                  }}
+                  disabled={submittingReview}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submittingReview ? "Enviando..." : "Enviar Avaliação"}
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {hasUserReviewed && (
+            <div className="mb-8 p-4 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-green-800 font-medium">✓ Você já avaliou este serviço</p>
+            </div>
+          )}
+          
+          {/* Lista de Avaliações */}
+          <div className="space-y-6">
+            {reviews.length === 0 ? (
+              <div className="text-center py-8">
+                <Star className="mx-auto text-gray-300" size={48} />
+                <p className="text-gray-500 mt-2">Nenhuma avaliação ainda</p>
+                <p className="text-sm text-gray-400">Seja o primeiro a avaliar este serviço!</p>
+              </div>
+            ) : (
+              reviews.map((review) => (
+                <div key={review.id} className="border-b border-gray-100 pb-6 last:border-b-0 last:pb-0">
+                  <div className="flex items-start gap-4">
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 font-semibold text-sm">
+                        {review.userName.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="font-semibold text-gray-900">{review.userName}</span>
+                        <div className="flex items-center gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              size={14}
+                              className={`${
+                                star <= review.rating
+                                  ? 'text-yellow-400 fill-current'
+                                  : 'text-gray-300'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-xs text-gray-500">
+                          {review.createdAt.toLocaleDateString('pt-BR')}
+                        </span>
+                      </div>
+                      {review.comment && (
+                        <p className="text-gray-700 text-sm">{review.comment}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

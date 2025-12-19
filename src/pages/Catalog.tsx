@@ -14,7 +14,9 @@ import {
   Phone,
   Clock,
   TrendingUp,
-  ChevronRight
+  ChevronRight,
+  Star,
+  Heart
 } from "lucide-react";
 
 export default function Catalog() {
@@ -378,69 +380,51 @@ export default function Catalog() {
                           {service.title}
                         </h3>
                         
-                        <div className="flex items-center gap-3 text-sm text-gray-600 mb-3">
-                          <div className="flex items-center gap-1">
-                            <MapPin size={14} />
-                            <span>{service.city}</span>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                            {service.category}
+                          </span>
+                          <div className="flex items-center gap-1 text-amber-500">
+                            <Star className="w-3 h-3 fill-current" />
+                            <span className="text-xs font-bold">{service.rating || 0}</span>
+                            <span className="text-gray-400 text-xs">({service.bookings || 0})</span>
                           </div>
-                          {service.type && (
-                            <div className="flex items-center gap-1">
-                              <Tag size={14} />
-                              <span>{service.type}</span>
-                            </div>
-                          )}
                         </div>
                         
-                        {/* Preço */}
-                        {service.price && (
-                          <div className="flex items-center gap-2 mb-3">
-                            <DollarSign className="text-green-600" size={18} />
-                            <span className="text-lg font-bold text-green-700">
-                              {service.price}
-                            </span>
-                          </div>
-                        )}
-                        
-                        <p className="text-gray-600 text-sm line-clamp-2 mb-4">
-                          {service.description}
+                        <p className="text-gray-600 text-sm line-clamp-2 mb-3">
+                          Por <span className="font-medium text-gray-900">{service.ownerName}</span>
                         </p>
+                        
+                        {/* Stats */}
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="flex items-center gap-1 text-gray-600">
+                            <Eye className="w-3 h-3" />
+                            <span className="text-xs font-medium">{service.views?.toLocaleString() || 0}</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-gray-600">
+                            <Heart className="w-3 h-3 text-rose-500" />
+                            <span className="text-xs font-medium">{service.bookings || 0}</span>
+                          </div>
+                        </div>
                       </div>
                       
-                      {/* Estatísticas */}
-                      <div className="flex items-center justify-between text-xs text-gray-500 mb-4 border-t border-gray-100 pt-4">
-                        {service.duration && (
-                          <div className="flex items-center gap-1">
-                            <Clock size={12} />
-                            <span>{service.duration}</span>
+                      {/* Preço e CTA */}
+                      <div className="mt-auto">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <div className="text-lg font-bold text-gray-900">
+                              R$ {service.price ? parseFloat(service.price.replace(',', '.'))?.toFixed(2).replace('.', ',') : '0,00'}
+                            </div>
+                            <p className="text-xs text-gray-500">
+                              {service.billingType === 'subscription' ? 'por mês' : 'valor único'}
+                            </p>
                           </div>
-                        )}
-                        
-                        {service.leads > 0 && (
-                          <div className="flex items-center gap-1">
-                            <Phone size={12} />
-                            <span>{service.leads} contatos</span>
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Botões de ação */}
-                      <div className="mt-auto space-y-2">
-                        <Link
-                          to={`/service/${service.id}`}
-                          className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition flex items-center justify-center gap-2"
-                        >
-                          <Eye size={18} />
-                          Ver produto
-                        </Link>
-                        
-                        <div className="grid grid-cols-1 gap-2">
-                          <Link
-                            to={`/service/${service.id}`}
-                            className="px-3 py-2 border border-blue-600 text-blue-600 rounded-lg font-medium hover:bg-blue-50 transition flex items-center justify-center gap-2 text-sm"
-                          >
-                            <Eye size={16} />
-                            Detalhes
-                          </Link>
+                          
+                          <button className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-medium rounded-lg hover:from-blue-700 hover:to-cyan-600 transition-all shadow-sm hover:shadow-md group/btn text-xs">
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Ver detalhes</span>
+                            <ChevronRight className="w-3.5 h-3.5 opacity-0 -translate-x-1 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all" />
+                          </button>
                         </div>
                       </div>
                     </div>
