@@ -21,16 +21,29 @@ export async function getTopRatedProducts(limit = 5): Promise<Product[]> {
     const servicesSnap = await getDocs(query(collection(db, "services"), where("status", "==", "approved")));
     const services: Product[] = servicesSnap.docs.map(doc => {
       const data = doc.data();
+      
+      // Função para parsear preço brasileiro (string com vírgula)
+      const parsePrice = (price: any): number => {
+        if (typeof price === 'number') return price;
+        if (typeof price === 'string') {
+          // Remove R$, espaços, etc., e converte vírgula para ponto
+          const cleaned = price.replace(/[^\d,.-]/g, '').replace(',', '.');
+          const parsed = parseFloat(cleaned);
+          return isNaN(parsed) ? 0 : parsed;
+        }
+        return 0;
+      };
+      
       return {
         id: doc.id,
         title: data.name || data.title || "Serviço sem nome",
         category: data.category || "Geral",
-        imageUrl: data.imageUrl || "https://via.placeholder.com/800x600?text=Imagem+não+disponível",
-        author: data.providerName || data.author || "Prestador",
-        rating: data.rating || 0,
-        views: data.views || 0,
-        bookings: data.bookings || 0,
-        price: data.price || 0,
+        imageUrl: Array.isArray(data.images) && data.images.length > 0 ? data.images[0] : "https://via.placeholder.com/800x600?text=Imagem+não+disponível",
+        author: data.ownerName || data.providerName || data.author || "Prestador",
+        rating: typeof data.rating === 'number' ? data.rating : 0,
+        views: typeof data.views === 'number' ? data.views : 0,
+        bookings: typeof data.bookings === 'number' ? data.bookings : 0,
+        price: parsePrice(data.price),
         badge: data.badge || "Premium"
       };
     });
