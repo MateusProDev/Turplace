@@ -5,7 +5,7 @@ function now() { return new Date().toISOString(); }
 
 function safePrint(obj) { try { return JSON.stringify(obj, null, 2); } catch (e) { return String(obj); } }
 
-module.exports = async (req, res) => {
+export default async (req, res) => {
   console.log('[webhook] Entrada', { method: req.method, url: req.url, headers: req.headers });
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const db = initFirestore();
