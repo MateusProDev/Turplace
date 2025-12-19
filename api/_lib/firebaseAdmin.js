@@ -1,6 +1,6 @@
 import admin from 'firebase-admin';
 
-function initFirebase() {
+function initFirestore() {
   if (!admin.apps.length) {
     if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
       try {
@@ -26,4 +26,4 @@ function initFirebase() {
   return admin.firestore();
 }
 
-export default initFirebase;
+export default initFirestore;
