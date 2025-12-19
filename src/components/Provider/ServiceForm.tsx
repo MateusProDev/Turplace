@@ -91,7 +91,14 @@ export default function ServiceForm({ editMode = false, serviceData, onClose }: 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    if (name === 'type') {
+      // Limpar categoria quando o tipo muda
+      setForm({ ...form, [name]: value, category: "" });
+    } else {
+      setForm({ ...form, [name]: value });
+    }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -282,7 +289,7 @@ export default function ServiceForm({ editMode = false, serviceData, onClose }: 
       if (!editMode) {
         setForm({
           title: "",
-          type: "Turismo",
+          type: "Turismo", // Mantém turismo como padrão, mas agora temos mais opções
           category: "",
           city: "",
           description: "",
@@ -313,23 +320,75 @@ export default function ServiceForm({ editMode = false, serviceData, onClose }: 
     }
   };
 
-  // Categorias sugeridas para turismo
-  const tourismCategories = [
-    "Passeios Guiados", "Transporte Turístico", "Hospedagem", "Gastronomia",
-    "Aventura", "Ecoturismo", "Cultura Local", "City Tour", "Tour Fotográfico",
-    "Eventos", "Roteiros Personalizados", "Traslados", "Aluguel de Equipamentos"
-  ];
+  // Categorias organizadas por tipo de serviço
+  const serviceCategories = {
+    "Turismo": [
+      "Passeios Guiados", "Transporte Turístico", "Hospedagem", "Gastronomia",
+      "Aventura", "Ecoturismo", "Cultura Local", "City Tour", "Tour Fotográfico",
+      "Eventos", "Roteiros Personalizados", "Traslados", "Aluguel de Equipamentos",
+      "Pacotes Turísticos", "Experiências Locais", "Guias Turísticos"
+    ],
+    "Marketing Digital": [
+      "Tráfego Pago", "Social Media", "Gestão de Redes Sociais", "Criação de Conteúdo",
+      "SEO", "Google Ads", "Facebook Ads", "Instagram Ads", "TikTok Ads",
+      "Marketing de Influência", "Email Marketing", "Análise de Dados"
+    ],
+    "Design e Criativos": [
+      "Criação de Logos", "Design Gráfico", "Branding", "Identidade Visual",
+      "Criação de Artes", "Ilustrações", "Motion Graphics", "UI/UX Design",
+      "Fotografia", "Vídeos Promocionais", "Materiais Impressos"
+    ],
+    "Tecnologia": [
+      "Criação de Sites", "Desenvolvimento Web", "Apps Mobile", "E-commerce",
+      "Sistemas Personalizados", "Automação", "Consultoria Tech", "SEO Técnico",
+      "Otimização de Performance", "Manutenção de Sites"
+    ],
+    "Consultoria": [
+      "Consultoria Empresarial", "Planejamento Estratégico", "Marketing Consultoria",
+      "Consultoria Financeira", "Gestão de Projetos", "Coaching", "Mentoria",
+      "Análise de Mercado", "Planejamento de Negócios"
+    ],
+    "Transporte e Mobilidade": [
+      "Transfer Aeroporto", "Transporte Executivo", "Aluguel de Veículos",
+      "Passeios e Transfers", "Transporte para Eventos", "Mobilidade Urbana",
+      "Motoristas Profissionais", "Logística Local"
+    ],
+    "Gastronomia": [
+      "Experiências Gastronômicas", "Cursos de Culinária", "Degustações",
+      "Jantares Temáticos", "Food Tours", "Consultoria Gastronômica",
+      "Eventos Gastronômicos", "Catering"
+    ],
+    "Educação e Capacitação": [
+      "Cursos Online", "Workshops", "Treinamentos", "Palestras", "Mentoria",
+      "Consultoria Educacional", "Capacitação Profissional", "Aulas Particulares"
+    ],
+    "Saúde e Bem-estar": [
+      "Massagens", "Terapias Alternativas", "Consultoria Nutricional",
+      "Aulas de Yoga", "Meditação", "Bem-estar Mental", "Coaching de Vida"
+    ],
+    "Outro": [
+      "Serviços Gerais", "Consultoria Especializada", "Produtos Digitais",
+      "Infoprodutos", "Cursos e Treinamentos", "Serviços Personalizados"
+    ]
+  };
 
   const types = [
-    { value: "Turismo", label: "🏖️ Turismo" },
-    { value: "Artes", label: "🎨 Artes" },
-    { value: "Criação de Sites", label: "💻 Criação de Sites" },
-    { value: "Consultoria", label: "📊 Consultoria" },
-    { value: "Gastronomia", label: "🍽️ Gastronomia" },
-    { value: "Transporte", label: "🚗 Transporte" },
-    { value: "Hospedagem", label: "🏨 Hospedagem" },
-    { value: "Outro", label: "🔧 Outro" }
+    { value: "Turismo", label: "🏖️ Turismo & Experiências" },
+    { value: "Marketing Digital", label: "📱 Marketing Digital" },
+    { value: "Design e Criativos", label: "🎨 Design & Criativos" },
+    { value: "Tecnologia", label: "💻 Tecnologia & Desenvolvimento" },
+    { value: "Consultoria", label: "📊 Consultoria & Assessoria" },
+    { value: "Transporte e Mobilidade", label: "🚗 Transporte & Mobilidade" },
+    { value: "Gastronomia", label: "🍽️ Gastronomia & Experiências" },
+    { value: "Educação e Capacitação", label: "📚 Educação & Capacitação" },
+    { value: "Saúde e Bem-estar", label: "🧘 Saúde & Bem-estar" },
+    { value: "Outro", label: "🔧 Outros Serviços" }
   ];
+
+  // Obter categorias do tipo selecionado
+  const getCategoriesForType = (type: string) => {
+    return serviceCategories[type as keyof typeof serviceCategories] || serviceCategories["Outro"];
+  };
 
   if (!user) {
     return (
@@ -449,10 +508,13 @@ export default function ServiceForm({ editMode = false, serviceData, onClose }: 
                   required
                 />
                 <datalist id="categories">
-                  {tourismCategories.map(cat => (
+                  {getCategoriesForType(form.type).map(cat => (
                     <option key={cat} value={cat} />
                   ))}
                 </datalist>
+                <p className="text-xs text-gray-500 mt-1">
+                  Categorias sugeridas para {form.type.toLowerCase()}
+                </p>
               </div>
 
               {/* Localização */}
