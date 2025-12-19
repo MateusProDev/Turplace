@@ -3,13 +3,11 @@ import { useEffect, useState } from "react";
 import { Menu, X, ChevronDown } from "lucide-react";
 import iconLogo from '../assets/iconlogo.png';
 import { getCategoriesWithProducts } from "../utils/getCategoriesWithProducts";
+import { getTopRatedProducts } from "../utils/getTopRatedProducts";
 import { 
   MapPin, 
-  Users, 
   Star, 
-  TrendingUp, 
   Search, 
-  Shield, 
   Camera,
   Briefcase,
   Car,
@@ -22,13 +20,15 @@ import {
   BarChart3,
   Users2,
   Building,
-  CheckCircle,
   Award,
-  MessageCircle,
-  Filter,
   ArrowRight,
   ArrowUpRight,
-  ExternalLink
+  ExternalLink,
+  Eye,
+  Heart,
+  BookOpen,
+  TrendingUp as TrendingUpIcon,
+  Flame
 } from "lucide-react";
 
 interface CategoryData {
@@ -39,8 +39,13 @@ interface CategoryData {
     title?: string;
     imageUrl?: string;
     price?: number;
+    rating?: number;
+    views?: number;
+    bookings?: number;
   }>;
 }
+
+// Dados fictícios removidos - agora usa dados dinâmicos
 
 // Mapeamento de ícones para categorias
 const getCategoryIcon = (category: string) => {
@@ -74,18 +79,11 @@ const getCategoryIcon = (category: string) => {
   return <Briefcase className="w-6 h-6" />;
 };
 
-
-// Cores de fundo profissionais para categorias (padronizadas para o azul do site)
-// A implementação getCategoryBackground foi removida porque não estava sendo utilizada;
-// reintroduza a função quando precisar mapear backgrounds por categoria.
-
-
-// Retorna uma imagem temática para cada categoria usando Unsplash (imagens gratuitas)
+// Retorna uma imagem temática para cada categoria
 const getCategoryImageUrl = (category: string) => {
   const normalize = (str: string) => str.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
   const normalizedCategory = normalize(category);
   
-  // Mapeamento direto para URLs do Unsplash com imagens específicas para cada categoria
   const categoryImages: Record<string, string> = {
     'passeio': 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&h=600&fit=crop',
     'guias': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop',
@@ -102,21 +100,13 @@ const getCategoryImageUrl = (category: string) => {
     'designer': 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&h=600&fit=crop'
   };
 
-  // Encontra a categoria correspondente
   for (const key in categoryImages) {
     if (normalizedCategory.includes(key)) {
       return categoryImages[key];
     }
   }
 
-  // Fallback genérico para turismo
   return 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&h=600&fit=crop';
-};
-
-// Thumbnail fallback para produtos (pequeno, usando Lorem Picsum para consistência)
-const getProductImageUrl = (_category: string, id: string, _label?: string) => {
-  // Use Lorem Picsum com seed baseado no ID para imagens consistentes por produto
-  return `https://picsum.photos/seed/${encodeURIComponent(id)}/64/64`;
 };
 
 // Site default gradient (azul do site)
@@ -127,12 +117,21 @@ export default function Landing() {
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [activeFilter, setActiveFilter] = useState('todos');
+  const [topProducts, setTopProducts] = useState<any[]>([]);
 
   useEffect(() => {
-    getCategoriesWithProducts(6).then((data) => {
-      setCategories(data as CategoryData[]);
+    const loadData = async () => {
+      const [categoriesData, topProductsData] = await Promise.all([
+        getCategoriesWithProducts(6),
+        getTopRatedProducts(5)
+      ]);
+      setCategories(categoriesData as CategoryData[]);
+      setTopProducts(topProductsData);
       setLoading(false);
-    });
+    };
+
+    loadData();
 
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
@@ -255,10 +254,6 @@ export default function Landing() {
               
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-8 leading-tight">
                 O <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Marketplace</span> Profissional Para o Turismo Local
-                <br />
-                {/* <span className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-light text-gray-300 mt-4 block">
-                  Para o Turismo Local
-                </span> */}
               </h1>
               
               <p className="text-lg sm:text-xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
@@ -324,6 +319,183 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Nova Seção: Conteúdos Mais Acessados - Hotmart Style */}
+      <section className="py-16 sm:py-20 bg-gradient-to-b from-white to-gray-50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header da Seção */}
+          <div className="max-w-6xl mx-auto mb-12">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
+              <div>
+                <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 px-5 py-2.5 rounded-full mb-4">
+                  <Flame className="w-5 h-5" />
+                  <span className="font-semibold text-sm">Destaques da Semana</span>
+                </div>
+                <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">
+                  Conteúdos mais <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-500">acessados</span>
+                </h2>
+                <p className="text-gray-600 mt-3 max-w-2xl">
+                  Os serviços premium mais visualizados e contratados por agências parceiras
+                </p>
+              </div>
+              
+              {/* Filtros de Produtos */}
+              <div className="flex flex-wrap gap-3">
+                <button 
+                  className={`px-5 py-2.5 rounded-xl font-medium transition-all ${activeFilter === 'todos' 
+                    ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                  onClick={() => setActiveFilter('todos')}
+                >
+                  Todos os produtos
+                </button>
+                <button 
+                  className={`px-5 py-2.5 rounded-xl font-medium transition-all ${activeFilter === 'bem-avaliados' 
+                    ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                  onClick={() => setActiveFilter('bem-avaliados')}
+                >
+                  Produtos bem avaliados
+                </button>
+                <button 
+                  className={`px-5 py-2.5 rounded-xl font-medium transition-all ${activeFilter === 'novidades' 
+                    ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                  onClick={() => setActiveFilter('novidades')}
+                >
+                  Novidades
+                </button>
+              </div>
+            </div>
+            
+            {/* Contador de Produtos */}
+            <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+              <p className="text-gray-600 font-medium">
+                Mostrando <span className="text-blue-600 font-bold">5</span> produtos premium
+              </p>
+              <div className="flex items-center gap-2 text-gray-500">
+                <TrendingUpIcon className="w-5 h-5" />
+                <span className="text-sm font-medium">Ordenar por: Mais acessados</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Grid de Conteúdos Acessados */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+            {topProducts.map((content) => (
+              <Link
+                key={content.id}
+                to={`/product/${content.id}`}
+                className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 overflow-hidden border border-gray-100"
+              >
+                <div className="flex flex-col sm:flex-row">
+                  {/* Imagem do Conteúdo */}
+                  <div className="relative h-56 sm:h-auto sm:w-2/5 overflow-hidden">
+                    <img 
+                      src={content.imageUrl} 
+                      alt={content.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    />
+                    {/* Badge */}
+                    <div className="absolute top-4 left-4">
+                      <span className={`px-3 py-1.5 text-xs font-bold text-white rounded-full ${
+                        content.badge === 'Mais Procurado' ? 'bg-gradient-to-r from-amber-500 to-orange-500' :
+                        content.badge === 'Em Alta' ? 'bg-gradient-to-r from-rose-500 to-pink-500' :
+                        content.badge === 'Oferta Especial' ? 'bg-gradient-to-r from-emerald-500 to-teal-500' :
+                        'bg-gradient-to-r from-blue-500 to-cyan-500'
+                      }`}>
+                        {content.badge}
+                      </span>
+                    </div>
+                    {/* Overlay gradient */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  </div>
+                  
+                  {/* Informações do Conteúdo */}
+                  <div className="sm:w-3/5 p-6 sm:p-8">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+                        {content.category}
+                      </span>
+                      <div className="flex items-center gap-1 text-amber-500">
+                        <Star className="w-4 h-4 fill-current" />
+                        <span className="text-sm font-bold">{content.rating}</span>
+                        <span className="text-gray-400 text-xs">({content.bookings} vendas)</span>
+                      </div>
+                    </div>
+                    
+                    <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors line-clamp-2">
+                      {content.title}
+                    </h3>
+                    
+                    <p className="text-gray-600 mb-6 line-clamp-2">
+                      Por <span className="font-medium text-gray-900">{content.author}</span>
+                    </p>
+                    
+                    {/* Stats */}
+                    <div className="flex items-center gap-6 mb-6">
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <Eye className="w-4 h-4" />
+                        <span className="text-sm font-medium">{content.views.toLocaleString()} visualizações</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <Heart className="w-4 h-4 text-rose-500" />
+                        <span className="text-sm font-medium">{content.bookings} reservas</span>
+                      </div>
+                    </div>
+                    
+                    {/* Preço e CTA */}
+                    <div className="flex items-center justify-between pt-6 border-t border-gray-100">
+                      <div>
+                        <div className="text-2xl font-bold text-gray-900">
+                          R$ {content.price.toFixed(2).replace('.', ',')}
+                        </div>
+                        <p className="text-sm text-gray-500">Valor por pessoa</p>
+                      </div>
+                      
+                      <button className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-cyan-600 transition-all shadow-md hover:shadow-lg group/btn">
+                        <BookOpen className="w-4 h-4" />
+                        <span>Ver detalhes</span>
+                        <ArrowRight className="w-4 h-4 opacity-0 -translate-x-2 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          {/* Banner Promocional entre as seções */}
+          <div className="mt-16 mb-8 max-w-6xl mx-auto">
+            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-blue-600 to-cyan-500 p-8 sm:p-12">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32"></div>
+              <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-24 -translate-x-24"></div>
+              
+              <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
+                <div className="text-white">
+                  <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-6">
+                    <Zap className="w-5 h-5" />
+                    <span className="font-semibold">Oferta Limitada</span>
+                  </div>
+                  <h3 className="text-2xl sm:text-3xl font-bold mb-4">
+                    Cadastre seu serviço e ganhe 3 meses de visibilidade premium!
+                  </h3>
+                  <p className="text-blue-100 max-w-xl">
+                    Promoção válida para os primeiros 50 prestadores cadastrados este mês.
+                  </p>
+                </div>
+                
+                <Link
+                  to="/dashboard"
+                  className="flex-shrink-0 px-8 py-4 bg-white text-blue-700 font-bold rounded-xl hover:bg-gray-50 transition-all shadow-2xl hover:shadow-2xl hover:scale-105"
+                >
+                  Quero me cadastrar
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Categories Section - Horizontal Rectangular Layout */}
       <section className="py-16 sm:py-24 bg-gradient-to-b from-white to-gray-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -374,7 +546,6 @@ export default function Landing() {
               {/* Masonry Grid Layout - Rectangular Horizontal Cards */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {categories.map((cat) => {
-                  
                   return (
                     <Link
                       key={cat.category}
@@ -447,7 +618,7 @@ export default function Landing() {
                                         />
                                       ) : (
                                         <img
-                                          src={getProductImageUrl(cat.category, prod.id, prod.name || prod.title)}
+                                          src={`https://picsum.photos/seed/${encodeURIComponent(prod.id)}/64/64`}
                                           alt={prod.name || prod.title || 'Serviço'}
                                           className="w-full h-full object-cover"
                                         />
@@ -482,7 +653,7 @@ export default function Landing() {
                             })()}
                             
                             <div className="flex items-center gap-2">
-                              <TrendingUp size={14} className="text-green-500" />
+                              <TrendingUpIcon size={14} className="text-green-500" />
                               <span className="text-xs text-gray-600">Alta procura</span>
                             </div>
                           </div>
@@ -525,7 +696,6 @@ export default function Landing() {
                     to="/catalog"
                     className="inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-2xl font-bold hover:from-blue-700 hover:to-cyan-600 transition-all shadow-xl hover:shadow-2xl group"
                   >
-                    <Filter size={22} />
                     <span>Ver Todas as Categorias</span>
                     <ArrowRight className="transform group-hover:translate-x-2 transition-transform" size={22} />
                   </Link>
@@ -563,7 +733,7 @@ export default function Landing() {
                 color: "blue"
               },
               {
-                icon: <Users className="text-emerald-600" size={32} />,
+                icon: <Users2 className="text-emerald-600" size={32} />,
                 title: "Para Agências",
                 description: "Encontre os melhores profissionais e experiências únicas para seus clientes.",
                 features: ["Busca Avançada", "Avaliações Reais", "Suporte Dedicado"],
@@ -596,7 +766,7 @@ export default function Landing() {
                   <div className="space-y-3 mb-8">
                     {item.features.map((feature, idx) => (
                       <div key={idx} className="flex items-center gap-3">
-                        <CheckCircle className={`text-${item.color}-500`} size={18} />
+                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
                         <span className="text-gray-700">{feature}</span>
                       </div>
                     ))}
@@ -749,14 +919,12 @@ export default function Landing() {
             
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-2xl mx-auto">
               {[
-                { icon: <Shield className="text-cyan-300" />, text: "Segurança e Confiança" },
-                { icon: <TrendingUp className="text-emerald-300" />, text: "Aumento de Renda" },
-                { icon: <MapPin className="text-amber-300" />, text: "Foco no Turismo Local" }
+                { icon: <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center"><div className="w-6 h-6 rounded-full bg-cyan-300"></div></div>, text: "Segurança e Confiança" },
+                { icon: <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><TrendingUpIcon className="text-emerald-300" /></div>, text: "Aumento de Renda" },
+                { icon: <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center"><MapPin className="text-amber-300" /></div>, text: "Foco no Turismo Local" }
               ].map((item, index) => (
                 <div key={index} className="flex flex-col items-center gap-3">
-                  <div className="p-3 rounded-xl bg-white/10 backdrop-blur-sm">
-                    {item.icon}
-                  </div>
+                  {item.icon}
                   <span className="text-white/90 font-medium">{item.text}</span>
                 </div>
               ))}
@@ -780,10 +948,10 @@ export default function Landing() {
               </p>
               <div className="flex items-center gap-4">
                 <div className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors cursor-pointer">
-                  <MessageCircle size={20} />
+                  <div className="w-5 h-5 rounded-full bg-blue-500"></div>
                 </div>
                 <div className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors cursor-pointer">
-                  <Users size={20} />
+                  <Users2 size={20} />
                 </div>
                 <div className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors cursor-pointer">
                   <Briefcase size={20} />
