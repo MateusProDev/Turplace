@@ -417,11 +417,14 @@ export default function Catalog() {
                             </p>
                           </div>
                           
-                          <button className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-medium rounded-lg hover:from-blue-700 hover:to-cyan-600 transition-all shadow-sm hover:shadow-md group/btn text-xs">
+                          <Link 
+                            to={`/service/${service.id}`}
+                            className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-medium rounded-lg hover:from-blue-700 hover:to-cyan-600 transition-all shadow-sm hover:shadow-md group/btn text-xs"
+                          >
                             <Eye className="w-3.5 h-3.5" />
                             <span>Ver detalhes</span>
                             <ChevronRight className="w-3.5 h-3.5 opacity-0 -translate-x-1 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all" />
-                          </button>
+                          </Link>
                         </div>
                       </div>
                     </div>

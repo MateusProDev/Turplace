@@ -115,14 +115,37 @@ export default function ServiceDetail() {
           console.log("ServiceDetail: Document exists, data:", snap.data());
           const rawData = snap.data();
           
-          // Validar dados essenciais
-          if (!rawData.title || !rawData.description) {
-            console.error("ServiceDetail: Document missing required fields", rawData);
+          // Validar dados essenciais (menos rigoroso)
+          if (!rawData.title) {
+            console.error("ServiceDetail: Document missing title", rawData);
             setError("Serviço com dados incompletos");
             return;
           }
           
-          const data = { id: snap.id, ...rawData } as ServiceData;
+          const data: ServiceData = {
+            id: snap.id,
+            title: rawData.title || "Serviço sem título",
+            category: rawData.category || "Geral",
+            city: rawData.city || "",
+            description: rawData.description || "Sem descrição",
+            images: Array.isArray(rawData.images) ? rawData.images : [],
+            whatsapp: rawData.whatsapp || "",
+            ownerId: rawData.ownerId || "",
+            ownerEmail: rawData.ownerEmail || "",
+            ownerName: rawData.ownerName || "",
+            status: rawData.status || "pending",
+            type: rawData.type,
+            price: rawData.price,
+            duration: rawData.duration,
+            capacity: rawData.capacity,
+            includes: Array.isArray(rawData.includes) ? rawData.includes : [],
+            views: rawData.views || 0,
+            productType: rawData.productType,
+            billingType: rawData.billingType,
+            priceMonthly: rawData.priceMonthly,
+            rating: rawData.rating || 0,
+            bookings: rawData.bookings || 0
+          };
           setService(data);
           setViews(data.views || 0);
           
@@ -164,11 +187,17 @@ export default function ServiceDetail() {
           // Buscar avaliações
           const reviewsRef = collection(db, "services", id, "reviews");
           const reviewsSnap = await getDocs(reviewsRef);
-          const reviewsData = reviewsSnap.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            createdAt: doc.data().createdAt?.toDate() || new Date()
-          })) as Review[];
+          const reviewsData: Review[] = reviewsSnap.docs.map(doc => {
+            const reviewData = doc.data();
+            return {
+              id: doc.id,
+              userId: reviewData.userId || "",
+              userName: reviewData.userName || "Usuário Anônimo",
+              rating: reviewData.rating || 0,
+              comment: reviewData.comment,
+              createdAt: reviewData.createdAt?.toDate() || new Date()
+            };
+          });
           setReviews(reviewsData);
           
           // Verificar se o usuário atual já avaliou
