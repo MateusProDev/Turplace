@@ -51,6 +51,7 @@ export default async (req, res) => {
     // Busca provider
     const providerId = service.providerId || service.ownerId;
     console.log('[create-checkout-session-guest] Buscando provider', { providerId });
+    const providerSnap = await db.collection('users').doc(providerId).get();
     if (!providerSnap.exists) {
       console.warn('[create-checkout-session-guest] Provider não encontrado', { providerId });
       return res.status(404).json({ error: 'Provider not found' });
