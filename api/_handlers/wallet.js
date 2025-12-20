@@ -9,10 +9,14 @@ export default async (req, res) => {
   if (!userId) return res.status(400).json({ error: 'userId required' });
 
   try {
+    console.log('[wallet] Buscando dados para userId:', userId);
+
     // Buscar orders onde o usuário é provider (via serviceId)
     const ordersSnapshot = await db.collection('orders')
-      .where('status', '==', 'paid')
+      .where('paymentStatus', '==', 'paid')
       .get();
+
+    console.log('[wallet] Orders encontradas:', ordersSnapshot.size);
 
     let totalSales = 0;
     let totalCommissions = 0;
@@ -26,7 +30,7 @@ export default async (req, res) => {
       const serviceDoc = await db.collection('services').doc(order.serviceId).get();
       if (!serviceDoc.exists || serviceDoc.data().ownerId !== userId) continue;
 
-      const amount = order.amount || 0;
+      const amount = (order.totalAmount || 0) / 100; // Converter de centavos para reais
       totalSales += amount;
 
       // Calcular comissão baseada no plano do provider
@@ -55,10 +59,12 @@ export default async (req, res) => {
       });
     }
 
-    // Buscar pagamentos pendentes (orders pending)
+    // Buscar pagamentos pendentes (orders pending ou sem paymentStatus)
     const pendingSnapshot = await db.collection('orders')
       .where('status', '==', 'pending')
       .get();
+
+    console.log('[wallet] Pending orders encontradas:', pendingSnapshot.size);
 
     let pendingAmount = 0;
     const pendingSales = [];
@@ -68,10 +74,10 @@ export default async (req, res) => {
       const serviceDoc = await db.collection('services').doc(order.serviceId).get();
       if (!serviceDoc.exists || serviceDoc.data().ownerId !== userId) continue;
 
-      pendingAmount += order.amount || 0;
+      pendingAmount += (order.totalAmount || 0) / 100; // Converter de centavos para reais
       pendingSales.push({
         id: doc.id,
-        amount: order.amount || 0,
+        amount: (order.totalAmount || 0) / 100, // Converter de centavos para reais
         date: order.createdAt,
         serviceId: order.serviceId,
       });
@@ -95,6 +101,16 @@ export default async (req, res) => {
     const userData = userDoc.data();
     const stripeAccountId = userData?.stripeAccountId || null;
     const chavePix = userData?.chavePix || '';
+
+    console.log('[wallet] Retornando dados:', {
+      totalSales,
+      totalCommissions,
+      totalReceived,
+      availableBalance,
+      pendingAmount,
+      salesCount: sales.length,
+      pendingCount: pendingSales.length
+    });
 
     res.json({
       totalSales,

@@ -13,15 +13,23 @@ const app = express();
 app.use(bodyParser.json({ limit: '6mb' }));
 app.use(bodyParser.raw({ type: 'application/json' }));
 
+// Add logging middleware
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
 // Import the handlers from api folder
 import createSub from '../api/_handlers/create-subscription-session.js';
 import createCheckout from '../api/_handlers/create-checkout-session.js';
 import createCheckoutGuest from '../api/_handlers/create-checkout-session-guest.js';
+import wallet from '../api/_handlers/wallet.js';
 import webhook from '../api/_handlers/webhook.js';
 
 app.post('/api/create-subscription-session', (req, res) => createSub(req, res));
 app.post('/api/create-checkout-session', (req, res) => createCheckout(req, res));
 app.post('/api/create-checkout-session-guest', (req, res) => createCheckoutGuest(req, res));
+app.get('/api/wallet', (req, res) => wallet(req, res));
 app.post('/api/webhook', (req, res) => webhook(req, res));
 
 const port = process.env.PORT || 3000;
