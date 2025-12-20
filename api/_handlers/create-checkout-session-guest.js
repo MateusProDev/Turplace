@@ -29,16 +29,20 @@ export default async (req, res) => {
       return res.status(400).json({ error: 'serviceId required' });
     }
 
-    // Busca o serviço
-    const serviceSnap = await db.collection('services').doc(serviceId).get();
-    if (!serviceSnap.exists) {
-      console.warn('[create-checkout-session-guest] Serviço não encontrado', { serviceId });
-      return res.status(404).json({ error: 'Service not found' });
-    }
-    const service = serviceSnap.data();
+    console.log('[create-checkout-session-guest] Serviço encontrado', {
+      serviceId,
+      title: service.title,
+      price: service.price,
+      priceMonthly: service.priceMonthly,
+      billingType: service.billingType,
+      priceType: service.priceType,
+      priceId: service.priceId,
+      stripeProductId: service.stripeProductId
+    });
 
     // Busca provider
     const providerId = service.providerId || service.ownerId;
+    console.log('[create-checkout-session-guest] Buscando provider', { providerId });
     const providerSnap = await db.collection('users').doc(providerId).get();
     if (!providerSnap.exists) {
       console.warn('[create-checkout-session-guest] Provider não encontrado', { providerId });
@@ -84,25 +88,40 @@ export default async (req, res) => {
     console.log('[create-checkout-session-guest] Ordem criada', { orderId: orderRef.id, order });
 
     // Cria Checkout Session com Connect se provider tiver connectedAccountId
-    const priceData = {
-      currency: 'brl',
-      product_data: {
-        name: service.title || 'Serviço',
-        description: service.description ? service.description.substring(0, 200) : undefined
-      },
-      unit_amount: unitAmount
-    };
+    let lineItems;
 
-    if (isSubscription) {
-      priceData.recurring = { interval: 'month' };
-    }
+    if (service.priceId && !isSubscription) {
+      // Usa priceId existente para pagamentos únicos
+      console.log('[create-checkout-session-guest] Usando priceId existente', { priceId: service.priceId });
+      lineItems = [
+        {
+          price: service.priceId,
+          quantity: 1
+        }
+      ];
+    } else {
+      // Cria price_data para serviços sem priceId ou subscriptions
+      console.log('[create-checkout-session-guest] Criando price_data', { isSubscription, hasPriceId: !!service.priceId });
+      const priceData = {
+        currency: 'brl',
+        product_data: {
+          name: service.title || 'Serviço',
+          description: service.description ? service.description.substring(0, 200) : undefined
+        },
+        unit_amount: unitAmount
+      };
 
-    const lineItems = [
-      {
-        price_data: priceData,
-        quantity: 1
+      if (isSubscription) {
+        priceData.recurring = { interval: 'month' };
       }
-    ];
+
+      lineItems = [
+        {
+          price_data: priceData,
+          quantity: 1
+        }
+      ];
+    }
 
     const sessionCreateParams = {
       payment_method_types: ['card'],
@@ -121,7 +140,7 @@ export default async (req, res) => {
       ...(isSubscription ? {} : { customer_creation: 'always' }) // customer_creation só para payment mode
     };
 
-    if (provider.stripeAccountId) {
+    if (provider.stripeAccountId && provider.stripeAccountId !== 'pending') {
       if (isSubscription) {
         // Para subscriptions, configurar application_fee_percent na subscription
         sessionCreateParams.subscription_data = {
@@ -135,6 +154,8 @@ export default async (req, res) => {
           transfer_data: { destination: provider.stripeAccountId }
         };
       }
+    } else {
+      console.log('[create-checkout-session-guest] Provider não tem conta Stripe conectada, processando sem split');
     }
 
     let session;

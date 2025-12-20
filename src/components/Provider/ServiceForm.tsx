@@ -231,7 +231,23 @@ export default function ServiceForm({ editMode = false, serviceData, onClose }: 
       
       // Preparar dados para o Firestore
       const cleanTitle = form.title.includes('%') ? decodeURIComponent(form.title) : form.title;
-      const slug = cleanTitle.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      let slug = cleanTitle
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+        .replace(/[^a-z0-9\s-]/g, '') // Remove caracteres especiais
+        .trim()
+        .replace(/\s+/g, '-') // Substitui espaços por hífens
+        .replace(/-+/g, '-') // Remove hífens consecutivos
+        .replace(/^-|-$/g, ''); // Remove hífens no início/fim
+
+      // Garantir slug único
+      const existingServices = await getDocs(query(collection(db, "services"), where("slug", "==", slug)));
+      if (!existingServices.empty && (!editMode || existingServices.docs[0].id !== serviceData?.id)) {
+        // Adicionar timestamp se houver conflito
+        slug = `${slug}-${Date.now()}`;
+      }
+
       const firestoreData = {
         ...form,
         title: cleanTitle,
@@ -254,8 +270,6 @@ export default function ServiceForm({ editMode = false, serviceData, onClose }: 
       
       if (editMode && serviceData) {
         // Atualizar serviço existente
-        const cleanTitle = form.title.includes('%') ? decodeURIComponent(form.title) : form.title;
-        const slug = cleanTitle.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
         await updateDoc(doc(db, "services", serviceData.id), {
           ...form,
           title: cleanTitle,
