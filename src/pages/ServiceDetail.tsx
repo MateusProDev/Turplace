@@ -34,6 +34,7 @@ import {
 interface ServiceData {
   id: string;
   title: string;
+  slug?: string;
   category: string;
   city: string;
   description: string;
@@ -82,7 +83,7 @@ if (import.meta.env.DEV) {
 }
 
 export default function ServiceDetail() {
-  const { title } = useParams();
+  const { slug } = useParams();
   const [service, setService] = useState<ServiceData | null>(null);
   const [provider, setProvider] = useState<ProviderMiniProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -98,23 +99,51 @@ export default function ServiceDetail() {
   const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
-    if (!title) {
-      console.log("ServiceDetail: No title provided");
+    if (!slug || slug === "undefined") {
+      setError("Serviço não encontrado");
+      setLoading(false);
       return;
     }
     
-    console.log("ServiceDetail: Loading service with title:", title);
+    console.log("ServiceDetail: Loading service with slug:", slug);
     
     const loadService = async () => {
       try {
         setLoading(true);
-        const decodedTitle = decodeURIComponent(title);
-        console.log("ServiceDetail: Querying for title:", decodedTitle);
-        const q = query(collection(db, "services"), where("title", "==", decodedTitle));
-        const snap = await getDocs(q);
-        
+        console.log("ServiceDetail: Querying for slug:", slug);
+        const q = query(collection(db, "services"), where("slug", "==", slug));
+        let snap = await getDocs(q);
+        let docSnap = null;
+
         if (!snap.empty) {
-          const docSnap = snap.docs[0];
+          console.log("ServiceDetail: Found by slug");
+          docSnap = snap.docs[0];
+        } else {
+          console.log("ServiceDetail: Not found by slug, trying by title");
+          const decodedTitle = decodeURIComponent(slug);
+          console.log("ServiceDetail: Querying for title:", decodedTitle);
+          const q2 = query(collection(db, "services"), where("title", "==", decodedTitle));
+          const snap2 = await getDocs(q2);
+          if (!snap2.empty) {
+            console.log("ServiceDetail: Found by title");
+            docSnap = snap2.docs[0];
+          } else {
+            // Busca flexível: ignora maiúsculas/minúsculas e espaços
+            console.log("ServiceDetail: Not found by title, trying flexible search");
+            const allServicesSnap = await getDocs(collection(db, "services"));
+            const normalizedParam = decodedTitle.toLowerCase().replace(/\s+/g, "");
+            const foundDoc = allServicesSnap.docs.find(doc => {
+              const rawTitle = (doc.data().title || "").toLowerCase().replace(/\s+/g, "");
+              return rawTitle === normalizedParam;
+            });
+            if (foundDoc) {
+              docSnap = foundDoc;
+              console.log("ServiceDetail: Found by flexible search");
+            }
+          }
+        }
+
+        if (docSnap) {
           console.log("ServiceDetail: Document found, data:", docSnap.data());
           const rawData = docSnap.data() as any;
           
@@ -128,6 +157,7 @@ export default function ServiceDetail() {
           const data: ServiceData = {
             id: docSnap.id,
             title: rawData.title || "Serviço sem título",
+            slug: rawData.slug,
             category: rawData.category || "Geral",
             city: rawData.city || "",
             description: rawData.description || "Sem descrição",
@@ -226,13 +256,13 @@ export default function ServiceDetail() {
           console.log("ServiceDetail: Document does not exist");
           setError("Serviço não encontrado");
         }
-      } catch (err) {
-        console.error("ServiceDetail: Error loading service:", err);
-        const error = err as Error;
+      } catch (error) {
+        console.error("ServiceDetail: Error loading service:", error);
+        const err = error as Error;
         console.error("ServiceDetail: Error details:", {
-          message: error.message,
-          code: (error as any).code,
-          stack: error.stack
+          message: err.message,
+          code: (err as any).code,
+          stack: err.stack
         });
         setError("Erro ao carregar os detalhes do serviço");
       } finally {
@@ -241,7 +271,7 @@ export default function ServiceDetail() {
     };
     
     loadService();
-  }, [title]);
+  }, [slug]);
 
   const handleContact = async () => {
     if (!service) return;
@@ -379,7 +409,7 @@ export default function ServiceDetail() {
               <span>/</span>
               <Link to="/catalog" className="hover:text-blue-600">Catálogo</Link>
               <span>/</span>
-              <span className="text-gray-900 font-medium">{service.category}</span>
+              <span className="text-gray-900 font-medium">{service.category || "Categoria não informada"}</span>
             </div>
 
             {/* Imagem Principal */}
@@ -435,7 +465,15 @@ export default function ServiceDetail() {
 
             {/* Informações Detalhadas */}
             <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{service.title}</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{
+                (() => {
+                  try {
+                    return decodeURIComponent(service.title);
+                  } catch {
+                    return service.title;
+                  }
+                })()
+              }</h1>
               
               <div className="flex flex-wrap gap-4 mb-6">
                 <div className="flex items-center gap-2 text-gray-600">
@@ -444,7 +482,7 @@ export default function ServiceDetail() {
                 </div>
                 <div className="flex items-center gap-2 text-gray-600">
                   <MapPin size={18} />
-                  <span>{service.city}</span>
+                  <span>{service.city || "Cidade não informada"}</span>
                 </div>
                 {service.type && (
                   <div className="flex items-center gap-2 text-gray-600">
@@ -464,7 +502,7 @@ export default function ServiceDetail() {
               <div className="mb-8">
                 <h3 className="text-lg font-bold text-gray-900 mb-3">Descrição</h3>
                 <div className="prose max-w-none text-gray-700 whitespace-pre-line">
-                  {service.description || "Este serviço não possui descrição detalhada."}
+                  {service.description && service.description.trim() !== "" ? service.description : "Este serviço não possui descrição detalhada."}
                 </div>
               </div>
 

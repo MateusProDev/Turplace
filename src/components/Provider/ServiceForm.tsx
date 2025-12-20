@@ -30,6 +30,7 @@ import {
 interface Service {
   id: string;
   title: string;
+  slug?: string;
   type: string;
   category: string;
   city: string;
@@ -229,8 +230,12 @@ export default function ServiceForm({ editMode = false, serviceData, onClose }: 
       }
       
       // Preparar dados para o Firestore
+      const cleanTitle = form.title.includes('%') ? decodeURIComponent(form.title) : form.title;
+      const slug = cleanTitle.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
       const firestoreData = {
         ...form,
+        title: cleanTitle,
+        slug,
         images: imageUrls,
         ownerId: user.uid,
         ownerEmail: user.email,
@@ -249,8 +254,12 @@ export default function ServiceForm({ editMode = false, serviceData, onClose }: 
       
       if (editMode && serviceData) {
         // Atualizar serviço existente
+        const cleanTitle = form.title.includes('%') ? decodeURIComponent(form.title) : form.title;
+        const slug = cleanTitle.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
         await updateDoc(doc(db, "services", serviceData.id), {
           ...form,
+          title: cleanTitle,
+          slug,
           images: imageUrls,
           ownerName: user.displayName || "Anônimo",
           updatedAt: serverTimestamp(),
@@ -278,7 +287,7 @@ export default function ServiceForm({ editMode = false, serviceData, onClose }: 
             billingType: form.billingType,
             price: form.price,
             priceMonthly: form.priceMonthly,
-            title: form.title,
+            title: cleanTitle,
             description: form.description
           })
         });
@@ -756,7 +765,7 @@ export default function ServiceForm({ editMode = false, serviceData, onClose }: 
                   <div 
                     key={service.id} 
                     className="border rounded-lg p-4 hover:border-blue-300 transition cursor-pointer"
-                    onClick={() => navigate(`/service/${encodeURIComponent(service.title)}`)}
+                    onClick={() => navigate(`/service/${service.slug || encodeURIComponent(service.title)}`)}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">

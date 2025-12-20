@@ -384,7 +384,7 @@ export default function Landing() {
             {topProducts.map((content) => (
               <Link
                 key={content.id}
-                to={`/service/${encodeURIComponent(content.title)}`}
+                to={`/service/${content.slug || encodeURIComponent(content.title)}`}
                 className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 overflow-hidden border border-gray-100"
               >
                 <div className="flex flex-col">

@@ -418,7 +418,7 @@ export default function Catalog() {
                           </div>
                           
                           <Link 
-                            to={`/service/${encodeURIComponent(service.title)}`}
+                            to={`/service/${service.slug || encodeURIComponent(service.title)}`}
                             className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-medium rounded-lg hover:from-blue-700 hover:to-cyan-600 transition-all shadow-sm hover:shadow-md group/btn text-xs"
                           >
                             <Eye className="w-3.5 h-3.5" />
