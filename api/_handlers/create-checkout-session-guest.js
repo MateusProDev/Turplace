@@ -29,6 +29,14 @@ export default async (req, res) => {
       return res.status(400).json({ error: 'serviceId required' });
     }
 
+    // Busca o serviço
+    const serviceSnap = await db.collection('services').doc(serviceId).get();
+    if (!serviceSnap.exists) {
+      console.warn('[create-checkout-session-guest] Serviço não encontrado', { serviceId });
+      return res.status(404).json({ error: 'Service not found' });
+    }
+    const service = serviceSnap.data();
+
     console.log('[create-checkout-session-guest] Serviço encontrado', {
       serviceId,
       title: service.title,
@@ -39,9 +47,6 @@ export default async (req, res) => {
       priceId: service.priceId,
       stripeProductId: service.stripeProductId
     });
-
-    // Busca provider
-    const providerId = service.providerId || service.ownerId;
     console.log('[create-checkout-session-guest] Buscando provider', { providerId });
     const providerSnap = await db.collection('users').doc(providerId).get();
     if (!providerSnap.exists) {
