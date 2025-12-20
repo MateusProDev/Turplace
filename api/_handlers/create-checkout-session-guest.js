@@ -148,7 +148,9 @@ export default async (req, res) => {
       ...(isSubscription ? {} : { customer_creation: 'always' }) // customer_creation só para payment mode
     };
 
+// Configura pagamento baseado na conta Stripe do provider
     if (provider.stripeAccountId && provider.stripeAccountId !== 'pending') {
+      console.log('[create-checkout-session-guest] Provider tem conta Stripe conectada, configurando transferência', { stripeAccountId: provider.stripeAccountId });
       if (isSubscription) {
         // Para subscriptions, configurar application_fee_percent na subscription
         sessionCreateParams.subscription_data = {
@@ -163,7 +165,7 @@ export default async (req, res) => {
         };
       }
     } else {
-      console.log('[create-checkout-session-guest] Provider não tem conta Stripe conectada, processando sem split');
+      console.log('[create-checkout-session-guest] Provider não tem conta Stripe conectada, processando na conta principal');
     }
 
     let session;
