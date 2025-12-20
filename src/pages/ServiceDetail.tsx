@@ -467,16 +467,6 @@ export default function ServiceDetail() {
 
               {/* Informações Adicionais */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {service.price && (
-                  <div className="bg-blue-50 rounded-xl p-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <DollarSign className="text-blue-600" size={24} />
-                      <h4 className="font-bold text-gray-900">Valor</h4>
-                    </div>
-                    <p className="text-2xl font-bold text-blue-700">{service.price}</p>
-                  </div>
-                )}
-
                 {service.duration && (
                   <div className="bg-emerald-50 rounded-xl p-4">
                     <div className="flex items-center gap-3 mb-2">
@@ -523,10 +513,10 @@ export default function ServiceDetail() {
                 <div>
                   <h4 className="font-bold text-yellow-800 mb-2">Dicas de segurança</h4>
                   <ul className="text-yellow-700 space-y-1 text-sm">
-                    <li>• Combine encontros em locais públicos</li>
-                    <li>• Verifique as referências do prestador</li>
-                    <li>• Não faça pagamentos antecipados sem garantias</li>
-                    <li>• Desconfie de valores muito abaixo do mercado</li>
+                    <li>• Verifique as avaliações e comentários dos clientes</li>
+                    <li>• Leia atentamente a descrição e termos do serviço</li>
+                    <li>• Use apenas a plataforma para pagamentos e comunicações</li>
+                    <li>• Entre em contato com o suporte se tiver dúvidas</li>
                   </ul>
                 </div>
               </div>
@@ -537,17 +527,6 @@ export default function ServiceDetail() {
           <div className="lg:col-span-1 space-y-6">
             {/* Card de Contato/Compra */}
             <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-6">
-              <div className="text-center mb-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  {service.price || service.priceMonthly ? "Pagar Agora" : "Contratar Serviço"}
-                </h3>
-                <p className="text-gray-600">
-                  {service.price || service.priceMonthly 
-                    ? "Pagamento 100% seguro pela plataforma" 
-                    : "Entre em contato para contratar este serviço"}
-                </p>
-              </div>
-
               {success && (
                 <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
                   {success}
@@ -557,6 +536,24 @@ export default function ServiceDetail() {
               {error && (
                 <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
                   {error}
+                </div>
+              )}
+
+              {(service.price || service.priceMonthly) && (
+                <div className="text-left mb-4">
+                  <div className="flex items-center justify-start gap-2 mb-2">
+                    <DollarSign className="text-red-600" size={20} />
+                    <span className="text-sm font-medium text-gray-600">Valor</span>
+                  </div>
+                  <div className="text-3xl font-bold text-red-700">
+                    R$ {(() => {
+                      const displayPrice = service.billingType === 'subscription' ? service.priceMonthly : service.price;
+                      return displayPrice ? parseFloat(displayPrice.replace(',', '.'))?.toFixed(2).replace('.', ',') : '0,00';
+                    })()}
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    {service.billingType === 'subscription' ? 'por mês' : 'valor único'}
+                  </p>
                 </div>
               )}
 
