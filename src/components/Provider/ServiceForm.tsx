@@ -756,7 +756,7 @@ export default function ServiceForm({ editMode = false, serviceData, onClose }: 
                   <div 
                     key={service.id} 
                     className="border rounded-lg p-4 hover:border-blue-300 transition cursor-pointer"
-                    onClick={() => navigate(`/service/${service.id}`)}
+                    onClick={() => navigate(`/service/${encodeURIComponent(service.title)}`)}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">

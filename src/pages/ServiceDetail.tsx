@@ -8,7 +8,9 @@ import {
   serverTimestamp,
   updateDoc,
   increment,
-  addDoc
+  addDoc,
+  query,
+  where
 } from "firebase/firestore";
 import { db, auth } from "../utils/firebase";
 import { 
@@ -80,7 +82,7 @@ if (import.meta.env.DEV) {
 }
 
 export default function ServiceDetail() {
-  const { id } = useParams();
+  const { title } = useParams();
   const [service, setService] = useState<ServiceData | null>(null);
   const [provider, setProvider] = useState<ProviderMiniProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -96,24 +98,25 @@ export default function ServiceDetail() {
   const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
-    if (!id) {
-      console.log("ServiceDetail: No ID provided");
+    if (!title) {
+      console.log("ServiceDetail: No title provided");
       return;
     }
     
-    console.log("ServiceDetail: Loading service with ID:", id);
+    console.log("ServiceDetail: Loading service with title:", title);
     
     const loadService = async () => {
       try {
         setLoading(true);
-        console.log("ServiceDetail: Creating document reference for services/", id);
-        const ref = doc(db, "services", id);
-        console.log("ServiceDetail: Fetching document...");
-        const snap = await getDoc(ref);
+        const decodedTitle = decodeURIComponent(title);
+        console.log("ServiceDetail: Querying for title:", decodedTitle);
+        const q = query(collection(db, "services"), where("title", "==", decodedTitle));
+        const snap = await getDocs(q);
         
-        if (snap.exists()) {
-          console.log("ServiceDetail: Document exists, data:", snap.data());
-          const rawData = snap.data();
+        if (!snap.empty) {
+          const docSnap = snap.docs[0];
+          console.log("ServiceDetail: Document found, data:", docSnap.data());
+          const rawData = docSnap.data() as any;
           
           // Validar dados essenciais (menos rigoroso)
           if (!rawData.title) {
@@ -123,7 +126,7 @@ export default function ServiceDetail() {
           }
           
           const data: ServiceData = {
-            id: snap.id,
+            id: docSnap.id,
             title: rawData.title || "Serviço sem título",
             category: rawData.category || "Geral",
             city: rawData.city || "",
@@ -181,7 +184,7 @@ export default function ServiceDetail() {
           if (auth.currentUser) {
             try {
               console.log("ServiceDetail: Incrementing views");
-              await updateDoc(ref, {
+              await updateDoc(docSnap.ref, {
                 views: increment(1),
                 lastViewed: serverTimestamp()
               });
@@ -194,7 +197,7 @@ export default function ServiceDetail() {
           }
           
           // Buscar avaliações
-          const reviewsRef = collection(db, "services", id, "reviews");
+          const reviewsRef = collection(db, "services", docSnap.id, "reviews");
           const reviewsSnap = await getDocs(reviewsRef);
           const reviewsData: Review[] = reviewsSnap.docs.map(doc => {
             const reviewData = doc.data();
@@ -238,7 +241,7 @@ export default function ServiceDetail() {
     };
     
     loadService();
-  }, [id]);
+  }, [title]);
 
   const handleContact = async () => {
     if (!service) return;
