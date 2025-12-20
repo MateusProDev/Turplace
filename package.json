@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:server": "node scripts/local-server.js",
     "create:stripe-plans": "node scripts/createStripePlans.cjs",
     "build": "tsc -b && vite build",
     "init:firestore": "node scripts/initFirestore.cjs",

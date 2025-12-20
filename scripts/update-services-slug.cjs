@@ -35,11 +35,15 @@ async function updateExistingServices() {
       // Gerar slug se não existir
       if (!data.slug) {
         const cleanTitle = title.includes('%') ? decodeURIComponent(title) : title;
-        const slug = cleanTitle.toLowerCase()
-          .replace(/\s+/g, '-')
-          .replace(/[^a-z0-9-]/g, '')
-          .replace(/-+/g, '-') // remover hífens consecutivos
-          .replace(/^-|-$/g, ''); // remover hífens no início/fim
+        const slug = cleanTitle
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+          .replace(/[^a-z0-9\s-]/g, '') // Remove caracteres especiais
+          .trim()
+          .replace(/\s+/g, '-') // Substitui espaços por hífens
+          .replace(/-+/g, '-') // Remove hífens consecutivos
+          .replace(/^-|-$/g, ''); // Remove hífens no início/fim
 
         console.log(`Atualizando serviço "${title}" com slug: ${slug}`);
 

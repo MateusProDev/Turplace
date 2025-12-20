@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { db } from "../../utils/firebase";
+import { generateSlug } from "../../utils/slug";
 import { 
   collection, 
   addDoc, 
@@ -779,7 +780,7 @@ export default function ServiceForm({ editMode = false, serviceData, onClose }: 
                   <div 
                     key={service.id} 
                     className="border rounded-lg p-4 hover:border-blue-300 transition cursor-pointer"
-                    onClick={() => navigate(`/service/${service.slug || encodeURIComponent(service.title)}`)}
+                    onClick={() => navigate(`/service/${generateSlug(service.title)}`)}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">

@@ -17,9 +17,10 @@ app.use((req, res, next) => {
 });
 
 // Require the handlers from api folder (agora .cjs) after envs loaded
-const createSub = require(path.join(__dirname, '..', 'api', 'create-subscription-session.cjs'));
-const createCheckout = require(path.join(__dirname, '..', 'api', 'create-checkout-session.cjs'));
-const webhook = require(path.join(__dirname, '..', 'api', 'webhook.cjs'));
+const createSub = require(path.join(__dirname, '..', 'api', '_handlers', 'create-subscription-session.js'));
+const createCheckout = require(path.join(__dirname, '..', 'api', '_handlers', 'create-checkout-session.js'));
+const createCheckoutGuest = require(path.join(__dirname, '..', 'api', '_handlers', 'create-checkout-session-guest.js'));
+const webhook = require(path.join(__dirname, '..', 'api', '_handlers', 'webhook.js'));
 // mount dev-only endpoint if present
 let devApply = null;
 try {
@@ -30,6 +31,7 @@ try {
 
 app.post('/api/create-subscription-session', (req, res) => createSub(req, res));
 app.post('/api/create-checkout-session', (req, res) => createCheckout(req, res));
+app.post('/api/create-checkout-session-guest', (req, res) => createCheckoutGuest(req, res));
 
 // webhook needs raw body for stripe signature verification
 app.post('/api/webhook', bodyParser.raw({ type: 'application/json' }), (req, res) => webhook(req, res));

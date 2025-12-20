@@ -4,6 +4,7 @@ import { Menu, X, ChevronDown } from "lucide-react";
 import iconLogo from '../assets/iconlogo.png';
 import { getCategoriesWithProducts } from "../utils/getCategoriesWithProducts";
 import { getTopRatedProducts } from "../utils/getTopRatedProducts";
+import { generateSlug } from "../utils/slug";
 import { 
   MapPin, 
   Star, 
@@ -97,7 +98,12 @@ const getCategoryImageUrl = (category: string) => {
     'turismo': 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&h=600&fit=crop',
     'experiencias': 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&h=600&fit=crop',
     'consultoria': 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=600&fit=crop',
-    'designer': 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&h=600&fit=crop'
+    'designer': 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&h=600&fit=crop',
+    'criacao de artes': 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=800&h=600&fit=crop',
+    'trafego pago': 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600&fit=crop',
+    'artes': 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=800&h=600&fit=crop',
+    'marketing': 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600&fit=crop',
+    'ads': 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600&fit=crop'
   };
 
   for (const key in categoryImages) {
@@ -384,7 +390,7 @@ export default function Landing() {
             {topProducts.map((content) => (
               <Link
                 key={content.id}
-                to={`/service/${content.slug || encodeURIComponent(content.title)}`}
+                to={`/service/${generateSlug(content.title)}`}
                 className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 overflow-hidden border border-gray-100"
               >
                 <div className="flex flex-col">

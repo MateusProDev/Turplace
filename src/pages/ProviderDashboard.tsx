@@ -8,6 +8,7 @@ import { uploadToCloudinary } from "../utils/cloudinary";
 import { Link, useNavigate } from "react-router-dom";
 import ConfirmModal from "../components/Provider/ConfirmModal";
 import logoSemFundo from "../assets/logosemfundo.png";
+import { generateSlug } from "../utils/slug";
 import { 
   Edit2, 
   Trash2, 
@@ -542,7 +543,7 @@ export default function ProviderDashboard() {
                       <div 
                         key={service.id} 
                         className="bg-white border border-gray-200 rounded-xl p-4 hover:border-blue-300 hover:shadow-md transition cursor-pointer group"
-                        onClick={() => navigate(`/service/${service.slug || encodeURIComponent(service.title)}`)}
+                        onClick={() => navigate(`/service/${generateSlug(service.title)}`)}
                       >
                         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 gap-2">
                           <div className="flex-1 min-w-0">
@@ -616,7 +617,7 @@ export default function ProviderDashboard() {
                             className="px-3 py-1 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs font-semibold transition flex items-center gap-1 w-full sm:w-auto justify-center"
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/service/${service.slug || encodeURIComponent(service.title)}`);
+                              navigate(`/service/${generateSlug(service.title)}`);
                             }}
                           >
                             <ExternalLink size={12} />

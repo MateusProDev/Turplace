@@ -150,18 +150,16 @@ export default async (req, res) => {
 
 // Configura pagamento baseado na conta Stripe do provider
     if (provider.stripeAccountId && provider.stripeAccountId !== 'pending') {
-      console.log('[create-checkout-session-guest] Provider tem conta Stripe conectada, configurando transferência', { stripeAccountId: provider.stripeAccountId });
+      console.log('[create-checkout-session-guest] Provider tem conta Stripe conectada, mas transferências desabilitadas para desenvolvimento');
       if (isSubscription) {
-        // Para subscriptions, configurar application_fee_percent na subscription
-        sessionCreateParams.subscription_data = {
-          application_fee_percent: commissionPercent,
-          transfer_data: { destination: provider.stripeAccountId }
-        };
+        // Para subscriptions, não configurar application_fee_percent sem transfer_data
+        // sessionCreateParams.subscription_data = {
+        //   application_fee_percent: commissionPercent
+        // };
       } else {
         // Para payments únicos, usar payment_intent_data
         sessionCreateParams.payment_intent_data = {
-          application_fee_amount: commissionAmount,
-          transfer_data: { destination: provider.stripeAccountId }
+          application_fee_amount: commissionAmount
         };
       }
     } else {
