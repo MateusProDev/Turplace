@@ -420,7 +420,7 @@ export default function Catalog() {
                           
                           <Link 
                             to={`/service/${generateSlug(service.title)}`}
-                            className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-medium rounded-lg hover:from-blue-700 hover:to-cyan-600 transition-all shadow-sm hover:shadow-md group/btn text-xs"
+                            className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-green-600 to-emerald-500 text-white font-medium rounded-lg hover:from-green-700 hover:to-emerald-600 transition-all shadow-sm hover:shadow-md group/btn text-xs"
                           >
                             <Eye className="w-3.5 h-3.5" />
                             <span>Ver detalhes</span>

@@ -190,7 +190,7 @@ export default function Landing() {
 
             {/* Mobile menu button */}
             <button
-              className="lg:hidden p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`lg:hidden p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${scrolled ? 'bg-white/10 hover:bg-white/20' : 'bg-white/20 hover:bg-white/30 backdrop-blur-sm'}`}
               onClick={() => setMenuOpen(!menuOpen)}
             >
               {menuOpen ? (
@@ -427,11 +427,11 @@ export default function Landing() {
                       </p>
                     </div>
                     
-                    <button className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-medium rounded-lg hover:from-blue-700 hover:to-cyan-600 transition-all shadow-sm hover:shadow-md group/btn text-xs">
-                      <BookOpen className="w-3.5 h-3.5" />
-                      <span>Ver detalhes</span>
-                      <ArrowRight className="w-3.5 h-3.5 opacity-0 -translate-x-1 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all" />
-                    </button>
+                    <div className="flex items-center gap-1.5 text-green-600 group-hover:text-green-700 transition-colors">
+                      <BookOpen className="w-4 h-4" />
+                      <span className="text-sm font-medium">Ver detalhes</span>
+                      <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+                    </div>
                   </div>
                   
                   {/* Informações do Conteúdo */}
