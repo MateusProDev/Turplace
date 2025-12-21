@@ -131,6 +131,43 @@ export default function ProfileSettings() {
     }
   };
 
+  const handleDisconnectStripe = async () => {
+    if (!user) return;
+    
+    const confirmDisconnect = window.confirm(
+      'Tem certeza que deseja desconectar sua conta Stripe?\n\n' +
+      'Isso significa que você não poderá receber pagamentos via Stripe Connect.\n' +
+      'Você ainda poderá usar PIX para receber pagamentos.'
+    );
+    
+    if (!confirmDisconnect) return;
+
+    setLoading(true);
+    setMessage('');
+
+    try {
+      console.log('Desconectando conta Stripe...');
+      
+      // Remove stripeAccountId from user document
+      await updateDoc(doc(db, 'users', user.uid), {
+        stripeAccountId: null,
+        updatedAt: new Date(),
+      });
+
+      // Update local state
+      setStripeAccountId(null);
+      
+      console.log('Conta Stripe desconectada com sucesso!');
+      setMessage('Conta Stripe desconectada com sucesso! Você ainda pode usar PIX para receber pagamentos.');
+      setTimeout(() => setMessage(''), 5000);
+    } catch (error) {
+      console.error('Erro ao desconectar Stripe:', error);
+      setMessage('Erro ao desconectar conta Stripe. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSaveProfile = async () => {
     if (!user) return;
     setLoading(true);
@@ -425,25 +462,46 @@ export default function ProfileSettings() {
                   <div className="p-4 bg-green-100 text-green-700 rounded-lg border border-green-200">
                     Conta Stripe conectada com sucesso!
                   </div>
-                  <button
-                    onClick={handleConnectStripe}
-                    disabled={loading}
-                    className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
-                  >
-                    {loading ? (
-                      <>
-                        <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-                        </svg>
-                        Conectando...
-                      </>
-                    ) : (
-                      <>
-                        Gerenciar Conta Stripe
-                      </>
-                    )}
-                  </button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                      onClick={handleConnectStripe}
+                      disabled={loading}
+                      className="bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {loading ? (
+                        <>
+                          <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                          </svg>
+                          Carregando...
+                        </>
+                      ) : (
+                        <>
+                          Gerenciar Conta Stripe
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={handleDisconnectStripe}
+                      disabled={loading}
+                      className="bg-red-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-red-700 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {loading ? (
+                        <>
+                          <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                          </svg>
+                          Desconectando...
+                        </>
+                      ) : (
+                        <>
+                          Desconectar Stripe
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <button
@@ -467,7 +525,7 @@ export default function ProfileSettings() {
                 </button>
               )}
               <p className="text-xs text-gray-500 mt-2">
-                Conecte sua conta Stripe para receber pagamentos dos seus serviços.
+                Conecte sua conta Stripe para receber pagamentos dos seus serviços. Você pode desconectar a qualquer momento se preferir usar apenas PIX.
               </p>
             </div>
 
