@@ -1,11 +1,14 @@
 {
- "name": "Turplace",
+ "name": "Turplace - Serviços Turísticos",
  "short_name": "Turplace",
- "description": "Plataforma de serviços turísticos",
+ "description": "Plataforma de serviços turísticos. Conecte-se com os melhores prestadores de serviços da sua região.",
  "start_url": "/",
  "display": "standalone",
  "background_color": "#ffffff",
- "theme_color": "#ffffff",
+ "theme_color": "#3B82F6",
+ "orientation": "portrait-primary",
+ "scope": "/",
+ "lang": "pt-BR",
  "icons": [
   {
    "src": "/android-icon-36x36.png",
