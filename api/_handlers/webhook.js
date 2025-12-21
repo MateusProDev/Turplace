@@ -16,14 +16,13 @@ export default async (req, res) => {
   let event;
   try {
     if (!webhookSecret) {
-      console.warn('[webhook] STRIPE_WEBHOOK_SECRET não configurado, pulando verificação de assinatura');
-      event = req.body;
-    } else {
-      const buf = await getRawBody(req);
-      console.log('[webhook] Payload bruto recebido', { length: buf.length });
-      event = stripe.webhooks.constructEvent(buf, sig, webhookSecret);
-      console.log('[webhook] Assinatura verificada com sucesso', { eventId: event.id, eventType: event.type });
+      console.error('[webhook] STRIPE_WEBHOOK_SECRET não configurado - ERRO DE SEGURANÇA!');
+      return res.status(500).send('Webhook secret not configured');
     }
+    const buf = await getRawBody(req);
+    console.log('[webhook] Payload bruto recebido', { length: buf.length });
+    event = stripe.webhooks.constructEvent(buf, sig, webhookSecret);
+    console.log('[webhook] Assinatura verificada com sucesso', { eventId: event.id, eventType: event.type });
   } catch (err) {
     console.error('[webhook] Erro ao verificar assinatura/parsear evento', err);
     return res.status(400).send(`Webhook Error: ${err && err.message ? err.message : 'invalid payload'}`);
@@ -55,6 +54,55 @@ export default async (req, res) => {
 
       await orderRef.update({ status: 'paid', paidAt: new Date().toISOString(), stripePaymentIntentId: session.payment_intent });
       console.log('[webhook] Ordem atualizada para paga', { orderId });
+
+      // Processar transferência para provedor se for um serviço pago
+      if (order.serviceId && order.providerId && order.providerAmount > 0) {
+        try {
+          // Buscar dados do provedor
+          const providerRef = db.collection('users').doc(order.providerId);
+          const providerSnap = await providerRef.get();
+          if (!providerSnap.exists) {
+            console.warn('[webhook] Provider não encontrado para transferência', { providerId: order.providerId });
+          } else {
+            const provider = providerSnap.data();
+            if (provider.stripeAccountId && provider.stripeAccountId !== 'pending') {
+              // Criar transferência para a conta Stripe Connect do provedor
+              const transfer = await stripe.transfers.create({
+                amount: order.providerAmount, // Já está em centavos
+                currency: 'brl',
+                destination: provider.stripeAccountId,
+                transfer_group: `order_${orderId}`,
+                metadata: {
+                  orderId,
+                  serviceId: order.serviceId,
+                  providerId: order.providerId
+                }
+              });
+              console.log('[webhook] Transferência criada para provedor', {
+                transferId: transfer.id,
+                amount: order.providerAmount,
+                destination: provider.stripeAccountId
+              });
+
+              // Atualizar ordem com ID da transferência
+              await orderRef.update({
+                transferId: transfer.id,
+                transferStatus: 'completed',
+                transferredAt: new Date().toISOString()
+              });
+            } else {
+              console.log('[webhook] Provider não tem conta Stripe conectada, fundos permanecem na conta principal', { providerId: order.providerId });
+            }
+          }
+        } catch (transferErr) {
+          console.error('[webhook] Erro ao criar transferência', transferErr);
+          // Não falhar o webhook por erro de transferência, apenas logar
+          await orderRef.update({
+            transferStatus: 'failed',
+            transferError: transferErr.message
+          });
+        }
+      }
 
       if (order.type === 'subscription') {
         const plansQuery = await db.collection('plans').where('stripePriceId', '==', order.priceId).limit(1).get();

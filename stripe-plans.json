@@ -10,7 +10,7 @@
       "Sem analytics"
     ],
     "price_cents": 0,
-    "createdAt": "2025-12-18T17:15:25.816Z"
+    "createdAt": "2025-12-21T11:49:47.597Z"
   },
   {
     "planId": "professional",
@@ -23,7 +23,7 @@
       "Perfil verificado"
     ],
     "price_cents": 999,
-    "createdAt": "2025-12-18T17:15:26.975Z"
+    "createdAt": "2025-12-21T11:49:47.977Z"
   },
   {
     "planId": "premium",
@@ -37,6 +37,6 @@
       "Analytics avançado"
     ],
     "price_cents": 1999,
-    "createdAt": "2025-12-18T17:15:28.297Z"
+    "createdAt": "2025-12-21T11:49:48.538Z"
   }
 ]
