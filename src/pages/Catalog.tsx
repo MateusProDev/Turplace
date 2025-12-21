@@ -412,7 +412,7 @@ export default function Catalog() {
                           <div>
                             <div className="text-lg font-bold text-gray-900">
                               R$ {service.price ? parseFloat(service.price.replace(',', '.'))?.toFixed(2).replace('.', ',') : '0,00'}
-                            </div>
+                            </div> 
                             <p className="text-xs text-gray-500">
                               {service.billingType === 'subscription' ? 'por mês' : 'valor único'}
                             </p>
