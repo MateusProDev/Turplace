@@ -1,26 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { CheckCircle, Download, Mail, Clock } from "lucide-react";
 
 export default function Success() {
   const [searchParams] = useSearchParams();
-  const [orderDetails, setOrderDetails] = useState<any>(null);
+  const [orderDetails, setOrderDetails] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
   const [emailSent, setEmailSent] = useState(false);
 
-  const sessionId = searchParams.get('session_id');
-  const orderId = searchParams.get('order_id');
+  const sessionId = useMemo(() => searchParams.get('session_id'), [searchParams]);
+  const orderId = useMemo(() => searchParams.get('order_id'), [searchParams]);
 
-  useEffect(() => {
-    if (sessionId) {
-      // Buscar detalhes da sessão do Stripe
-      fetchOrderDetails();
-    } else {
-      setLoading(false);
-    }
-  }, [sessionId]);
-
-  const fetchOrderDetails = async () => {
+  const fetchOrderDetails = useCallback(async () => {
     try {
       const params = new URLSearchParams();
       if (sessionId) params.append('session_id', sessionId);
@@ -59,7 +50,16 @@ export default function Success() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [sessionId, orderId]);
+
+  useEffect(() => {
+    if (sessionId) {
+      // Buscar detalhes da sessão do Stripe
+      fetchOrderDetails();
+    } else {
+      setLoading(false);
+    }
+  }, [sessionId, fetchOrderDetails]);
 
   const handleSendEmail = async () => {
     if (!orderDetails) return;
@@ -108,22 +108,22 @@ export default function Success() {
               <div className="space-y-4 mb-8">
                 <div className="flex justify-between items-center py-3 border-b border-gray-200">
                   <span className="font-medium text-gray-700">Produto/Serviço:</span>
-                  <span className="text-gray-900">{orderDetails.serviceTitle}</span>
+                  <span className="text-gray-900">{orderDetails.serviceTitle as string}</span>
                 </div>
 
                 <div className="flex justify-between items-center py-3 border-b border-gray-200">
                   <span className="font-medium text-gray-700">Valor Pago:</span>
-                  <span className="text-2xl font-bold text-green-600">{orderDetails.amount}</span>
+                  <span className="text-2xl font-bold text-green-600">{orderDetails.amount as string}</span>
                 </div>
 
                 <div className="flex justify-between items-center py-3 border-b border-gray-200">
                   <span className="font-medium text-gray-700">Prestador:</span>
-                  <span className="text-gray-900">{orderDetails.providerName}</span>
+                  <span className="text-gray-900">{orderDetails.providerName as string}</span>
                 </div>
 
-                <div className="flex justify-between items-center py-3 border-b border-gray-200">
-                  <span className="font-medium text-gray-700">ID do Pedido:</span>
-                  <span className="text-gray-900 font-mono text-sm">{orderDetails.orderId}</span>
+                <div className="flex justify-between items-center py-3">
+                  <span className="font-medium text-gray-700">ID da Transação:</span>
+                  <span className="text-gray-900 font-mono text-sm">{orderDetails.orderId as string}</span>
                 </div>
               </div>
             )}

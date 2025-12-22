@@ -1,7 +1,7 @@
 import { db } from "./firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
 
-interface Product {
+export interface Product {
   id: string;
   name?: string;
   title?: string;
@@ -24,7 +24,7 @@ export async function getTopRatedProducts(limit = 5): Promise<Product[]> {
       const data = doc.data();
       
       // Função para parsear preço brasileiro (string com vírgula)
-      const parsePrice = (price: any): number => {
+      const parsePrice = (price: unknown): number => {
         if (typeof price === 'number') return price;
         if (typeof price === 'string') {
           // Remove R$, espaços, etc., e converte vírgula para ponto

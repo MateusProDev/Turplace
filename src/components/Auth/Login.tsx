@@ -39,7 +39,7 @@ export default function Login() {
     }
   }, [user, navigate]);
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     console.log("Login.tsx: handleSubmit chamado", { isLogin, email });
     e.preventDefault();
     setError("");
@@ -59,11 +59,12 @@ export default function Login() {
         });
       }
       navigate("/provider");
-    } catch (err: any) {
-      if (err.code === "auth/email-already-in-use") {
+    } catch (err: unknown) {
+      const error = err as { code?: string; message?: string };
+      if (error.code === "auth/email-already-in-use") {
         setError("E-mail já cadastrado. Tente fazer login ou use o botão 'Entrar com Google'.");
       } else {
-        setError(err.message);
+        setError(error.message || "Erro desconhecido");
       }
     } finally {
       setLoading(false);
@@ -96,22 +97,23 @@ export default function Login() {
         console.log("Login.tsx: Dados salvos com sucesso");
       }
       navigate("/provider");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Login.tsx: Erro no Google login", err);
 
       // Tratamento específico de erros do Firebase Auth
       let errorMessage = "Falha ao entrar com Google";
 
-      if (err.code === 'auth/popup-closed-by-user') {
+      const error = err as { code?: string };
+      if (error.code === 'auth/popup-closed-by-user') {
         errorMessage = "Login cancelado pelo usuário";
-      } else if (err.code === 'auth/popup-blocked') {
+      } else if ((err as any).code === 'auth/popup-blocked') {
         errorMessage = "Popup bloqueado pelo navegador. Permita popups para este site.";
-      } else if (err.code === 'auth/cancelled-popup-request') {
+      } else if ((err as any).code === 'auth/cancelled-popup-request') {
         errorMessage = "Login cancelado";
-      } else if (err.code === 'auth/network-request-failed') {
+      } else if ((err as any).code === 'auth/network-request-failed') {
         errorMessage = "Erro de rede. Verifique sua conexão.";
-      } else if (err.message) {
-        errorMessage += ": " + err.message;
+      } else if ((err as any).message) {
+        errorMessage += ": " + (err as any).message;
       }
 
       setError(errorMessage);

@@ -1,4 +1,6 @@
 import ProfileSettings from './pages/ProfileSettings';
+import LeadPage from './pages/LeadPage';
+import LeadPageEditor from './pages/LeadPageEditor';
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import Landing from './pages/Landing';
 import Catalog from './pages/Catalog';
@@ -26,6 +28,8 @@ function App() {
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/profile" element={<Navigate to="/profile/settings" replace />} />
         <Route path="/profile/settings" element={<ProfileSettings />} />
+        <Route path="/profile/leadpage" element={<RequireAuth><LeadPageEditor /></RequireAuth>} />
+        <Route path="/lead/:userId" element={<LeadPage />} />
         <Route path="/login" element={user ? <RequireAuth><ProviderDashboard /></RequireAuth> : <Login />} />
         <Route path="/dashboard" element={<RequireAuth><ServiceForm /></RequireAuth>} />
         <Route path="/dashboard/service/new" element={<RequireAuth><ServiceForm /></RequireAuth>} />

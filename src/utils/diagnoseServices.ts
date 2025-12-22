@@ -3,7 +3,7 @@ import { db } from "../utils/firebase";
 
 interface ServiceToFix {
   id: string;
-  data: any;
+  data: Record<string, unknown>;
   missingFields: string[];
 }
 
@@ -18,7 +18,7 @@ export const diagnoseServices = async () => {
 
     let validServices = 0;
     let invalidServices = 0;
-    let servicesToFix: ServiceToFix[] = [];
+    const servicesToFix: ServiceToFix[] = [];
 
     for (const docSnap of snapshot.docs) {
       const data = docSnap.data();
@@ -81,7 +81,7 @@ const fixServices = async (servicesToFix: ServiceToFix[]) => {
 
   for (const service of servicesToFix) {
     try {
-      const updates: { [key: string]: any } = {};
+      const updates: Record<string, unknown> = {};
 
       // Adicionar campos padrão se estiverem faltando
       if (service.missingFields.includes('title')) {

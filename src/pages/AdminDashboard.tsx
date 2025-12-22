@@ -71,7 +71,7 @@ export default function AdminDashboard() {
       return;
     }
     loadData();
-  }, [user, userData]);
+  }, [user, userData, navigate]);
 
   const loadData = async () => {
     try {

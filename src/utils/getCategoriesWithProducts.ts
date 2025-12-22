@@ -5,7 +5,7 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 interface Service {
   id: string;
   category?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 // Busca categorias e até N produtos por categoria
@@ -33,7 +33,7 @@ export async function getCategoriesWithProducts(maxProductsPerCategory = 5) {
     // Fallback: agrupa por services aprovados
     const servicesSnap = await getDocs(query(collection(db, "services"), where("status", "==", "approved")));
     const services: Service[] = servicesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    const categoriesMap: Record<string, any[]> = {};
+    const categoriesMap: Record<string, Service[]> = {};
     for (const service of services) {
       if (!service.category) continue;
       if (!categoriesMap[service.category]) {

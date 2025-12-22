@@ -112,7 +112,7 @@ export default function ServiceDetail() {
         setLoading(true);
         console.log("ServiceDetail: Querying for slug:", slug);
         const q = query(collection(db, "services"), where("slug", "==", slug));
-        let snap = await getDocs(q);
+        const snap = await getDocs(q);
         let docSnap = null;
 
         if (!snap.empty) {
@@ -145,7 +145,7 @@ export default function ServiceDetail() {
 
         if (docSnap) {
           console.log("ServiceDetail: Document found, data:", docSnap.data());
-          const rawData = docSnap.data() as any;
+          const rawData = docSnap.data() as Record<string, unknown>;
           
           // Validar dados essenciais (menos rigoroso)
           if (!rawData.title) {
@@ -156,28 +156,28 @@ export default function ServiceDetail() {
           
           const data: ServiceData = {
             id: docSnap.id,
-            title: rawData.title || "Serviço sem título",
-            slug: rawData.slug,
-            category: rawData.category || "Geral",
-            city: rawData.city || "",
-            description: rawData.description || "Sem descrição",
+            title: (rawData.title as string) || "Serviço sem título",
+            slug: rawData.slug as string,
+            category: (rawData.category as string) || "Geral",
+            city: (rawData.city as string) || "",
+            description: (rawData.description as string) || "Sem descrição",
             images: Array.isArray(rawData.images) ? rawData.images : [],
-            whatsapp: rawData.whatsapp || "",
-            ownerId: rawData.ownerId || "",
-            ownerEmail: rawData.ownerEmail || "",
-            ownerName: rawData.ownerName || "",
-            status: rawData.status || "pending",
-            type: rawData.type,
-            price: rawData.price,
-            duration: rawData.duration,
-            capacity: rawData.capacity,
+            whatsapp: (rawData.whatsapp as string) || "",
+            ownerId: (rawData.ownerId as string) || "",
+            ownerEmail: (rawData.ownerEmail as string) || "",
+            ownerName: (rawData.ownerName as string) || "",
+            status: (rawData.status as string) || "pending",
+            type: rawData.type as string,
+            price: rawData.price as string,
+            duration: rawData.duration as string,
+            capacity: rawData.capacity as string,
             includes: Array.isArray(rawData.includes) ? rawData.includes : [],
-            views: rawData.views || 0,
-            productType: rawData.productType,
-            billingType: rawData.billingType,
-            priceMonthly: rawData.priceMonthly,
-            rating: rawData.rating || 0,
-            bookings: rawData.bookings || 0
+            views: (rawData.views as number) || 0,
+            productType: rawData.productType as string,
+            billingType: rawData.billingType as string,
+            priceMonthly: rawData.priceMonthly as string,
+            rating: (rawData.rating as number) || 0,
+            bookings: (rawData.bookings as number) || 0
           };
           setService(data);
           setViews(data.views || 0);
@@ -192,7 +192,7 @@ export default function ServiceDetail() {
               console.log("ServiceDetail: Provider profile found");
               // Buscar quantos serviços esse provider tem
               const servicesSnap = await getDocs(collection(db, "services"));
-              totalServices = servicesSnap.docs.filter((s: any) => s.data().ownerId === data.ownerId).length;
+              totalServices = servicesSnap.docs.filter((s: unknown) => (s as { data: () => Record<string, unknown> }).data().ownerId === data.ownerId).length;
               setProvider({
                 name: userSnap.data().name || data.ownerName,
                 email: userSnap.data().email || data.ownerEmail,
@@ -261,7 +261,7 @@ export default function ServiceDetail() {
         const err = error as Error;
         console.error("ServiceDetail: Error details:", {
           message: err.message,
-          code: (err as any).code,
+          code: (err as { code?: string }).code,
           stack: err.stack
         });
         setError("Erro ao carregar os detalhes do serviço");
@@ -791,7 +791,7 @@ export default function ServiceDetail() {
                     
                     setSubmittingReview(true);
                     try {
-                      const reviewData: any = {
+                      const reviewData: Record<string, unknown> = {
                         userId: auth.currentUser!.uid,
                         userName: auth.currentUser!.displayName || "Usuário Anônimo",
                         rating: userRating,
@@ -806,14 +806,14 @@ export default function ServiceDetail() {
                       
                       // Atualizar rating do serviço
                       const newReviews = [...reviews, { ...reviewData, id: 'temp', createdAt: new Date() }];
-                      const avgRating = newReviews.reduce((sum, r) => sum + r.rating, 0) / newReviews.length;
+                      const avgRating = newReviews.reduce((sum, r) => sum + ((r as Review).rating as number), 0) / newReviews.length;
                       
                       await updateDoc(doc(db, "services", service!.id), {
                         rating: avgRating,
                         bookings: newReviews.length
                       });
                       
-                      setReviews(newReviews);
+                      setReviews(newReviews as Review[]);
                       setHasUserReviewed(true);
                       setSuccess("Avaliação enviada com sucesso!");
                       

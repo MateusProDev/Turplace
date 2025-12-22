@@ -59,7 +59,7 @@ async function createProductsAndPrices() {
     },
   ];
 
-  const results: any[] = [];
+  const results: Record<string, unknown>[] = [];
 
   for (const plan of plans) {
     console.log(`Criando produto: ${plan.name}`);

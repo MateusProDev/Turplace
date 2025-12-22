@@ -76,7 +76,7 @@ export default function Pricing() {
     setLoading(priceId);
     try {
       const apiBase = import.meta.env.PROD ? '' : (import.meta.env.VITE_API_BASE || 'http://localhost:3000');
-      const body: any = { priceId };
+      const body: Record<string, unknown> = { priceId };
       if (user) {
         body.userId = user.uid;
         body.customerEmail = user.email || null;
@@ -92,7 +92,7 @@ export default function Pricing() {
         data = await res.json();
       } else {
         const txt = await res.text();
-        try { data = JSON.parse(txt); } catch (e) { data = { error: txt || 'Resposta inválida do servidor' }; }
+        try { data = JSON.parse(txt); } catch { data = { error: txt || 'Resposta inválida do servidor' }; }
       }
 
       if (!res.ok) {
@@ -101,11 +101,11 @@ export default function Pricing() {
       }
 
       if (data && data.sessionId) {
-        const pubKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || (window as any).__STRIPE_PUB_KEY;
+        const pubKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || (window as unknown as { __STRIPE_PUB_KEY?: string }).__STRIPE_PUB_KEY;
         if (pubKey) {
           const stripe = await loadStripe(pubKey);
           if (stripe) {
-            await (stripe as any).redirectToCheckout({ sessionId: data.sessionId });
+            await (stripe as unknown as { redirectToCheckout: (options: { sessionId: string }) => Promise<unknown> }).redirectToCheckout({ sessionId: data.sessionId });
             return;
           }
         }

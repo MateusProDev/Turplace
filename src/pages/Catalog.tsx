@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { db } from "../utils/firebase";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { Link } from "react-router-dom";
@@ -17,9 +17,27 @@ import {
   Heart
 } from "lucide-react";
 
+interface Service {
+  id: string;
+  title?: string;
+  description?: string;
+  category?: string;
+  city?: string;
+  views?: number;
+  leads?: number;
+  images?: string[];
+  price?: string;
+  status?: string;
+  userId?: string;
+  slug?: string;
+  rating?: number;
+  bookings?: number;
+  ownerName?: string;
+  billingType?: string;
+}
+
 export default function Catalog() {
-  const [services, setServices] = useState<any[]>([]);
-  const [filtered, setFiltered] = useState<any[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
@@ -28,6 +46,7 @@ export default function Catalog() {
   const [cities, setCities] = useState<string[]>([]);
   const [activeFilters, setActiveFilters] = useState<{category?: string, city?: string}>({});
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [filtered, setFiltered] = useState<Service[]>([]);
 
   useEffect(() => {
     const q = query(collection(db, "services"), where("status", "==", "approved"));
@@ -39,12 +58,11 @@ export default function Catalog() {
         leads: doc.data().leads || 0
       }));
       setServices(data);
-      setFiltered(data);
       setLoading(false);
       
       // Extrair categorias e cidades únicas
-      const uniqueCategories = [...new Set(data.map((s: any) => s.category).filter(Boolean))];
-      const uniqueCities = [...new Set(data.map((s: any) => s.city).filter(Boolean))];
+      const uniqueCategories = [...new Set(data.map((s: Service) => s.category).filter((c): c is string => c !== undefined))];
+      const uniqueCities = [...new Set(data.map((s: Service) => s.city).filter((c): c is string => c !== undefined))];
       
       // Ordenar alfabeticamente
       setCategories(uniqueCategories.sort());
@@ -53,12 +71,12 @@ export default function Catalog() {
     return () => unsub();
   }, []);
 
-  useMemo(() => {
+  useEffect(() => {
     let result = services;
     
     if (search) {
       const searchLower = search.toLowerCase();
-      result = result.filter((s: any) =>
+      result = result.filter((s: Service) =>
         s.title?.toLowerCase().includes(searchLower) ||
         s.description?.toLowerCase().includes(searchLower) ||
         s.category?.toLowerCase().includes(searchLower)
@@ -66,15 +84,15 @@ export default function Catalog() {
     }
     
     if (category) {
-      result = result.filter((s: any) => s.category === category);
+      result = result.filter((s: Service) => s.category === category);
     }
     
     if (city) {
-      result = result.filter((s: any) => s.city === city);
+      result = result.filter((s: Service) => s.city === city);
     }
     
     // Ordenar por visualizações (mais populares primeiro)
-    result = result.sort((a: any, b: any) => (b.views || 0) - (a.views || 0));
+    result = result.sort((a: Service, b: Service) => (b.views || 0) - (a.views || 0));
     
     setFiltered(result);
     setActiveFilters({ category, city });
@@ -331,7 +349,7 @@ export default function Catalog() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {filtered.map(service => (
+                {filtered.map((service: Service) => (
                   <div 
                     key={service.id} 
                     className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-blue-200 group"
@@ -340,8 +358,8 @@ export default function Catalog() {
                     <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
                       {service.images && service.images.length > 0 ? (
                         <img 
-                          src={service.images[0]} 
-                          alt={service.title}
+                          src={service.images?.[0]} 
+                          alt={service.title || ''}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
@@ -352,10 +370,10 @@ export default function Catalog() {
                       
                       {/* Badges */}
                       <div className="absolute top-3 left-3 flex flex-col gap-2">
-                        {service.views > 100 && (
+                        {service.views && service.views > 100 && (
                           <span className="bg-black/70 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1">
                             <Eye size={10} />
-                            {formatNumber(service.views)}
+                            {formatNumber(service.views || 0)}
                           </span>
                         )}
                         <span className="bg-blue-600 text-white px-2 py-1 rounded-full text-xs">
@@ -390,7 +408,7 @@ export default function Catalog() {
                         </div>
                         
                         <p className="text-gray-600 text-sm line-clamp-2 mb-3">
-                          Por <span className="font-medium text-gray-900">{service.ownerName}</span>
+                          Por <span className="font-medium text-gray-900">{service.ownerName || 'Prestador'}</span>
                         </p>
                         
                         {/* Stats */}
@@ -419,7 +437,7 @@ export default function Catalog() {
                           </div>
                           
                           <Link 
-                            to={`/service/${generateSlug(service.title)}`}
+                            to={`/service/${generateSlug(service.title || '')}`}
                             className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-green-600 to-emerald-500 text-white font-medium rounded-lg hover:from-green-700 hover:to-emerald-600 transition-all shadow-sm hover:shadow-md group/btn text-xs"
                           >
                             <Eye className="w-3.5 h-3.5" />

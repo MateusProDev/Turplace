@@ -24,7 +24,8 @@ import {
   Eye,
   User,
   CreditCard,
-  BarChart3
+  BarChart3,
+  FileText
 } from "lucide-react";
 import Pricing from "./Pricing";
 import Wallet from "./Wallet";
@@ -32,8 +33,8 @@ import ServiceForm from "../components/Provider/ServiceForm";
 
 export default function ProviderDashboard() {
   const { user, userData } = useAuth();
-  const [profile, setProfile] = useState<any>(null);
-  const [services, setServices] = useState<any[]>([]);
+  const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
+  const [services, setServices] = useState<Record<string, unknown>[]>([]);
   const [editMode, setEditMode] = useState(false);
   const [name, setName] = useState("");
   const [photo, setPhoto] = useState<string | null>(null);
@@ -43,8 +44,8 @@ export default function ProviderDashboard() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [currentTab, setCurrentTab] = useState<'services' | 'profile' | 'plans' | 'wallet'>('services');
-  const [editingService, setEditingService] = useState<any>(null);
+  const [currentTab, setCurrentTab] = useState<'services' | 'profile' | 'plans' | 'wallet' | 'leadpage'>('services');
+  const [editingService, setEditingService] = useState<Record<string, unknown> | null>(null);
   const [editServiceModal, setEditServiceModal] = useState(false);
 
   // Load dashboard settings on mount
@@ -60,14 +61,14 @@ export default function ProviderDashboard() {
     }
   }, []);
 
-  const applyDashboardSettings = (settings: any) => {
+  const applyDashboardSettings = (settings: Record<string, unknown>) => {
     const root = document.documentElement;
-    if (settings.primaryColor) root.style.setProperty('--dashboard-primary', settings.primaryColor);
-    if (settings.secondaryColor) root.style.setProperty('--dashboard-secondary', settings.secondaryColor);
-    if (settings.backgroundColor) root.style.setProperty('--dashboard-background', settings.backgroundColor);
+    if (settings.primaryColor) root.style.setProperty('--dashboard-primary', settings.primaryColor as string);
+    if (settings.secondaryColor) root.style.setProperty('--dashboard-secondary', settings.secondaryColor as string);
+    if (settings.backgroundColor) root.style.setProperty('--dashboard-background', settings.backgroundColor as string);
     if (settings.fontFamily) {
-      root.style.setProperty('--dashboard-font-family', settings.fontFamily);
-      document.body.style.fontFamily = settings.fontFamily;
+      root.style.setProperty('--dashboard-font-family', settings.fontFamily as string);
+      document.body.style.fontFamily = settings.fontFamily as string;
     }
     if (settings.fontSize) {
       const fontSizeMap = { small: '14px', medium: '16px', large: '18px' } as const;
@@ -199,7 +200,7 @@ export default function ProviderDashboard() {
     
     try {
       await deleteDoc(doc(db, "services", deleteId));
-      setServices(services.filter((s: any) => s.id !== deleteId));
+      setServices(services.filter((s: Record<string, unknown>) => s.id !== deleteId));
       setModalOpen(false);
       setDeleteId(null);
     } catch (err) {
@@ -209,7 +210,7 @@ export default function ProviderDashboard() {
   };
 
   const getStatusBadge = (status: string) => {
-    const statusMap: any = {
+    const statusMap: Record<string, { text: string; color: string; icon: typeof CheckCircle }> = {
       "approved": { text: "Publicado", color: "bg-green-100 text-green-800", icon: CheckCircle },
       "pending": { text: "Aguardando", color: "bg-yellow-100 text-yellow-800", icon: Clock },
       "rejected": { text: "Rejeitado", color: "bg-red-100 text-red-800", icon: CheckCircle }
@@ -334,6 +335,17 @@ export default function ProviderDashboard() {
                 <BarChart3 size={18} />
                 Carteira
               </button>
+              <button
+                onClick={() => setCurrentTab('leadpage')}
+                className={`flex items-center gap-2 sm:gap-3 py-2 sm:py-3 px-3 sm:px-6 border-b-2 font-semibold text-xs sm:text-sm transition-all duration-200 rounded-t-lg whitespace-nowrap ${
+                  currentTab === 'leadpage' 
+                    ? 'border-blue-600 text-blue-600 bg-blue-50' 
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <FileText size={18} />
+                Lead Page
+              </button>
             </div>
           </div>
         </div>
@@ -417,23 +429,23 @@ export default function ProviderDashboard() {
               ) : (
                 <>
                   <div className="text-center mb-6">
-                    <h2 className="text-xl font-bold text-gray-900 mb-1">{profile?.name || "Usuário"}</h2>
+                    <h2 className="text-xl font-bold text-gray-900 mb-1">{(profile?.name as string) || "Usuário"}</h2>
                     <div className="flex items-center justify-center gap-2 text-gray-600 mb-3">
                       <Mail size={14} />
-                      <span>{profile?.email}</span>
+                      <span>{profile?.email as string}</span>
                     </div>
                     <span className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">
-                      {profile?.role === "provider" ? "Prestador" : profile?.role || "Usuário"}
+                      {(profile?.role as string) === "provider" ? "Prestador" : (profile?.role as string) || "Usuário"}
                     </span>
 
                     {/* Plano atual do usuário */}
                     <div className="mt-4 p-3 bg-gray-50 rounded-lg text-sm">
                       <div className="flex items-center justify-between mb-2">
                         <div className="font-semibold text-gray-800">Plano atual</div>
-                        <div className="text-xs text-gray-600">{profile?.planActivatedAt ? new Date(profile.planActivatedAt).toLocaleDateString() : '—'}</div>
+                        <div className="text-xs text-gray-600">{profile?.planActivatedAt ? new Date(profile.planActivatedAt as string | number | Date).toLocaleDateString() : '—'}</div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <div className="text-sm text-gray-700 font-medium">{profile?.planId || 'free'}</div>
+                        <div className="text-sm text-gray-700 font-medium">{(profile?.planId as string) || 'free'}</div>
                         <div className="px-2 py-0.5 bg-white border rounded text-xs text-gray-600">
                           Taxa: {(() => {
                             const planId = profile?.planId || 'free';
@@ -442,13 +454,13 @@ export default function ProviderDashboard() {
                               'professional': 8,
                               'premium': 3.99
                             };
-                            return `${feeMap[planId] || profile?.platformFeePercent || 12}%`;
+                            return `${feeMap[planId as string] || (profile?.platformFeePercent as number) || 12}%`;
                           })()}
                         </div>
                       </div>
-                      {profile?.planFeatures && (
+                      {(profile as any)?.planFeatures && (
                         <div className="mt-3 text-xs text-gray-600">
-                          {Array.isArray(profile.planFeatures) ? profile.planFeatures.slice(0,3).join(' • ') : String(profile.planFeatures)}
+                          {Array.isArray((profile as any).planFeatures) ? ((profile as any).planFeatures as string[]).slice(0,3).join(' • ') : String((profile as any).planFeatures)}
                         </div>
                       )}
                     </div>
@@ -538,26 +550,26 @@ export default function ProviderDashboard() {
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {services.map(service => {
-                    const statusBadge = getStatusBadge(service.status);
+                    const statusBadge = getStatusBadge(service.status as string);
                     return (
                       <div 
-                        key={service.id} 
+                        key={service.id as string} 
                         className="bg-white border border-gray-200 rounded-xl p-4 hover:border-blue-300 hover:shadow-md transition cursor-pointer group"
-                        onClick={() => navigate(`/service/${generateSlug(service.title)}`)}
+                        onClick={() => navigate(`/service/${generateSlug(service.title as string)}`)}
                       >
                         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3 gap-2">
                           <div className="flex-1 min-w-0">
                             <h3 className="font-bold text-lg text-gray-900 group-hover:text-blue-700 transition line-clamp-1">
-                              {service.title}
+                              {service.title as string}
                             </h3>
                             <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 mt-1">
                               <div className="flex items-center gap-1">
                                 <Briefcase size={12} />
-                                <span className="truncate">{service.category}</span>
+                                <span className="truncate">{service.category as string}</span>
                               </div>
                               <div className="flex items-center gap-1">
                                 <MapPin size={12} />
-                                <span className="truncate">{service.city}</span>
+                                <span className="truncate">{service.city as string}</span>
                               </div>
                             </div>
                           </div>
@@ -567,12 +579,12 @@ export default function ProviderDashboard() {
                         </div>
                         
                         <p className="text-gray-700 text-sm line-clamp-2 mb-4">
-                          {service.description}
+                          {service.description as string}
                         </p>
                         
-                        {service.images && service.images.length > 0 && (
+                        {(service.images as string[]) && (service.images as string[]).length > 0 && (
                           <div className="flex gap-2 mb-4 overflow-x-auto">
-                            {service.images.slice(0, 3).map((img: string, i: number) => (
+                            {(service.images as string[]).slice(0, 3).map((img: string, i: number) => (
                               <img 
                                 key={i} 
                                 src={img} 
@@ -580,9 +592,9 @@ export default function ProviderDashboard() {
                                 className="w-16 h-16 object-cover rounded-lg border flex-shrink-0"
                               />
                             ))}
-                            {service.images.length > 3 && (
+                            {(service.images as string[]).length > 3 && (
                               <div className="w-16 h-16 bg-gray-100 rounded-lg border flex items-center justify-center text-gray-500 text-xs flex-shrink-0">
-                                +{service.images.length - 3}
+                                +{(service.images as string[]).length - 3}
                               </div>
                             )}
                           </div>
@@ -605,7 +617,7 @@ export default function ProviderDashboard() {
                               className="px-3 py-1 rounded bg-red-100 text-red-700 hover:bg-red-200 text-xs font-semibold transition flex items-center gap-1"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setDeleteId(service.id);
+                                setDeleteId(service.id as string);
                                 setModalOpen(true);
                               }}
                             >
@@ -617,7 +629,7 @@ export default function ProviderDashboard() {
                             className="px-3 py-1 rounded bg-gray-100 text-gray-700 hover:bg-gray-200 text-xs font-semibold transition flex items-center gap-1 w-full sm:w-auto justify-center"
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/service/${generateSlug(service.title)}`);
+                              navigate(`/service/${generateSlug(service.title as string)}`);
                             }}
                           >
                             <ExternalLink size={12} />
@@ -734,6 +746,50 @@ export default function ProviderDashboard() {
             <Wallet />
           </div>
         )}
+
+        {currentTab === 'leadpage' && (
+          <div className="max-w-6xl mx-auto">
+            <div className="bg-white rounded-2xl shadow-lg p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Lead Page Personalizada</h2>
+                  <p className="text-gray-600 mt-1">Crie e edite sua página de captura profissional para atrair agências e agentes de turismo.</p>
+                </div>
+                <Link
+                  to="/profile/leadpage"
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition"
+                >
+                  Editar Lead Page
+                </Link>
+              </div>
+              <div className="space-y-4">
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <h3 className="font-medium text-gray-900 mb-2">URL da Sua Lead Page</h3>
+                  <p className="text-sm text-gray-600">
+                      marketplace.turvia.com.br/lead/{user?.uid}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Compartilhe este link com agências de turismo e agentes de viagens.
+                  </p>
+                </div>
+                {userData?.plan !== 'premium' && (
+                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <h3 className="font-medium text-yellow-800 mb-2">Domínio Personalizado</h3>
+                    <p className="text-sm text-yellow-700">
+                      Disponível apenas no plano Premium. Configure seu próprio domínio (ex: www.meuservico.com).
+                    </p>
+                    <Link
+                      to="/pricing"
+                      className="text-sm text-yellow-800 underline hover:text-yellow-900"
+                    >
+                      Fazer upgrade para Premium
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <ConfirmModal
@@ -763,7 +819,7 @@ export default function ProviderDashboard() {
             <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
               <ServiceForm
                 editMode={true}
-                serviceData={editingService}
+                serviceData={editingService as any}
                 onClose={() => {
                   setEditServiceModal(false);
                   setEditingService(null);

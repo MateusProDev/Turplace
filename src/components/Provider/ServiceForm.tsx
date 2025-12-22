@@ -40,11 +40,18 @@ interface Service {
   images: string[];
   status: string;
   createdAt: Timestamp;
+  price?: string;
+  productType?: string;
+  billingType?: string;
+  priceMonthly?: string;
+  views?: number;
+  leads?: number;
+  featured?: boolean;
 }
 
 interface ServiceFormProps {
   editMode?: boolean;
-  serviceData?: any;
+  serviceData?: Service;
   onClose?: () => void;
 }
 
@@ -344,9 +351,10 @@ export default function ServiceForm({ editMode = false, serviceData, onClose }: 
         setTimeout(() => onClose(), 2000);
       }
       
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Erro ao cadastrar serviço:", err);
-      setError(err.message || "Erro ao cadastrar serviço. Tente novamente.");
+      const error = err as { message?: string };
+      setError(error.message || "Erro ao cadastrar serviço. Tente novamente.");
       setLoading(false);
     }
   };

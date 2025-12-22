@@ -8,7 +8,7 @@ interface ServiceData {
   description?: string;
   ownerId?: string;
   status?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export default function ServiceDiagnostics() {
@@ -36,7 +36,7 @@ export default function ServiceDiagnostics() {
 
   const fixService = async (service: ServiceData) => {
     try {
-      const updates: any = {};
+      const updates: Record<string, unknown> = {};
 
       if (!service.title) updates.title = 'Serviço sem título';
       if (!service.description) updates.description = 'Descrição não fornecida';

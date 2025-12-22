@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Menu, X, ChevronDown } from "lucide-react";
 import iconLogo from '../assets/iconlogo.png';
 import { getCategoriesWithProducts } from "../utils/getCategoriesWithProducts";
-import { getTopRatedProducts } from "../utils/getTopRatedProducts";
+import { getTopRatedProducts, type Product } from "../utils/getTopRatedProducts";
 import { generateSlug } from "../utils/slug";
 import { 
   MapPin, 
@@ -124,7 +124,7 @@ export default function Landing() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeFilter, setActiveFilter] = useState('todos');
-  const [topProducts, setTopProducts] = useState<any[]>([]);
+  const [topProducts, setTopProducts] = useState<Product[]>([]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -390,7 +390,7 @@ export default function Landing() {
             {topProducts.map((content) => (
               <Link
                 key={content.id}
-                to={`/service/${generateSlug(content.title)}`}
+                to={`/service/${generateSlug(content.title || '')}`}
                 className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 overflow-hidden border border-gray-100"
               >
                 <div className="flex flex-col">
@@ -420,7 +420,7 @@ export default function Landing() {
                   <div className="flex items-center justify-between p-4 border-b border-gray-100">
                     <div>
                       <div className="text-xl font-bold text-gray-900">
-                        R$ {content.price.toFixed(2).replace('.', ',')}
+                        R$ {content.price ? content.price.toFixed(2).replace('.', ',') : '0,00'}
                       </div>
                       <p className="text-xs text-gray-500">
                         {content.billingType === 'subscription' ? 'por mês' : 'valor único'}
@@ -459,7 +459,7 @@ export default function Landing() {
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-1 text-gray-600">
                         <Eye className="w-3.5 h-3.5" />
-                        <span className="text-xs font-medium">{content.views.toLocaleString()}</span>
+                        <span className="text-xs font-medium">{content.views?.toLocaleString() || '0'}</span>
                       </div>
                       <div className="flex items-center gap-1 text-gray-600">
                         <Heart className="w-3.5 h-3.5 text-rose-500" />
