@@ -13,6 +13,7 @@ import stripeWebhookGuest from './_handlers/stripe-webhook-guest.js';
 import testEnv from './_handlers/test-env.js';
 import wallet from './_handlers/wallet.js';
 import webhook from './_handlers/webhook.js';
+import mercadopagoCheckout from './mercadopago-checkout.js';
 
 const handlers = {
   'create-checkout-session': createCheckoutSession,
@@ -26,7 +27,8 @@ const handlers = {
   'stripe-webhook-guest': stripeWebhookGuest,
   'test-env': testEnv,
   'wallet': wallet,
-  'webhook': webhook
+  'webhook': webhook,
+  'mercadopago-checkout': mercadopagoCheckout
 };
 
 export default async (req, res) => {

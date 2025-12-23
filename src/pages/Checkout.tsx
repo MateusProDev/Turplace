@@ -38,6 +38,7 @@ export default function Checkout() {
   const [qrCodeBase64, setQrCodeBase64] = useState<string | null>(null);
   const [aguardandoPix, setAguardandoPix] = useState(false);
   const [pixStatus, setPixStatus] = useState<string | null>(null);
+  const [paymentId, setPaymentId] = useState<string | null>(null);
 
   // Dados do cliente
   const [customerData, setCustomerData] = useState<CustomerData>({
@@ -83,13 +84,12 @@ export default function Checkout() {
 
   // Monitoramento do status do Pix
   useEffect(() => {
-    if (aguardandoPix && qrCodePix) {
+    if (aguardandoPix && paymentId) {
       console.log('[Checkout] Iniciando monitoramento do status do Pix');
       const interval = setInterval(async () => {
         try {
           console.log('[Checkout] Verificando status do pagamento Pix');
-          const paymentId = qrCodePix.split('|')[0]; // Supondo que o payment_id está salvo
-          const resp = await fetch(`/api/payment/${paymentId}`);
+          const resp = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/payment/${paymentId}`);
           const data = await resp.json();
           console.log('[Checkout] Status do Pix:', data);
           if (data.status) setPixStatus(data.status);
@@ -102,7 +102,7 @@ export default function Checkout() {
         clearInterval(interval);
       };
     }
-  }, [aguardandoPix, qrCodePix]);
+  }, [aguardandoPix, paymentId]);
 
   const handleCustomerDataChange = (field: keyof CustomerData, value: string) => {
     console.log(`[Checkout] Atualizando campo ${field}:`, value);
@@ -202,6 +202,7 @@ export default function Checkout() {
         console.log('[Checkout] Pagamento Pix iniciado');
         setQrCodePix(response.qrCode || null);
         setQrCodeBase64(response.qrCodeBase64 || null);
+        setPaymentId(response.payment_id || null);
         setAguardandoPix(true);
       } else {
         console.log('[Checkout] Pagamento com cartão - redirecionamento necessário');

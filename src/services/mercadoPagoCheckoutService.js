@@ -1,7 +1,7 @@
 // Serviço para checkout Mercado Pago (cartão e Pix)
 // src/services/mercadoPagoCheckoutService.js
 
-const API_URL = process.env.REACT_APP_API_URL || '';
+const API_URL = import.meta.env.VITE_API_URL || '';
 
 export async function iniciarPagamentoCheckout({ valor, metodoPagamento, packageData, reservaData, cardToken, installments, payerData }) {
   console.log('[MercadoPago Service] Iniciando chamada para API', {
@@ -27,6 +27,7 @@ export async function iniciarPagamentoCheckout({ valor, metodoPagamento, package
 export async function verificarStatusPagamento(paymentId) {
   console.log('[MercadoPago Service] Verificando status do pagamento:', paymentId);
 
+  const API_URL = process.env.REACT_APP_API_URL || '';
   const response = await fetch(`${API_URL}/api/payment/${paymentId}`);
   const result = await response.json();
 

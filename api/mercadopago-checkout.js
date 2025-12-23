@@ -6,12 +6,16 @@ import initFirestore from './_lib/firebaseAdmin.js';
 
 const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN || process.env.REACT_APP_MERCADO_PAGO_ACCESS_TOKEN;
 
+console.log('[MercadoPago Checkout] Inicializando cliente Mercado Pago...');
+
 const client = new MercadoPagoConfig({
   accessToken,
   options: { timeout: 5000 }
 });
 
 const payment = new Payment(client);
+
+console.log('[MercadoPago Checkout] Cliente Mercado Pago inicializado com sucesso');
 
 export default async function handler(req, res) {
   console.log('[MercadoPago Checkout] Iniciando processamento', {
@@ -20,17 +24,39 @@ export default async function handler(req, res) {
     body: req.body
   });
 
+  console.log('[MercadoPago Checkout] Environment check:', {
+    hasAccessToken: !!process.env.MERCADO_PAGO_ACCESS_TOKEN,
+    accessTokenLength: process.env.MERCADO_PAGO_ACCESS_TOKEN?.length,
+    hasWebhookSecret: !!process.env.MERCADO_PAGO_WEBHOOK_SECRET,
+    webhookSecretLength: process.env.MERCADO_PAGO_WEBHOOK_SECRET?.length,
+    nodeEnv: process.env.NODE_ENV
+  });
+
   if (!accessToken) {
     console.error('[MercadoPago Checkout] Access token não configurado');
     return res.status(500).json({ error: 'Configuração do Mercado Pago não encontrada' });
   }
 
+  console.log('[MercadoPago Checkout] Mercado Pago configurado com sucesso');
+
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+  if (req.method === 'GET') {
+    console.log('[MercadoPago Checkout] GET request - retornando status');
+    return res.status(200).json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      environment: {
+        hasAccessToken: !!process.env.MERCADO_PAGO_ACCESS_TOKEN,
+        accessTokenPrefix: process.env.MERCADO_PAGO_ACCESS_TOKEN?.substring(0, 10) + '...',
+        hasWebhookSecret: !!process.env.MERCADO_PAGO_WEBHOOK_SECRET,
+        webhookSecretPrefix: process.env.MERCADO_PAGO_WEBHOOK_SECRET?.substring(0, 10) + '...',
+        hasFirebaseSA: !!process.env.FIREBASE_SERVICE_ACCOUNT_JSON,
+        nodeEnv: process.env.NODE_ENV
+      }
+    });
   }
 
   if (req.method !== 'POST') {
@@ -65,7 +91,10 @@ export default async function handler(req, res) {
       console.log('[MercadoPago Checkout] Processando pagamento Pix');
 
       // Criar pedido no Firestore antes de criar o pagamento
+      console.log('[MercadoPago Checkout] Inicializando Firestore...');
       const db = initFirestore();
+      console.log('[MercadoPago Checkout] Firestore inicializado com sucesso');
+
       const orderRef = db.collection('orders').doc();
 
       // Extrair dados do cliente
