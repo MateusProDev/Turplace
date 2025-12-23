@@ -292,11 +292,21 @@ const Wallet = () => {
                 <p className="mb-2">Conta Stripe conectada</p>
                 <button
                   onClick={() => handleWithdraw(data.availableBalance, 'stripe')}
-                  disabled={data.availableBalance <= 0 || loading}
-                  className="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 disabled:opacity-50 mr-4"
+                  disabled={data.availableBalance < 10 || loading}
+                  className="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed mr-4"
                 >
                   Sacar via Stripe
                 </button>
+                {data.availableBalance < 10 && data.availableBalance > 0 && (
+                  <p className="text-sm text-amber-600 mt-2">
+                    Saldo mínimo para saque: R$ 10,00. Você tem R$ {data.availableBalance.toFixed(2)}.
+                  </p>
+                )}
+                {data.availableBalance <= 0 && (
+                  <p className="text-sm text-red-600 mt-2">
+                    Você não possui saldo disponível para saque.
+                  </p>
+                )}
               </>
             )}
             {data.chavePix && (
@@ -304,11 +314,21 @@ const Wallet = () => {
                 <p className="mb-2">Chave PIX: {data.chavePix}</p>
                 <button
                   onClick={() => handleWithdraw(data.availableBalance, 'pix')}
-                  disabled={data.availableBalance <= 0 || loading}
-                  className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50"
+                  disabled={data.availableBalance < 10 || loading}
+                  className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Sacar via PIX
                 </button>
+                {data.availableBalance < 10 && data.availableBalance > 0 && (
+                  <p className="text-sm text-amber-600 mt-2">
+                    Saldo mínimo para saque: R$ 10,00. Você tem R$ {data.availableBalance.toFixed(2)}.
+                  </p>
+                )}
+                {data.availableBalance <= 0 && (
+                  <p className="text-sm text-red-600 mt-2">
+                    Você não possui saldo disponível para saque.
+                  </p>
+                )}
               </>
             )}
             <p className="mb-4">Saldo disponível: R$ {data.availableBalance.toFixed(2)}</p>
