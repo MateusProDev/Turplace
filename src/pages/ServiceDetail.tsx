@@ -278,27 +278,11 @@ export default function ServiceDetail() {
 
     setContacting(true);
     try {
-      // Para serviços com preço, criar checkout direto sem autenticação
+      // Para serviços com preço, redirecionar para checkout com Mercado Pago
       if (service.price || service.priceMonthly) {
-        // Criar sessão de checkout diretamente
-        const response = await fetch('/api/create-checkout-session-guest', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            serviceId: service.id,
-            successUrl: `${window.location.origin}/success?serviceId=${service.id}`,
-            cancelUrl: window.location.href
-          })
-        });
-
-        if (!response.ok) {
-          throw new Error('Erro ao criar sessão de checkout');
-        }
-
-        const { url } = await response.json();
-        window.location.href = url;
+        // Redirecionar para página de checkout com serviceId
+        window.location.href = `/checkout?serviceId=${service.id}`;
+        return;
       } else {
         // Para serviços sem preço, mostrar modal de contato
         setSuccess("Abrindo formulário de contato...");
