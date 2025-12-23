@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../utils/firebase";
 import { useAuth } from "../hooks/useAuth";
 import { CreditCard, Shield, CheckCircle, AlertCircle, QrCode, User, Sparkles, Lock, ArrowLeft, Loader2, Copy, Smartphone } from "lucide-react";
 import { iniciarPagamentoCheckout } from "../services/mercadoPagoCheckoutService";
@@ -68,6 +70,45 @@ export default function Checkout() {
 
   // @ts-ignore
   const serviceId = searchParams.get('serviceId');
+
+  useEffect(() => {
+    console.log('[Checkout] Iniciando carregamento, serviceId:', serviceId);
+    console.log('[Checkout] searchParams:', searchParams.toString());
+    if (!serviceId) {
+      console.warn('[Checkout] serviceId não fornecido, redirecionando para home');
+      navigate('/');
+      return;
+    }
+
+    const loadService = async () => {
+      console.log('[Checkout] Executando loadService para serviceId:', serviceId);
+      try {
+        console.log('[Checkout] Carregando serviço do Firestore');
+        console.log('[Checkout] db object:', db);
+        const ref = doc(db, "services", serviceId);
+        console.log('[Checkout] Referência do documento:', ref.path);
+        const snap = await getDoc(ref);
+        console.log('[Checkout] Snapshot exists:', snap.exists());
+        if (snap.exists()) {
+          const serviceData = { id: snap.id, ...snap.data() } as ServiceData;
+          console.log('[Checkout] Serviço carregado:', serviceData);
+          setService(serviceData);
+        } else {
+          console.error('[Checkout] Serviço não encontrado no Firestore');
+          setError("Serviço não encontrado");
+        }
+      } catch (err) {
+        console.error("[Checkout] Erro ao carregar serviço:", err);
+        console.error("[Checkout] Stack trace:", err instanceof Error ? err.stack : 'No stack trace');
+        setError("Erro ao carregar serviço");
+      } finally {
+        console.log('[Checkout] Finalizando carregamento, setLoading(false)');
+        setLoading(false);
+      }
+    };
+
+    loadService();
+  }, []);
 
   useEffect(() => {
     if (service?.billingType === 'subscription') {
