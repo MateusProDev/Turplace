@@ -35,7 +35,7 @@ function App() {
         <Route path="/dashboard/service/new" element={<RequireAuth><ServiceForm /></RequireAuth>} />
         <Route path="/provider" element={<RequireAuth><ProviderDashboard /></RequireAuth>} />
         <Route path="/service/:slug" element={<ServiceDetail />} />
-        <Route path="/checkout" element={<RequireAuth><Checkout /></RequireAuth>} />
+        <Route path="/checkout" element={<Checkout />} />
         <Route path="/success" element={<Success />} />
         <Route path="/cancel" element={<div className="min-h-screen flex items-center justify-center"><div className="text-center"><h1 className="text-2xl font-bold text-gray-900 mb-4">Pagamento Cancelado</h1><p className="text-gray-600 mb-6">Você cancelou o pagamento. Pode tentar novamente quando quiser.</p><Link to="/catalog" className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition">Voltar ao Catálogo</Link></div></div>} />
         <Route path="/diagnostics" element={<ServiceDiagnostics />} />
