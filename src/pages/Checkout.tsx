@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { doc, getDoc } from "firebase/firestore";
-import { db } from "../utils/firebase";
 import { useAuth } from "../hooks/useAuth";
 import { CreditCard, Shield, CheckCircle, AlertCircle, QrCode, User, Sparkles, Lock, ArrowLeft, Loader2, Copy, Smartphone } from "lucide-react";
 import { iniciarPagamentoCheckout } from "../services/mercadoPagoCheckoutService";
@@ -38,7 +36,9 @@ export default function Checkout() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  // @ts-ignore
   const [service, setService] = useState<ServiceData | null>(null);
+  // @ts-ignore
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,39 +66,14 @@ export default function Checkout() {
     phone: ''
   });
 
+  // @ts-ignore
   const serviceId = searchParams.get('serviceId');
 
   useEffect(() => {
-    console.log('[Checkout] Iniciando carregamento, serviceId:', serviceId);
-    if (!serviceId) {
-      console.warn('[Checkout] serviceId não fornecido, redirecionando para home');
-      navigate('/');
-      return;
+    if (service?.billingType === 'subscription') {
+      setMetodoPagamento('cartao');
     }
-
-    const loadService = async () => {
-      try {
-        console.log('[Checkout] Carregando serviço do Firestore');
-        const ref = doc(db, "services", serviceId);
-        const snap = await getDoc(ref);
-        if (snap.exists()) {
-          const serviceData = { id: snap.id, ...snap.data() } as ServiceData;
-          console.log('[Checkout] Serviço carregado:', serviceData);
-          setService(serviceData);
-        } else {
-          console.error('[Checkout] Serviço não encontrado no Firestore');
-          setError("Serviço não encontrado");
-        }
-      } catch (err) {
-        console.error("[Checkout] Erro ao carregar serviço:", err);
-        setError("Erro ao carregar serviço");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadService();
-  }, [serviceId, navigate]);
+  }, [service?.billingType]);
 
   // Monitoramento do status do Pix
   useEffect(() => {
@@ -183,10 +158,40 @@ export default function Checkout() {
       console.log('[Checkout] Iniciando processamento de pagamento', {
         metodoPagamento,
         serviceId: service.id,
-        customerData
+        billingType: service.billingType
       });
 
-      const valor = service.billingType === 'subscription' ? service.priceMonthly : service.price;
+      // Para subscriptions, usar Stripe
+      if (service.billingType === 'subscription') {
+        if (!service.priceId) {
+          throw new Error('Serviço não configurado para assinatura');
+        }
+
+        console.log('[Checkout] Criando sessão de assinatura Stripe');
+        const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/create-subscription-session`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            priceId: service.priceId,
+            customerEmail: customerData.email,
+            userId: user?.uid
+          })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Erro ao criar sessão de assinatura');
+        }
+
+        console.log('[Checkout] Sessão Stripe criada, redirecionando', data.checkoutUrl);
+        window.location.href = data.checkoutUrl;
+        return;
+      }
+
+      // Para pagamentos únicos, usar Mercado Pago
+      const valor = service.price;
       if (!valor) {
         throw new Error('Valor do serviço não definido');
       }
@@ -447,54 +452,73 @@ export default function Checkout() {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">Método de pagamento</h2>
-                  <p className="text-gray-600 text-sm">Escolha como deseja pagar</p>
+                  <p className="text-gray-600 text-sm">
+                    {service?.billingType === 'subscription' 
+                      ? 'Assinatura mensal processada via Stripe' 
+                      : 'Escolha como deseja pagar'
+                    }
+                  </p>
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-4 mb-8">
-                <button
-                  onClick={() => setMetodoPagamento('pix')}
-                  className={`p-4 rounded-xl border-2 transition-all ${metodoPagamento === 'pix' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}
-                >
+              {service?.billingType === 'subscription' ? (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${metodoPagamento === 'pix' ? 'bg-green-500' : 'bg-gray-100'}`}>
-                      <QrCode className={`w-5 h-5 ${metodoPagamento === 'pix' ? 'text-white' : 'text-gray-600'}`} />
+                    <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                      <CreditCard className="w-5 h-5 text-white" />
                     </div>
-                    <div className="text-left">
-                      <div className="font-semibold text-gray-900">Pix</div>
-                      <div className="text-sm text-gray-600">Pagamento instantâneo</div>
+                    <div>
+                      <div className="font-semibold text-gray-900">Assinatura Mensal</div>
+                      <div className="text-sm text-gray-600">Pagamento recorrente via cartão de crédito</div>
                     </div>
-                    {metodoPagamento === 'pix' && (
-                      <div className="ml-auto w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                        <div className="w-2 h-2 bg-white rounded-full"></div>
-                      </div>
-                    )}
                   </div>
-                </button>
-
-                <button
-                  onClick={() => setMetodoPagamento('cartao')}
-                  className={`p-4 rounded-xl border-2 transition-all ${metodoPagamento === 'cartao' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${metodoPagamento === 'cartao' ? 'bg-blue-500' : 'bg-gray-100'}`}>
-                      <CreditCard className={`w-5 h-5 ${metodoPagamento === 'cartao' ? 'text-white' : 'text-gray-600'}`} />
-                    </div>
-                    <div className="text-left">
-                      <div className="font-semibold text-gray-900">Cartão</div>
-                      <div className="text-sm text-gray-600">Crédito ou débito</div>
-                    </div>
-                    {metodoPagamento === 'cartao' && (
-                      <div className="ml-auto w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
-                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 gap-4 mb-8">
+                  <button
+                    onClick={() => setMetodoPagamento('pix')}
+                    className={`p-4 rounded-xl border-2 transition-all ${metodoPagamento === 'pix' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-300'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${metodoPagamento === 'pix' ? 'bg-green-500' : 'bg-gray-100'}`}>
+                        <QrCode className={`w-5 h-5 ${metodoPagamento === 'pix' ? 'text-white' : 'text-gray-600'}`} />
                       </div>
-                    )}
-                  </div>
-                </button>
-              </div>
+                      <div className="text-left">
+                        <div className="font-semibold text-gray-900">Pix</div>
+                        <div className="text-sm text-gray-600">Pagamento instantâneo</div>
+                      </div>
+                      {metodoPagamento === 'pix' && (
+                        <div className="ml-auto w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                          <div className="w-2 h-2 bg-white rounded-full"></div>
+                        </div>
+                      )}
+                    </div>
+                  </button>
 
-              {/* Campos do Cartão */}
-              {metodoPagamento === 'cartao' && (
+                  <button
+                    onClick={() => setMetodoPagamento('cartao')}
+                    className={`p-4 rounded-xl border-2 transition-all ${metodoPagamento === 'cartao' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${metodoPagamento === 'cartao' ? 'bg-blue-500' : 'bg-gray-100'}`}>
+                        <CreditCard className={`w-5 h-5 ${metodoPagamento === 'cartao' ? 'text-white' : 'text-gray-600'}`} />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-semibold text-gray-900">Cartão</div>
+                        <div className="text-sm text-gray-600">Crédito ou débito</div>
+                      </div>
+                      {metodoPagamento === 'cartao' && (
+                        <div className="ml-auto w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                          <div className="w-2 h-2 bg-white rounded-full"></div>
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                </div>
+              )}
+
+              {/* Campos do Cartão - apenas para pagamentos únicos */}
+              {metodoPagamento === 'cartao' && service?.billingType !== 'subscription' && (
                 <div className="space-y-6 animate-fadeIn">
                   <div>
                     <label className="block text-sm font-semibold text-gray-900 mb-2">
@@ -670,10 +694,7 @@ export default function Checkout() {
                 <div className="flex-1">
                   <h3 className="font-bold text-gray-900 mb-1 line-clamp-2">{service.title}</h3>
                   <p className="text-gray-600 text-sm mb-2">Por {service.ownerName}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-gray-900">R$ {price}</span>
-                    <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">{billingText}</span>
-                  </div>
+                  <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">{billingText}</span>
                 </div>
               </div>
 
