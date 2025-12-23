@@ -19,6 +19,17 @@ interface PendingSale {
   serviceId: string;
 }
 
+interface Payout {
+  id: string;
+  amount: number;
+  method: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  createdAt: string;
+  processedAt?: string;
+  chavePix?: string;
+  mercadoPagoTransferId?: string;
+}
+
 interface WalletData {
   totalSales: number;
   totalCommissions: number;
@@ -27,6 +38,7 @@ interface WalletData {
   pendingAmount: number;
   sales: Sale[];
   pendingSales: PendingSale[];
+  payouts: Payout[];
   stripeAccountId: string | null;
   chavePix: string;
 }
@@ -41,6 +53,7 @@ const Wallet = () => {
     pendingAmount: 0,
     sales: [],
     pendingSales: [],
+    payouts: [],
     stripeAccountId: null,
     chavePix: '',
   });
@@ -69,7 +82,20 @@ const Wallet = () => {
           return res.json();
         })
         .then(freshData => {
-          setData(freshData);
+          // Buscar payouts do usuário
+          fetch(`/api/payouts?userId=${user.uid}`)
+            .then(payoutRes => payoutRes.json())
+            .then(payoutData => {
+              setData({
+                ...freshData,
+                payouts: payoutData.payouts || []
+              });
+            })
+            .catch(payoutError => {
+              console.error('Erro ao buscar payouts:', payoutError);
+              setData(freshData);
+            });
+
           // Cache the data with timestamp
           localStorage.setItem(`wallet_${user.uid}`, JSON.stringify({
             data: freshData,
@@ -93,14 +119,20 @@ const Wallet = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.uid, amount, method }),
       });
-      if (!response.ok) throw new Error('Erro ao processar saque');
-      const { delayHours } = await response.json();
-      alert(`Saque solicitado com sucesso! O dinheiro será enviado ${method === 'stripe' ? 'via Stripe' : 'via PIX'} em aproximadamente ${delayHours} horas.`);
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erro ao processar saque');
+      }
+
+      alert(`${result.message}\n\nID da transação: ${result.payoutId}\nTempo estimado: ${result.estimatedTime}`);
+
       // Refresh data
       window.location.reload();
     } catch (error) {
       console.error('Erro no saque:', error);
-      alert('Erro ao solicitar saque. Tente novamente.');
+      alert(`Erro ao solicitar saque: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     } finally {
       setLoading(false);
     }
@@ -194,6 +226,57 @@ const Wallet = () => {
                   <td className="border px-4 py-2">R$ {sale.amount.toFixed(2)}</td>
                 </tr>
               ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Payouts History Section */}
+      <div className="mt-8">
+        <h2 className="text-2xl font-bold mb-4">Histórico de Saques</h2>
+        <table className="w-full table-auto">
+          <thead>
+            <tr>
+              <th className="px-4 py-2">Data</th>
+              <th className="px-4 py-2">Valor</th>
+              <th className="px-4 py-2">Método</th>
+              <th className="px-4 py-2">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading && (!data.payouts || data.payouts.length === 0) ? (
+              <tr>
+                <td colSpan={4} className="border px-4 py-2 text-center">
+                  <Loader className="animate-spin mx-auto" size={20} />
+                </td>
+              </tr>
+            ) : data.payouts && data.payouts.length > 0 ? (
+              data.payouts.map(payout => (
+                <tr key={payout.id}>
+                  <td className="border px-4 py-2">{new Date(payout.createdAt).toLocaleDateString()}</td>
+                  <td className="border px-4 py-2">R$ {payout.amount.toFixed(2)}</td>
+                  <td className="border px-4 py-2">{payout.method === 'pix' ? 'PIX' : 'Stripe'}</td>
+                  <td className="border px-4 py-2">
+                    <span className={`px-2 py-1 rounded text-sm ${
+                      payout.status === 'completed' ? 'bg-green-100 text-green-800' :
+                      payout.status === 'processing' ? 'bg-yellow-100 text-yellow-800' :
+                      payout.status === 'failed' ? 'bg-red-100 text-red-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {payout.status === 'completed' ? 'Concluído' :
+                       payout.status === 'processing' ? 'Processando' :
+                       payout.status === 'failed' ? 'Falhou' :
+                       'Pendente'}
+                    </span>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={4} className="border px-4 py-2 text-center text-gray-500">
+                  Nenhum saque realizado ainda
+                </td>
+              </tr>
             )}
           </tbody>
         </table>
