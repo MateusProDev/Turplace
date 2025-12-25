@@ -4,8 +4,9 @@ class ShareContentService {
   private client: ShareContent;
 
   constructor(token?: string) {
+    // Mantém o cliente para uso futuro, mas usaremos API routes para evitar CORS
     this.client = new ShareContent({
-      token: token || import.meta.env.VITE_SHARECONTENT_TOKEN, // Use variável de ambiente para o token
+      token: token || import.meta.env.VITE_SHARECONTENT_TOKEN,
       timeout: 30000,
     });
   }
@@ -18,14 +19,28 @@ class ShareContentService {
     this.client.setProjectId(projectId);
   }
 
-  // Método para criar um link encurtado
+  // Método para criar um link encurtado via API route
   async createShortLink(url: string, title?: string, shortCode?: string) {
     try {
-      const shortLink = await this.client.shortLinks.create({
-        url,
-        title,
-        short_code: shortCode,
+      const response = await fetch('/api/sharecontent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'createShortLink',
+          url,
+          title,
+          shortCode,
+        }),
       });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao criar link encurtado');
+      }
+
+      const shortLink = await response.json();
       return shortLink;
     } catch (error) {
       console.error('Erro ao criar link encurtado:', error);
@@ -33,24 +48,55 @@ class ShareContentService {
     }
   }
 
-  // Método para listar links
-  async listShortLinks() {
+  // Método para obter analytics de um link via API route
+  async getLinkAnalytics(shortCode: string) {
     try {
-      const links = await this.client.shortLinks.list();
-      return links;
+      const response = await fetch('/api/sharecontent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'getLinkAnalytics',
+          shortCode,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao obter analytics');
+      }
+
+      const analytics = await response.json();
+      return analytics;
     } catch (error) {
-      console.error('Erro ao listar links:', error);
+      console.error('Erro ao obter analytics:', error);
       throw error;
     }
   }
 
-  // Método para obter analytics de um link
-  async getLinkAnalytics(shortCode: string) {
+  // Método para listar links via API route
+  async listShortLinks() {
     try {
-      const analytics = await this.client.analytics.getByLink(shortCode);
-      return analytics;
+      const response = await fetch('/api/sharecontent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'listShortLinks',
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Erro ao listar links');
+      }
+
+      const links = await response.json();
+      return links;
     } catch (error) {
-      console.error('Erro ao obter analytics:', error);
+      console.error('Erro ao listar links:', error);
       throw error;
     }
   }

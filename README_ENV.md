@@ -39,6 +39,12 @@ CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 ```
 
+### ShareContent (Links Encurtados)
+```bash
+SHARECONTENT_TOKEN=your_sharecontent_api_token
+VITE_SHARECONTENT_TOKEN=your_sharecontent_api_token
+```
+
 ## Como Configurar no Vercel
 
 1. Acesse o painel do Vercel

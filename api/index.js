@@ -13,6 +13,7 @@ import stripeWebhookGuest from './_handlers/stripe-webhook-guest.js';
 import testEnv from './_handlers/test-env.js';
 import wallet from './_handlers/wallet.js';
 import webhook from './_handlers/webhook.js';
+import sharecontent from './_handlers/sharecontent.js';
 import mercadopagoCheckout from './mercadopago-checkout.js';
 
 const handlers = {
@@ -28,6 +29,7 @@ const handlers = {
   'test-env': testEnv,
   'wallet': wallet,
   'webhook': webhook,
+  'sharecontent': sharecontent,
   'mercadopago-checkout': mercadopagoCheckout
 };
 
