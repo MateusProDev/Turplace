@@ -11,7 +11,7 @@ export default function Success() {
   const sessionId = useMemo(() => searchParams.get('session_id'), [searchParams]);
   const orderId = useMemo(() => searchParams.get('order_id'), [searchParams]);
 
-  const fetchOrderDetails = useCallback(async () => {
+  const fetchOrderDetails = useCallback(async () => { 
     try {
       const params = new URLSearchParams();
       if (sessionId) params.append('session_id', sessionId);
