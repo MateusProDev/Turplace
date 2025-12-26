@@ -90,6 +90,32 @@ export default function ProviderDashboard() {
   useEffect(() => {
     if (!user) return;
 
+    const loadExistingShortLink = async () => {
+      try {
+        const expectedShortCode = `lead-${user.uid}`;
+        console.log('Checking for existing short link with code:', expectedShortCode);
+        
+        // Try to get analytics for the expected short code to check if it exists
+        const analytics = await shareContentService.getLinkAnalytics(expectedShortCode);
+        if (analytics && analytics.short_code === expectedShortCode) {
+          // Link exists, construct the URL
+          const shortUrl = `https://sharecontent.io/x/${expectedShortCode}`;
+          console.log('Found existing short link:', shortUrl);
+          setShortLink(shortUrl);
+          localStorage.setItem('providerShortLink', shortUrl);
+          
+          // Save to Firestore for future loads
+          await updateDoc(doc(db, "users", user.uid), {
+            shortLink: shortUrl,
+            updatedAt: new Date()
+          });
+          console.log('Saved existing short link to Firestore');
+        }
+      } catch (error) {
+        console.log('No existing short link found or error checking:', error instanceof Error ? error.message : String(error));
+      }
+    };
+
     const unsubProfile = onSnapshot(doc(db, "users", user.uid), (doc) => {
       if (doc.exists()) {
         const data = doc.data();
@@ -107,7 +133,9 @@ export default function ProviderDashboard() {
           // Also save to localStorage for faster loading
           localStorage.setItem('providerShortLink', firestoreShortLink);
         } else {
-          console.log('No shortLink found in Firestore for user:', user.uid);
+          console.log('No shortLink found in Firestore for user:', user.uid, '- checking API');
+          // If no short link in Firestore, try to load from API
+          loadExistingShortLink();
         }
       } else {
         console.log('User document does not exist for uid:', user.uid);
