@@ -26,6 +26,7 @@ app.use((req, res, next) => {
 // import createStripeAccount from '../api/_handlers/create-stripe-account.js';
 // import wallet from '../api/_handlers/wallet.js';
 // import webhook from '../api/_handlers/webhook.js';
+import sharecontent from '../api/_handlers/sharecontent.js';
 
 // Simple test handler
 const testHandler = (req, res) => {
@@ -38,10 +39,23 @@ app.post('/api/create-checkout-session-guest', testHandler);
 app.post('/api/create-stripe-account', testHandler);
 app.get('/api/wallet', (req, res) => res.json({ totalSales: 0, totalCommissions: 0, totalReceived: 0, availableBalance: 0, pendingAmount: 0, sales: [], pendingSales: [], stripeAccountId: null, chavePix: '' }));
 app.post('/api/webhook', testHandler);
+app.post('/api/sharecontent', sharecontent);
+console.log('ShareContent handler loaded successfully');
+
+console.log('Routes registered:');
+console.log('POST /api/sharecontent - sharecontent handler');
 
 const port = process.env.PORT || 3001;
 app.listen(port, () => {
   console.log(`Local API server listening on http://localhost:${port}`);
+  console.log('Available routes:');
+  console.log('POST /api/create-subscription-session');
+  console.log('POST /api/create-checkout-session');
+  console.log('POST /api/create-checkout-session-guest');
+  console.log('POST /api/create-stripe-account');
+  console.log('GET /api/wallet');
+  console.log('POST /api/webhook');
+  console.log('POST /api/sharecontent');
 }).on('error', (err) => {
   console.error('Server failed to start:', err);
   process.exit(1);
