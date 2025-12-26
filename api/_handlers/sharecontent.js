@@ -47,23 +47,56 @@ async function createShortLinkDirect(token, url, title, shortCode) {
 }
 
 async function getLinkAnalyticsDirect(token, shortCode) {
-  console.log('[DEBUG] Getting analytics via direct API call');
-  const response = await fetch(`https://api.sharecontent.io/api/short-links/${shortCode}/analytics`, {
+  console.log('[DEBUG] Getting analytics via direct API call for shortCode:', shortCode);
+
+  // Primeiro, precisamos encontrar o ID do link pelo short_code
+  const listResponse = await fetch('https://api.sharecontent.io/api/short-links', {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
     },
   });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('[ERROR] ShareContent Analytics API error:', response.status, errorText);
-    throw new Error(`ShareContent Analytics API error: ${response.status} ${errorText}`);
+  if (!listResponse.ok) {
+    const errorText = await listResponse.text();
+    throw new Error(`ShareContent List API error: ${listResponse.status} ${errorText}`);
   }
 
-  const result = await response.json();
+  const listData = await listResponse.json();
+  const links = listData.data || listData; // Handle both {data: [...]} and [...] formats
+
+  // Encontrar o link pelo short_code
+  const link = links.find(l => l.short_code === shortCode);
+  if (!link) {
+    throw new Error(`Link with short_code '${shortCode}' not found`);
+  }
+
+  console.log('[DEBUG] Found link ID:', link.id, 'for short_code:', shortCode);
+
+  // Agora tentar analytics com o ID
+  const analyticsResponse = await fetch(`https://api.sharecontent.io/api/short-links/${link.id}/analytics`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!analyticsResponse.ok) {
+    const errorText = await analyticsResponse.text();
+    console.error('[ERROR] Analytics API error:', analyticsResponse.status, errorText);
+    // Se analytics não estiver disponível, retornar dados básicos do link
+    return {
+      link_id: link.id,
+      short_code: link.short_code,
+      views: link.views || 0,
+      created_at: link.created_at,
+      note: 'Analytics may not be available for this link yet'
+    };
+  }
+
+  const analytics = await analyticsResponse.json();
   console.log('[DEBUG] Analytics retrieved successfully');
-  return result;
+  return analytics;
 }
 
 async function listShortLinksDirect(token) {
@@ -81,8 +114,7 @@ async function listShortLinksDirect(token) {
     throw new Error(`ShareContent List API error: ${response.status} ${errorText}`);
   }
 
-  const result = await response.json();
-  console.log('[DEBUG] Links listed successfully, count:', result.length);
+  const result = await response.json();  const links = result.data || result; // Handle both {data: [...]} and [...] formats  console.log('[DEBUG] Links listed successfully, count:', result.length);
   return result;
 }
 
