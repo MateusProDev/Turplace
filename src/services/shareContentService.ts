@@ -35,13 +35,30 @@ class ShareContentService {
         }),
       });
 
+      const contentType = response.headers.get('content-type') || '';
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erro ao criar link encurtado');
+        if (contentType.includes('application/json')) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Erro ao criar link encurtado');
+        } else {
+          const text = await response.text();
+          throw new Error(text || `Erro ao criar link encurtado (status ${response.status})`);
+        }
       }
 
-      const shortLink = await response.json();
-      return shortLink;
+      if (contentType.includes('application/json')) {
+        const shortLink = await response.json();
+        return shortLink;
+      }
+
+      // Fallback: se o servidor retornar texto (HTML/plaintext), lançar como erro para tratamento upstream
+      const textBody = await response.text();
+      try {
+        return JSON.parse(textBody);
+      } catch (_e) {
+        throw new Error(textBody || 'Resposta inválida do servidor ao criar link encurtado');
+      }
     } catch (error) {
       console.error('Erro ao criar link encurtado:', error);
       throw error;
@@ -62,13 +79,29 @@ class ShareContentService {
         }),
       });
 
+      const contentType = response.headers.get('content-type') || '';
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erro ao obter analytics');
+        if (contentType.includes('application/json')) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Erro ao obter analytics');
+        } else {
+          const text = await response.text();
+          throw new Error(text || `Erro ao obter analytics (status ${response.status})`);
+        }
       }
 
-      const analytics = await response.json();
-      return analytics;
+      if (contentType.includes('application/json')) {
+        const analytics = await response.json();
+        return analytics;
+      }
+
+      const textBody = await response.text();
+      try {
+        return JSON.parse(textBody);
+      } catch (_e) {
+        throw new Error(textBody || 'Resposta inválida do servidor ao obter analytics');
+      }
     } catch (error) {
       console.error('Erro ao obter analytics:', error);
       throw error;
@@ -88,13 +121,29 @@ class ShareContentService {
         }),
       });
 
+      const contentType = response.headers.get('content-type') || '';
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erro ao listar links');
+        if (contentType.includes('application/json')) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Erro ao listar links');
+        } else {
+          const text = await response.text();
+          throw new Error(text || `Erro ao listar links (status ${response.status})`);
+        }
       }
 
-      const links = await response.json();
-      return links;
+      if (contentType.includes('application/json')) {
+        const links = await response.json();
+        return links;
+      }
+
+      const textBody = await response.text();
+      try {
+        return JSON.parse(textBody);
+      } catch (_e) {
+        throw new Error(textBody || 'Resposta inválida do servidor ao listar links');
+      }
     } catch (error) {
       console.error('Erro ao listar links:', error);
       throw error;

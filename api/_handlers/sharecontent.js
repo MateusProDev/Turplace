@@ -1,16 +1,34 @@
-import { ShareContentClient } from '@sharecontent/sdk';
+import { createRequire } from 'module';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
-console.log('SHARECONTENT_TOKEN from env:', process.env.SHARECONTENT_TOKEN);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const require = createRequire(import.meta.url);
+
+// Load env for this module
+try {
+  require('dotenv').config({ path: join(__dirname, '../../.env.local') });
+  require('dotenv').config({ path: join(__dirname, '../../.env') });
+} catch (e) {
+  console.warn('Could not load dotenv:', e.message);
+}
+
+const SC = require('@sharecontent/sdk');
+const ShareContent = SC.ShareContent || SC.default || SC;
+
+console.log('SHARECONTENT_TOKEN from env:', process.env.SHARECONTENT_TOKEN ? '***SET***' : 'undefined');
 
 let client;
 try {
-  client = new ShareContentClient({
+  client = new ShareContent({
     token: process.env.SHARECONTENT_TOKEN,
     timeout: 30000,
   });
   console.log('ShareContent client initialized successfully');
 } catch (error) {
-  console.error('Failed to initialize ShareContent client:', error);
+  console.error('Failed to initialize ShareContent client:', error && error.message ? error.message : error);
 }
 
 export default async (req, res) => {
@@ -27,6 +45,10 @@ export default async (req, res) => {
 
     switch (action) {
       case 'createShortLink': {
+        if (!client || !client.shortLinks) {
+          console.error('ShareContent client not initialized');
+          return res.status(500).json({ error: 'Internal server error', message: 'ShareContent client not initialized' });
+        }
         const { url, title, shortCode } = params;
         const shortLink = await client.shortLinks.create({
           url,
@@ -37,12 +59,20 @@ export default async (req, res) => {
       }
 
       case 'getLinkAnalytics': {
+        if (!client || !client.analytics) {
+          console.error('ShareContent client not initialized');
+          return res.status(500).json({ error: 'Internal server error', message: 'ShareContent client not initialized' });
+        }
         const { shortCode } = params;
         const analytics = await client.analytics.getByLink(shortCode);
         return res.status(200).json(analytics);
       }
 
       case 'listShortLinks': {
+        if (!client || !client.shortLinks) {
+          console.error('ShareContent client not initialized');
+          return res.status(500).json({ error: 'Internal server error', message: 'ShareContent client not initialized' });
+        }
         const links = await client.shortLinks.list();
         return res.status(200).json(links);
       }
