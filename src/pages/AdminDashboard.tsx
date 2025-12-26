@@ -7,7 +7,7 @@ import { BarChart3, Users, DollarSign, ShoppingCart, CreditCard, TrendingUp, Che
 
 interface Stats {
   totalUsers: number;
-  totalProviders: number;
+  totalProviders: number; 
   totalOrders: number;
   totalSales: number;
   pendingPayouts: number;
