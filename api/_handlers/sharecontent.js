@@ -40,7 +40,7 @@ try {
 // Fallback function using fetch directly
 async function createShortLinkDirect(token, url, title, shortCode) {
   console.log('[DEBUG] Using direct fetch fallback for createShortLink');
-  const response = await fetch('https://api.sharecontent.io/short-links', {
+  const response = await fetch('https://api.sharecontent.io/api/short-links', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -49,7 +49,7 @@ async function createShortLinkDirect(token, url, title, shortCode) {
     body: JSON.stringify({
       url,
       title,
-      short_code: shortCode,
+      ...(shortCode && { short_code: shortCode }),
     }),
   });
 
