@@ -142,24 +142,6 @@ export default function ProviderDashboard() {
     }
   ], []);
 
-  // Carregar configurações do dashboard
-  useEffect(() => {
-    const saved = localStorage.getItem('dashboardSettings');
-    if (saved) {
-      try {
-        const settings = JSON.parse(saved);
-        applyDashboardSettings(settings);
-      } catch (error) {
-        console.error('Erro ao carregar configurações:', error);
-      }
-    }
-
-    const savedShortLink = localStorage.getItem('providerShortLink');
-    if (savedShortLink) {
-      setShortLink(savedShortLink);
-    }
-  }, []);
-
   const applyDashboardSettings = useCallback((settings: Record<string, unknown>) => {
     const root = document.documentElement;
     if (settings.primaryColor) root.style.setProperty('--dashboard-primary', settings.primaryColor as string);
@@ -181,25 +163,33 @@ export default function ProviderDashboard() {
     const loadExistingShortLink = async () => {
       try {
         const expectedShortCode = `lead-${user.uid}`;
+        console.log('Checking for existing short link with code:', expectedShortCode);
+        
+        // Try to get analytics for the expected short code to check if it exists
         const analytics = await shareContentService.getLinkAnalytics(expectedShortCode);
         if (analytics && analytics.short_code === expectedShortCode) {
+          // Link exists, construct the URL
           const shortUrl = `https://sharecontent.io/x/${expectedShortCode}`;
+          console.log('Found existing short link:', shortUrl);
           setShortLink(shortUrl);
           localStorage.setItem('providerShortLink', shortUrl);
           
+          // Save to Firestore for future loads
           await updateDoc(doc(db, "users", user.uid), {
             shortLink: shortUrl,
             updatedAt: new Date()
           });
+          console.log('Saved existing short link to Firestore');
         }
       } catch (error) {
-        console.log('Sem link encurtado existente');
+        console.log('No existing short link found or error checking:', error instanceof Error ? error.message : String(error));
       }
     };
 
     const unsubProfile = onSnapshot(doc(db, "users", user.uid), (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
+        console.log('Loading user data for uid:', user.uid, 'data keys:', Object.keys(data));
         setProfile(data);
         setName(data.name as string || "");
         setBio(data.bio as string || "");
@@ -209,13 +199,20 @@ export default function ProviderDashboard() {
         setExperience(data.experience as string || "");
         setPhoto(data.photoURL as string || null);
         
+        // Load short link from Firestore
         const firestoreShortLink = data.shortLink as string;
         if (firestoreShortLink) {
+          console.log('Found shortLink in Firestore:', firestoreShortLink);
           setShortLink(firestoreShortLink);
+          // Also save to localStorage for faster loading
           localStorage.setItem('providerShortLink', firestoreShortLink);
         } else {
+          console.log('No shortLink found in Firestore for user:', user.uid, '- checking API');
+          // If no short link in Firestore, try to load from API
           loadExistingShortLink();
         }
+      } else {
+        console.log('User document does not exist for uid:', user.uid);
       }
       setLoading(false);
     });
@@ -236,7 +233,7 @@ export default function ProviderDashboard() {
 
     fetchServices();
     return () => unsubProfile();
-  }, [user, shareContentService]);
+  }, [user]);
 
   // Manipuladores de perfil
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -380,18 +377,15 @@ export default function ProviderDashboard() {
 
     setLoadingAnalytics(true);
     try {
+      // Extrair o código do link encurtado
       const urlParts = shortLink.split('/');
       const shortCode = urlParts[urlParts.length - 1];
-      console.log('Loading analytics for shortCode:', shortCode);
-      
+
       const analytics = await shareContentService.getLinkAnalytics(shortCode);
-      console.log('Analytics loaded:', analytics);
       setLinkAnalytics(analytics);
     } catch (err) {
       console.error("Erro ao carregar analytics:", err);
-      alert(`Erro ao carregar analytics: ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
-      // Reset analytics on error
-      setLinkAnalytics(null);
+      alert("Erro ao carregar analytics. Tente novamente.");
     } finally {
       setLoadingAnalytics(false);
     }
@@ -1083,57 +1077,52 @@ export default function ProviderDashboard() {
                         </div>
                         
                         <div className="space-y-4">
-                          {linkAnalytics.note ? (
-                            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-                              <div className="flex items-center gap-2 text-yellow-800">
-                                <BarChart3 size={16} />
-                                <span className="font-medium">Analytics Indisponível</span>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl">
+                              <div className="text-2xl font-bold text-purple-700 mb-1">
+                                {linkAnalytics.totalViews || linkAnalytics.views || 0}
                               </div>
-                              <p className="text-sm text-yellow-700 mt-1">{linkAnalytics.note}</p>
-                              <p className="text-xs text-yellow-600 mt-2">
-                                Os dados de analytics podem levar alguns minutos para aparecer após o primeiro acesso.
-                              </p>
+                              <div className="text-xs text-purple-600">Visualizações Totais</div>
                             </div>
-                          ) : (
-                            <>
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-xl">
-                                  <div className="text-2xl font-bold text-purple-700 mb-1">
-                                    {linkAnalytics.totalViews || linkAnalytics.views || 0}
-                                  </div>
-                                  <div className="text-xs text-purple-600">Visualizações Totais</div>
-                                </div>
-                                
-                                <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl">
-                                  <div className="text-2xl font-bold text-blue-700 mb-1">
-                                    {linkAnalytics.uniqueViews || linkAnalytics.unique_visitors || 0}
-                                  </div>
-                                  <div className="text-xs text-blue-600">Visitantes Únicos</div>
-                                </div>
+                            
+                            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl">
+                              <div className="text-2xl font-bold text-blue-700 mb-1">
+                                {linkAnalytics.uniqueViews || linkAnalytics.unique_visitors || 0}
                               </div>
-                              
-                              <div className="space-y-2">
-                                <div className="flex items-center justify-between text-sm">
-                                  <span className="text-gray-600">Cliques</span>
-                                  <span className="font-medium text-gray-900">
-                                    {linkAnalytics.clicks || 0}
-                                  </span>
-                                </div>
-                                <div className="flex items-center justify-between text-sm">
-                                  <span className="text-gray-600">Países</span>
-                                  <span className="font-medium text-gray-900">
-                                    {linkAnalytics.topCountries?.length || linkAnalytics.countries?.length || 0}
-                                  </span>
-                                </div>
-                                <div className="flex items-center justify-between text-sm">
-                                  <span className="text-gray-600">Data de Criação</span>
-                                  <span className="font-medium text-gray-900">
-                                    {linkAnalytics.created_at ? new Date(linkAnalytics.created_at).toLocaleDateString('pt-BR') : 'N/A'}
-                                  </span>
-                                </div>
+                              <div className="text-xs text-blue-600">Visualizações Únicas</div>
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 p-4 rounded-xl">
+                              <div className="text-2xl font-bold text-emerald-700 mb-1">
+                                {linkAnalytics.viewsByDay ? Object.keys(linkAnalytics.viewsByDay).length : 0}
                               </div>
-                            </>
-                          )}
+                              <div className="text-xs text-emerald-600">Dias Ativos</div>
+                            </div>
+                            
+                            <div className="bg-gradient-to-br from-rose-50 to-rose-100 p-4 rounded-xl">
+                              <div className="text-2xl font-bold text-rose-700 mb-1">
+                                {linkAnalytics.topCountries ? linkAnalytics.topCountries.length : linkAnalytics.countries?.length || 0}
+                              </div>
+                              <div className="text-xs text-rose-600">Países</div>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-600">Cliques</span>
+                              <span className="font-medium text-gray-900">
+                                {linkAnalytics.clicks || 0}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-gray-600">Data de Criação</span>
+                              <span className="font-medium text-gray-900">
+                                {linkAnalytics.created_at ? new Date(linkAnalytics.created_at).toLocaleDateString('pt-BR') : 'N/A'}
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     )}

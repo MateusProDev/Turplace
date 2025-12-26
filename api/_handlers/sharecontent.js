@@ -69,32 +69,8 @@ async function createShortLinkDirect(token, url, title, shortCode) {
 async function getLinkAnalyticsDirect(token, shortCode) {
   console.log('[DEBUG] Getting analytics via direct API call for shortCode:', shortCode);
 
-  // Primeiro, precisamos encontrar o ID do link pelo short_code
-  const listResponse = await fetch('https://api.sharecontent.io/api/short-links', {
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
-  });
-
-  if (!listResponse.ok) {
-    const errorText = await listResponse.text();
-    throw new Error(`ShareContent List API error: ${listResponse.status} ${errorText}`);
-  }
-
-  const listData = await listResponse.json();
-  const links = listData.data || listData; // Handle both {data: [...]} and [...] formats
-
-  // Encontrar o link pelo short_code
-  const link = links.find(l => l.short_code === shortCode);
-  if (!link) {
-    throw new Error(`Link with short_code '${shortCode}' not found`);
-  }
-
-  console.log('[DEBUG] Found link ID:', link.id, 'for short_code:', shortCode);
-
-  // Agora tentar analytics com o short_code
-  const analyticsResponse = await fetch(`https://api.sharecontent.io/api/short-links/${link.short_code}/analytics`, {
+  // Use the correct endpoint with shortCode directly
+  const analyticsResponse = await fetch(`https://api.sharecontent.io/api/analytics/${shortCode}`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -104,13 +80,16 @@ async function getLinkAnalyticsDirect(token, shortCode) {
   if (!analyticsResponse.ok) {
     const errorText = await analyticsResponse.text();
     console.error('[ERROR] Analytics API error:', analyticsResponse.status, errorText);
-    // Se analytics não estiver disponível, retornar dados básicos do link
+    // If analytics not available, return basic info
     return {
-      link_id: link.id,
-      short_code: link.short_code,
-      views: link.views || 0,
-      created_at: link.created_at,
-      note: 'Analytics may not be available for this link yet'
+      slug: shortCode,
+      totalViews: 0,
+      uniqueViews: 0,
+      viewsByDay: {},
+      topCountries: [],
+      deviceTypes: {},
+      browsers: {},
+      note: 'Analytics may not be available for this link yet or the link does not exist'
     };
   }
 
