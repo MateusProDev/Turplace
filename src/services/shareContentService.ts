@@ -1,23 +1,11 @@
-import ShareContent from '@sharecontent/sdk';
+// import ShareContent from '@sharecontent/sdk'; // Removed for security
 
 class ShareContentService {
-  private client: ShareContent;
-
-  constructor(token?: string) {
-    // Mantém o cliente para uso futuro, mas usaremos API routes para evitar CORS
-    this.client = new ShareContent({
-      token: token || import.meta.env.VITE_SHARECONTENT_TOKEN,
-      timeout: 30000,
-    });
+  constructor() {
+    // All operations go through the API route for security
   }
 
-  setToken(token: string) {
-    this.client.setToken(token);
-  }
-
-  setProjectId(projectId: string) {
-    this.client.setProjectId(projectId);
-  }
+  // setToken and setProjectId removed for security - all operations via API route
 
   // Método para criar um link encurtado via API route
   async createShortLink(url: string, title?: string, shortCode?: string) {
