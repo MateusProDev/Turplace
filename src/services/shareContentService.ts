@@ -56,6 +56,9 @@ class ShareContentService {
   // Método para obter analytics de um link via API route
   async getLinkAnalytics(shortCode: string) {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
       const response = await fetch('/api/sharecontent', {
         method: 'POST',
         headers: {
@@ -65,18 +68,30 @@ class ShareContentService {
           action: 'getLinkAnalytics',
           shortCode,
         }),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
       const contentType = response.headers.get('content-type') || '';
 
       if (!response.ok) {
+        let errorMessage = `Erro ao obter analytics (status ${response.status})`;
+        
         if (contentType.includes('application/json')) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Erro ao obter analytics');
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.message || errorMessage;
+          } catch (e) {
+            errorMessage = 'Resposta de erro inválida do servidor';
+          }
         } else {
           const text = await response.text();
-          throw new Error(text || `Erro ao obter analytics (status ${response.status})`);
+          if (text) {
+            errorMessage = text.length > 100 ? 'Erro interno do servidor' : text;
+          }
         }
+        
+        throw new Error(errorMessage);
       }
 
       if (contentType.includes('application/json')) {
@@ -84,13 +99,17 @@ class ShareContentService {
         return analytics;
       }
 
+      // Se não for JSON, tentar parsear como JSON mesmo assim
       const textBody = await response.text();
       try {
         return JSON.parse(textBody);
       } catch (_e) {
-        throw new Error(textBody || 'Resposta inválida do servidor ao obter analytics');
+        throw new Error('Resposta inválida do servidor ao obter analytics');
       }
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Timeout ao carregar analytics. Tente novamente.');
+      }
       console.error('Erro ao obter analytics:', error);
       throw error;
     }
