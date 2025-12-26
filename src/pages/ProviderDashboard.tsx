@@ -65,7 +65,7 @@ export default function ProviderDashboard() {
       }
     }
 
-    // Load saved short link
+    // Load short link from localStorage as fallback while Firestore loads
     const savedShortLink = localStorage.getItem('providerShortLink');
     if (savedShortLink) {
       setShortLink(savedShortLink);
@@ -97,6 +97,14 @@ export default function ProviderDashboard() {
         setName(data.name as string || "");
         setBio(data.bio as string || "");
         setPhoto(data.photoURL as string || null);
+        
+        // Load short link from Firestore
+        const firestoreShortLink = data.shortLink as string;
+        if (firestoreShortLink) {
+          setShortLink(firestoreShortLink);
+          // Also save to localStorage for faster loading
+          localStorage.setItem('providerShortLink', firestoreShortLink);
+        }
       }
       setLoading(false);
     });
@@ -235,9 +243,15 @@ export default function ProviderDashboard() {
       const newShortLink = shortLinkData.short_url ?? null;
       setShortLink(newShortLink);
       
-      // Save to localStorage
+      // Save to localStorage for immediate access
       if (newShortLink) {
         localStorage.setItem('providerShortLink', newShortLink);
+        
+        // Save to Firestore for persistence across devices
+        await updateDoc(doc(db, "users", user.uid), {
+          shortLink: newShortLink,
+          updatedAt: new Date()
+        });
       }
     } catch (err) {
       console.error("Erro ao gerar link encurtado:", err);
