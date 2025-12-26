@@ -93,6 +93,7 @@ export default function ProviderDashboard() {
     const unsubProfile = onSnapshot(doc(db, "users", user.uid), (doc) => {
       if (doc.exists()) {
         const data = doc.data();
+        console.log('Loading user data for uid:', user.uid, 'data keys:', Object.keys(data));
         setProfile(data);
         setName(data.name as string || "");
         setBio(data.bio as string || "");
@@ -101,10 +102,15 @@ export default function ProviderDashboard() {
         // Load short link from Firestore
         const firestoreShortLink = data.shortLink as string;
         if (firestoreShortLink) {
+          console.log('Found shortLink in Firestore:', firestoreShortLink);
           setShortLink(firestoreShortLink);
           // Also save to localStorage for faster loading
           localStorage.setItem('providerShortLink', firestoreShortLink);
+        } else {
+          console.log('No shortLink found in Firestore for user:', user.uid);
         }
+      } else {
+        console.log('User document does not exist for uid:', user.uid);
       }
       setLoading(false);
     });
@@ -230,17 +236,30 @@ export default function ProviderDashboard() {
   const stats = calculateStats();
 
   const handleGenerateShortLink = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('No user logged in');
+      return;
+    }
 
+    // If short link already exists, just load analytics
+    if (shortLink) {
+      console.log('Short link already exists:', shortLink, '- loading analytics');
+      handleLoadAnalytics();
+      return;
+    }
+
+    console.log('Generating short link for user:', user.uid);
     setGeneratingLink(true);
     try {
       const leadPageUrl = `${window.location.origin}/lead/${user.uid}`;
+      console.log('Lead page URL:', leadPageUrl);
       const shortLinkData = await shareContentService.createShortLink(
         leadPageUrl,
         `Lead Page de ${profile?.name || user.displayName || 'Usuário'}`,
         `lead-${user.uid}`
       );
       const newShortLink = shortLinkData.short_url ?? null;
+      console.log('Short link created/retrieved:', newShortLink);
       setShortLink(newShortLink);
       
       // Save to localStorage for immediate access
@@ -252,6 +271,7 @@ export default function ProviderDashboard() {
           shortLink: newShortLink,
           updatedAt: new Date()
         });
+        console.log('Short link saved to Firestore');
       }
     } catch (err) {
       console.error("Erro ao gerar link encurtado:", err);

@@ -38,6 +38,26 @@ async function createShortLinkDirect(token, url, title, shortCode) {
   if (!response.ok) {
     const errorText = await response.text();
     console.error('[ERROR] ShareContent API error:', response.status, errorText);
+    
+    // If slug already in use, try to find and return the existing link
+    if (response.status === 400 && errorText.includes('slug já está em uso')) {
+      console.log('[DEBUG] Slug already in use, attempting to find existing link');
+      try {
+        const links = await listShortLinksDirect(token);
+        const existingLink = links.find(link => link.short_code === shortCode);
+        if (existingLink) {
+          console.log('[DEBUG] Found existing link:', existingLink.short_url);
+          return existingLink;
+        } else {
+          console.error('[ERROR] Existing link not found despite slug in use error');
+          throw new Error(`ShareContent API error: ${response.status} ${errorText}`);
+        }
+      } catch (listError) {
+        console.error('[ERROR] Failed to list links after slug in use error:', listError.message);
+        throw new Error(`ShareContent API error: ${response.status} ${errorText}`);
+      }
+    }
+    
     throw new Error(`ShareContent API error: ${response.status} ${errorText}`);
   }
 
@@ -73,8 +93,8 @@ async function getLinkAnalyticsDirect(token, shortCode) {
 
   console.log('[DEBUG] Found link ID:', link.id, 'for short_code:', shortCode);
 
-  // Agora tentar analytics com o ID
-  const analyticsResponse = await fetch(`https://api.sharecontent.io/api/short-links/${link.id}/analytics`, {
+  // Agora tentar analytics com o short_code
+  const analyticsResponse = await fetch(`https://api.sharecontent.io/api/short-links/${link.short_code}/analytics`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -114,8 +134,8 @@ async function listShortLinksDirect(token) {
     throw new Error(`ShareContent List API error: ${response.status} ${errorText}`);
   }
 
-  const result = await response.json();  const links = result.data || result; // Handle both {data: [...]} and [...] formats  console.log('[DEBUG] Links listed successfully, count:', result.length);
-  return result;
+  const result = await response.json();  const links = result.data || result; // Handle both {data: [...]} and [...] formats  console.log('[DEBUG] Links listed successfully, count:', links.length);
+  return links;
 }
 
 export default async (req, res) => {
