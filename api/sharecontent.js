@@ -93,8 +93,8 @@ async function getLinkAnalyticsDirect(token, shortCode) {
 
   console.log('[DEBUG] Found link ID:', link.id, 'for short_code:', shortCode);
 
-  // Agora tentar analytics com o short_code
-  const analyticsResponse = await fetch(`https://api.sharecontent.io/api/short-links/${link.short_code}/analytics`, {
+  // Agora tentar analytics com o id
+  const analyticsResponse = await fetch(`https://api.sharecontent.io/api/short-links/${link.id}/analytics`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
