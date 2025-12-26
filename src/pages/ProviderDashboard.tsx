@@ -53,7 +53,7 @@ export default function ProviderDashboard() {
 
   const shareContentService = new ShareContentService();
 
-  // Load dashboard settings on mount
+  // Load dashboard settings and short link on mount
   useEffect(() => {
     const saved = localStorage.getItem('dashboardSettings');
     if (saved) {
@@ -63,6 +63,12 @@ export default function ProviderDashboard() {
       } catch (error) {
         console.error('Erro ao carregar configurações salvas:', error);
       }
+    }
+
+    // Load saved short link
+    const savedShortLink = localStorage.getItem('providerShortLink');
+    if (savedShortLink) {
+      setShortLink(savedShortLink);
     }
   }, []);
 
@@ -226,7 +232,13 @@ export default function ProviderDashboard() {
         `Lead Page de ${profile?.name || user.displayName || 'Usuário'}`,
         `lead-${user.uid}`
       );
-      setShortLink(shortLinkData.short_url ?? null);
+      const newShortLink = shortLinkData.short_url ?? null;
+      setShortLink(newShortLink);
+      
+      // Save to localStorage
+      if (newShortLink) {
+        localStorage.setItem('providerShortLink', newShortLink);
+      }
     } catch (err) {
       console.error("Erro ao gerar link encurtado:", err);
       alert("Erro ao gerar link encurtado. Tente novamente.");
