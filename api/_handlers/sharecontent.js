@@ -37,6 +37,30 @@ try {
   client = null; // Ensure client is null on failure
 }
 
+// Fallback function using fetch directly
+async function createShortLinkDirect(token, url, title, shortCode) {
+  console.log('[DEBUG] Using direct fetch fallback for createShortLink');
+  const response = await fetch('https://api.sharecontent.io/short-links', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      url,
+      title,
+      short_code: shortCode,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`ShareContent API error: ${response.status} ${errorText}`);
+  }
+
+  return await response.json();
+}
+
 export default async (req, res) => {
   console.log('[DEBUG] ShareContent handler called with method:', req.method);
   console.log('[DEBUG] Request headers:', JSON.stringify(req.headers, null, 2));
@@ -54,19 +78,35 @@ export default async (req, res) => {
     switch (action) {
       case 'createShortLink': {
         console.log('[DEBUG] Processing createShortLink');
-        if (!client || !client.shortLinks) {
-          console.error('[ERROR] ShareContent client not initialized or missing shortLinks');
-          return res.status(500).json({ error: 'Internal server error', message: 'ShareContent client not initialized' });
-        }
         const { url, title, shortCode } = params;
         console.log('[DEBUG] createShortLink params - url:', url, 'title:', title, 'shortCode:', shortCode);
-        console.log('[DEBUG] Calling client.shortLinks.create...');
-        const shortLink = await client.shortLinks.create({
-          url,
-          title,
-          short_code: shortCode,
-        });
-        console.log('[DEBUG] createShortLink success, response:', JSON.stringify(shortLink, null, 2));
+
+        let shortLink;
+        try {
+          if (client && client.shortLinks) {
+            console.log('[DEBUG] Trying SDK method...');
+            shortLink = await client.shortLinks.create({
+              url,
+              title,
+              short_code: shortCode,
+            });
+            console.log('[DEBUG] SDK method successful');
+          } else {
+            console.log('[DEBUG] SDK not available, using direct fetch...');
+            shortLink = await createShortLinkDirect(process.env.SHARECONTENT_TOKEN, url, title, shortCode);
+          }
+        } catch (sdkError) {
+          console.log('[WARN] SDK method failed, trying direct fetch:', sdkError.message);
+          try {
+            shortLink = await createShortLinkDirect(process.env.SHARECONTENT_TOKEN, url, title, shortCode);
+            console.log('[DEBUG] Direct fetch successful');
+          } catch (fetchError) {
+            console.error('[ERROR] Both SDK and direct fetch failed');
+            throw fetchError;
+          }
+        }
+
+        console.log('[DEBUG] createShortLink success, response keys:', Object.keys(shortLink));
         return res.status(200).json(shortLink);
       }
 
