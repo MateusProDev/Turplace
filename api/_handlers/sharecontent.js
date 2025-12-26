@@ -16,30 +16,12 @@ try {
   console.warn('[WARN] Could not load dotenv:', e.message);
 }
 
-const SC = require('@sharecontent/sdk');
-const ShareContent = SC.ShareContent || SC.default || SC;
-console.log('[DEBUG] ShareContent SDK loaded:', typeof ShareContent);
-
+// Remove SDK dependency entirely - use direct API calls only
 console.log('[DEBUG] SHARECONTENT_TOKEN from env:', process.env.SHARECONTENT_TOKEN ? '***SET*** (length: ' + process.env.SHARECONTENT_TOKEN.length + ')' : 'undefined');
 
-let client;
-try {
-  if (!process.env.SHARECONTENT_TOKEN) {
-    throw new Error('SHARECONTENT_TOKEN is not defined');
-  }
-  client = new ShareContent({
-    token: process.env.SHARECONTENT_TOKEN,
-    timeout: 30000,
-  });
-  console.log('[DEBUG] ShareContent client initialized successfully');
-} catch (error) {
-  console.error('[ERROR] Failed to initialize ShareContent client:', error && error.message ? error.message : error);
-  client = null; // Ensure client is null on failure
-}
-
-// Fallback function using fetch directly
+// Direct API functions
 async function createShortLinkDirect(token, url, title, shortCode) {
-  console.log('[DEBUG] Using direct fetch fallback for createShortLink');
+  console.log('[DEBUG] Creating short link via direct API call');
   const response = await fetch('https://api.sharecontent.io/api/short-links', {
     method: 'POST',
     headers: {
@@ -55,10 +37,53 @@ async function createShortLinkDirect(token, url, title, shortCode) {
 
   if (!response.ok) {
     const errorText = await response.text();
+    console.error('[ERROR] ShareContent API error:', response.status, errorText);
     throw new Error(`ShareContent API error: ${response.status} ${errorText}`);
   }
 
-  return await response.json();
+  const result = await response.json();
+  console.log('[DEBUG] Short link created successfully:', result.short_url);
+  return result;
+}
+
+async function getLinkAnalyticsDirect(token, shortCode) {
+  console.log('[DEBUG] Getting analytics via direct API call');
+  const response = await fetch(`https://api.sharecontent.io/api/short-links/${shortCode}/analytics`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[ERROR] ShareContent Analytics API error:', response.status, errorText);
+    throw new Error(`ShareContent Analytics API error: ${response.status} ${errorText}`);
+  }
+
+  const result = await response.json();
+  console.log('[DEBUG] Analytics retrieved successfully');
+  return result;
+}
+
+async function listShortLinksDirect(token) {
+  console.log('[DEBUG] Listing short links via direct API call');
+  const response = await fetch('https://api.sharecontent.io/api/short-links', {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[ERROR] ShareContent List API error:', response.status, errorText);
+    throw new Error(`ShareContent List API error: ${response.status} ${errorText}`);
+  }
+
+  const result = await response.json();
+  console.log('[DEBUG] Links listed successfully, count:', result.length);
+  return result;
 }
 
 export default async (req, res) => {
@@ -78,62 +103,66 @@ export default async (req, res) => {
     switch (action) {
       case 'createShortLink': {
         console.log('[DEBUG] Processing createShortLink');
+        if (!process.env.SHARECONTENT_TOKEN) {
+          console.error('[ERROR] SHARECONTENT_TOKEN not found');
+          return res.status(500).json({ error: 'Internal server error', message: 'Token not configured' });
+        }
         const { url, title, shortCode } = params;
         console.log('[DEBUG] createShortLink params - url:', url, 'title:', title, 'shortCode:', shortCode);
 
-        let shortLink;
         try {
-          if (client && client.shortLinks) {
-            console.log('[DEBUG] Trying SDK method...');
-            shortLink = await client.shortLinks.create({
-              url,
-              title,
-              short_code: shortCode,
-            });
-            console.log('[DEBUG] SDK method successful');
-          } else {
-            console.log('[DEBUG] SDK not available, using direct fetch...');
-            shortLink = await createShortLinkDirect(process.env.SHARECONTENT_TOKEN, url, title, shortCode);
-          }
-        } catch (sdkError) {
-          console.log('[WARN] SDK method failed, trying direct fetch:', sdkError.message);
-          try {
-            shortLink = await createShortLinkDirect(process.env.SHARECONTENT_TOKEN, url, title, shortCode);
-            console.log('[DEBUG] Direct fetch successful');
-          } catch (fetchError) {
-            console.error('[ERROR] Both SDK and direct fetch failed');
-            throw fetchError;
-          }
+          const shortLink = await createShortLinkDirect(process.env.SHARECONTENT_TOKEN, url, title, shortCode);
+          console.log('[DEBUG] createShortLink success, response keys:', Object.keys(shortLink));
+          return res.status(200).json(shortLink);
+        } catch (error) {
+          console.error('[ERROR] createShortLink failed:', error.message);
+          return res.status(500).json({
+            error: 'Internal server error',
+            message: error.message
+          });
         }
-
-        console.log('[DEBUG] createShortLink success, response keys:', Object.keys(shortLink));
-        return res.status(200).json(shortLink);
       }
 
       case 'getLinkAnalytics': {
         console.log('[DEBUG] Processing getLinkAnalytics');
-        if (!client || !client.analytics) {
-          console.error('[ERROR] ShareContent client not initialized or missing analytics');
-          return res.status(500).json({ error: 'Internal server error', message: 'ShareContent client not initialized' });
+        if (!process.env.SHARECONTENT_TOKEN) {
+          console.error('[ERROR] SHARECONTENT_TOKEN not found');
+          return res.status(500).json({ error: 'Internal server error', message: 'Token not configured' });
         }
         const { shortCode } = params;
         console.log('[DEBUG] getLinkAnalytics params - shortCode:', shortCode);
-        console.log('[DEBUG] Calling client.analytics.getByLink...');
-        const analytics = await client.analytics.getByLink(shortCode);
-        console.log('[DEBUG] getLinkAnalytics success, response keys:', Object.keys(analytics));
-        return res.status(200).json(analytics);
+
+        try {
+          const analytics = await getLinkAnalyticsDirect(process.env.SHARECONTENT_TOKEN, shortCode);
+          console.log('[DEBUG] getLinkAnalytics success, response keys:', Object.keys(analytics));
+          return res.status(200).json(analytics);
+        } catch (error) {
+          console.error('[ERROR] getLinkAnalytics failed:', error.message);
+          return res.status(500).json({
+            error: 'Internal server error',
+            message: error.message
+          });
+        }
       }
 
       case 'listShortLinks': {
         console.log('[DEBUG] Processing listShortLinks');
-        if (!client || !client.shortLinks) {
-          console.error('[ERROR] ShareContent client not initialized or missing shortLinks');
-          return res.status(500).json({ error: 'Internal server error', message: 'ShareContent client not initialized' });
+        if (!process.env.SHARECONTENT_TOKEN) {
+          console.error('[ERROR] SHARECONTENT_TOKEN not found');
+          return res.status(500).json({ error: 'Internal server error', message: 'Token not configured' });
         }
-        console.log('[DEBUG] Calling client.shortLinks.list...');
-        const links = await client.shortLinks.list();
-        console.log('[DEBUG] listShortLinks success, links count:', links.length);
-        return res.status(200).json(links);
+
+        try {
+          const links = await listShortLinksDirect(process.env.SHARECONTENT_TOKEN);
+          console.log('[DEBUG] listShortLinks success, links count:', links.length);
+          return res.status(200).json(links);
+        } catch (error) {
+          console.error('[ERROR] listShortLinks failed:', error.message);
+          return res.status(500).json({
+            error: 'Internal server error',
+            message: error.message
+          });
+        }
       }
 
       default:
