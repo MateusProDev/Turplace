@@ -1,6 +1,6 @@
 export interface LeadPageSection {
   id: string;
-  type: 'hero' | 'about' | 'benefits' | 'social-proof' | 'cta' | 'contact';
+  type: 'hero' | 'about' | 'benefits' | 'social-proof' | 'cta' | 'contact' | 'features';
   title?: string;
   content?: string;
   image?: string;
@@ -10,7 +10,7 @@ export interface LeadPageSection {
   enabled: boolean;
   // Modern template properties
   subtitle?: string;
-  stats?: string[];
+  stats?: string[] | any[];
   urgencyText?: string;
   backgroundColor?: string;
   backgroundImage?: string;
@@ -22,10 +22,14 @@ export interface LeadPageSection {
   text?: string;
   price?: string;
   period?: string;
-  features?: string[];
+  features?: any[];
   cta?: string;
   bonus?: string;
   description?: string;
+  contactInfo?: {
+    phone?: string;
+    email?: string;
+  };
 }
 
 export interface LeadPageTemplate {

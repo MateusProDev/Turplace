@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { getUserLeadPage, getTemplate, getAllTemplates, saveUserLeadPage, updateLeadPageSection } from '../utils/leadpage';
+import { getUserLeadPage, getTemplate, getAllTemplates, saveUserLeadPage, updateLeadPageSection, getLeadPageStats, calculateLeadPageMetrics } from '../utils/leadpage';
 import type { LeadPageTemplate, UserLeadPage, LeadPageSection } from '../types/leadpage';
 import { 
   Eye, 
@@ -238,6 +238,8 @@ const LeadPageEditor = () => {
   const [uploadingImage, setUploadingImage] = useState<string | null>(null);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [copied, setCopied] = useState(false);
+  const [leadPageStats, setLeadPageStats] = useState<any>(null);
+  const [loadingLeadStats, setLoadingLeadStats] = useState(false);
 
   const toggleSectionExpand = (sectionId: string) => {
     const newExpanded = new Set(expandedSections);
@@ -334,6 +336,26 @@ const LeadPageEditor = () => {
     };
     loadData();
   }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      handleLoadLeadStats();
+    }
+  }, [user]);
+
+  const handleLoadLeadStats = async () => {
+    if (!user) return;
+    try {
+      setLoadingLeadStats(true);
+      const stats = await getLeadPageStats(user.uid);
+      const metrics = stats ? calculateLeadPageMetrics(stats) : null;
+      setLeadPageStats(metrics);
+    } catch (error) {
+      console.error('Erro ao carregar estatísticas:', error);
+    } finally {
+      setLoadingLeadStats(false);
+    }
+  };
 
   const handleSectionChange = async (sectionId: string, field: string, value: unknown) => {
     if (!user) return;
@@ -882,19 +904,27 @@ const LeadPageEditor = () => {
                 <h3 className="font-semibold text-gray-900 mb-4">Estatísticas</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-blue-50 rounded-lg p-4 text-center">
-                    <div className="text-2xl font-bold text-blue-600">0</div>
+                    <div className="text-2xl font-bold text-blue-600">
+                      {loadingLeadStats ? '...' : (leadPageStats?.views || 0)}
+                    </div>
                     <div className="text-sm text-gray-600">Visualizações</div>
                   </div>
                   <div className="bg-green-50 rounded-lg p-4 text-center">
-                    <div className="text-2xl font-bold text-green-600">0</div>
+                    <div className="text-2xl font-bold text-green-600">
+                      {loadingLeadStats ? '...' : (leadPageStats?.leads || 0)}
+                    </div>
                     <div className="text-sm text-gray-600">Leads</div>
                   </div>
                   <div className="bg-purple-50 rounded-lg p-4 text-center">
-                    <div className="text-2xl font-bold text-purple-600">0%</div>
+                    <div className="text-2xl font-bold text-purple-600">
+                      {loadingLeadStats ? '...' : `${(leadPageStats?.conversionRate || 0).toFixed(1)}%`}
+                    </div>
                     <div className="text-sm text-gray-600">Taxa de Conversão</div>
                   </div>
                   <div className="bg-yellow-50 rounded-lg p-4 text-center">
-                    <div className="text-2xl font-bold text-yellow-600">0</div>
+                    <div className="text-2xl font-bold text-yellow-600">
+                      {loadingLeadStats ? '...' : (leadPageStats?.clicks || 0)}
+                    </div>
                     <div className="text-sm text-gray-600">Cliques</div>
                   </div>
                 </div>

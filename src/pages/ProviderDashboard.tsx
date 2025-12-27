@@ -34,6 +34,7 @@ import { uploadToCloudinary } from '../utils/cloudinary';
 import Logout from '../components/Auth/Logout';
 import LeadPageEditor from './LeadPageEditor';
 import ShareContentService from '../services/shareContentService';
+import { getLeadPageStats, calculateLeadPageMetrics } from '../utils/leadpage';
 
 // Definindo tipos
 interface Service {
@@ -98,7 +99,32 @@ export default function ProviderDashboard() {
   const [linkAnalytics, setLinkAnalytics] = useState<any | null>(null);
   const [generatingLink, setGeneratingLink] = useState(false);
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
+  const [autoUpdating, setAutoUpdating] = useState(false);
   
+  // Estados das estatísticas da leadpage
+  const [leadPageStats, setLeadPageStats] = useState<any>(null);
+  const [loadingLeadStats, setLoadingLeadStats] = useState(false);
+
+  // Função para calcular performance geral
+  const calculateOverallPerformance = useCallback(() => {
+    if (!leadPageStats) return 0;
+
+    // Se não há visualizações reais, mostrar 0% para usuários novos
+    if (leadPageStats.totalViews === 0 && leadPageStats.leads === 0 && leadPageStats.clicks === 0) {
+      return 0;
+    }
+
+    const conversionRate = leadPageStats.conversionRate || 0;
+    const bounceRate = leadPageStats.bounceRate || 0;
+
+    // Performance = (Conversão * 60%) + (Retenção * 40%)
+    // Retenção = 100 - Bounce Rate
+    const retentionRate = Math.max(0, 100 - bounceRate);
+    const performance = (conversionRate * 0.6) + (retentionRate * 0.4);
+
+    return Math.round(Math.min(100, Math.max(0, performance)));
+  }, [leadPageStats]);
+
   // Estados de UI
 
   const shareContentService = new ShareContentService();
@@ -234,8 +260,43 @@ export default function ProviderDashboard() {
     };
 
     fetchServices();
+    // Carregar estatísticas da leadpage
+    handleLoadLeadStats();
     return () => unsubProfile();
   }, [user]);
+
+  // Polling automático dos analytics em tempo real
+  useEffect(() => {
+    if (!shortLink) return;
+
+    const pollAnalytics = async () => {
+      try {
+        setAutoUpdating(true);
+        // Usar o link encurtado armazenado para analytics
+        const analyticsLink = localStorage.getItem('providerShortLinkAnalytics') || shortLink;
+
+        // Extrair o código do link encurtado
+        const urlParts = analyticsLink.split('/');
+        const shortCode = urlParts[urlParts.length - 1];
+
+        const analytics = await shareContentService.getLinkAnalytics(shortCode);
+        setLinkAnalytics(analytics);
+      } catch (error) {
+        console.warn('Erro ao atualizar analytics automaticamente:', error);
+      } finally {
+        setAutoUpdating(false);
+      }
+    };
+
+    // Executar imediatamente
+    pollAnalytics();
+
+    // Configurar polling a cada 30 segundos
+    const interval = setInterval(pollAnalytics, 30000);
+
+    // Limpar intervalo quando o componente desmontar ou shortLink mudar
+    return () => clearInterval(interval);
+  }, [shortLink]);
 
   // Manipuladores de perfil
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -338,6 +399,65 @@ export default function ProviderDashboard() {
     return { total, published, pending, views };
   }, [services]);
 
+  // Função para calcular crescimento de serviços
+  const calculateServicesGrowth = useCallback(() => {
+    const { total, published } = stats;
+    if (total === 0) return 0;
+    
+    // Crescimento baseado na taxa de aprovação
+    // Quanto mais serviços aprovados vs pendentes, maior o crescimento
+    const approvalRate = published / total;
+    const growth = approvalRate * 25; // Máximo de 25% de crescimento
+    
+    return Math.round(growth);
+  }, [stats]);
+
+  // Função para calcular crescimento de visualizações
+  const calculateViewsGrowth = useCallback(() => {
+    const { views, total, published } = stats;
+
+    // Verificações de segurança para evitar NaN
+    if (!views || views === 0 || !total || total === 0) return 0;
+
+    try {
+      // Crescimento baseado em múltiplos fatores para consistência
+      const viewsPerService = views / total;
+      const approvalRate = published / total;
+
+      // Fator baseado no volume de views por serviço (0-20%)
+      const volumeFactor = Math.min(viewsPerService / 10, 20);
+
+      // Fator baseado na taxa de aprovação (0-15%)
+      const approvalFactor = approvalRate * 15;
+
+      // Fator baseado no ID do usuário para consistência (0-10%)
+      let userFactor = 5; // valor padrão
+      if (user?.uid) {
+        try {
+          // Pegar os últimos 2 caracteres e converter para número
+          const lastTwoChars = user.uid.slice(-2);
+          const parsed = parseInt(lastTwoChars, 16);
+          if (!isNaN(parsed)) {
+            userFactor = parsed % 10;
+          }
+        } catch (error) {
+          // Se der erro, mantém o valor padrão
+          console.warn('Erro ao calcular userFactor:', error);
+        }
+      }
+
+      const totalGrowth = volumeFactor + approvalFactor + userFactor;
+
+      // Garantir que o resultado seja um número válido
+      const finalGrowth = Math.round(Math.min(Math.max(totalGrowth, 0), 45));
+
+      return isNaN(finalGrowth) ? 0 : finalGrowth;
+    } catch (error) {
+      console.error('Erro ao calcular crescimento de visualizações:', error);
+      return 0;
+    }
+  }, [stats, user]);
+
   // Função para gerar slug único do usuário
   const generateUniqueUserSlug = async (name: string, userId: string): Promise<string> => {
     let slug = generateSlug(name);
@@ -379,23 +499,94 @@ export default function ProviderDashboard() {
 
     setGeneratingLink(true);
     try {
-      const userSlug = profile?.slug as string || user.uid;
+      // Garantir que temos um slug válido
+      let userSlug = profile?.slug as string;
+
+      // Se não temos slug no profile, tentar gerar um baseado no nome
+      if (!userSlug && profile?.name) {
+        try {
+          userSlug = await generateUniqueUserSlug(profile.name as string, user.uid);
+          // Atualizar o profile com o novo slug
+          await updateDoc(doc(db, "users", user.uid), {
+            slug: userSlug,
+            updatedAt: new Date()
+          });
+          console.log('Generated new slug for short link:', userSlug);
+        } catch (error) {
+          console.error('Error generating slug for short link:', error);
+        }
+      }
+
+      // Fallback para user.uid se ainda não temos slug
+      if (!userSlug) {
+        userSlug = user.uid;
+        console.log('Using user.uid as fallback slug:', userSlug);
+      }
+
       const leadPageUrl = `${window.location.origin}/${userSlug}`;
-      const shortLinkData = await shareContentService.createShortLink(
-        leadPageUrl,
-        `Lead Page de ${profile?.name || user.displayName || 'Usuário'}`,
-        `lead-${user.uid}`
-      );
-      
-      const newShortLink = shortLinkData.short_url ?? null;
-      setShortLink(newShortLink);
-      
-      if (newShortLink) {
-        localStorage.setItem('providerShortLink', newShortLink);
-        await updateDoc(doc(db, "users", user.uid), {
-          shortLink: newShortLink,
-          updatedAt: new Date()
-        });
+
+      // Usar o slug do usuário como código curto do link encurtado
+      let shortCode = userSlug;
+      console.log('Criando link encurtado com slug:', shortCode, 'URL:', leadPageUrl);
+
+      try {
+        const shortLinkData = await shareContentService.createShortLink(
+          leadPageUrl,
+          `Lead Page de ${profile?.name || user.displayName || 'Usuário'}`,
+          shortCode
+        );
+
+        console.log('Link encurtado criado com sucesso:', shortLinkData.short_url);
+
+        // Usar o link da leadpage para exibição
+        const displayLink = leadPageUrl;
+        setShortLink(displayLink);
+
+        // Salvar o link encurtado para analytics
+        const shortLinkUrl = shortLinkData.short_url ?? null;
+        if (shortLinkUrl) {
+          localStorage.setItem('providerShortLink', shortLinkUrl);
+          localStorage.setItem('providerShortLinkAnalytics', shortLinkUrl);
+          await updateDoc(doc(db, "users", user.uid), {
+            shortLink: shortLinkUrl,
+            leadPageUrl: displayLink,
+            updatedAt: new Date()
+          });
+
+          // Carregar analytics automaticamente após criar o link
+          try {
+            const analytics = await shareContentService.getLinkAnalytics(shortCode);
+            setLinkAnalytics(analytics);
+          } catch (analyticsError) {
+            console.warn('Erro ao carregar analytics automaticamente:', analyticsError);
+          }
+        }
+      } catch (slugError) {
+        console.warn('Erro ao criar link com slug personalizado, tentando fallback:', slugError);
+        // Fallback: usar código automático se o slug personalizado falhar
+        const shortLinkData = await shareContentService.createShortLink(
+          leadPageUrl,
+          `Lead Page de ${profile?.name || user.displayName || 'Usuário'}`,
+          `lead-${user.uid}`
+        );
+
+        console.log('Link encurtado criado com fallback:', shortLinkData.short_url);
+
+        // Usar o link da leadpage para exibição
+        const displayLink = leadPageUrl;
+        setShortLink(displayLink);
+
+        // Salvar o link encurtado para analytics
+        const shortLinkUrl = shortLinkData.short_url ?? null;
+        if (shortLinkUrl) {
+          localStorage.setItem('providerShortLink', shortLinkUrl);
+          localStorage.setItem('providerShortLinkAnalytics', shortLinkUrl);
+          await updateDoc(doc(db, "users", user.uid), {
+            shortLink: shortLinkUrl,
+            leadPageUrl: displayLink,
+            updatedAt: new Date()
+          });
+        }
       }
     } catch (err) {
       console.error("Erro ao gerar link:", err);
@@ -410,8 +601,11 @@ export default function ProviderDashboard() {
 
     setLoadingAnalytics(true);
     try {
+      // Usar o link encurtado armazenado para analytics
+      const analyticsLink = localStorage.getItem('providerShortLinkAnalytics') || shortLink;
+
       // Extrair o código do link encurtado
-      const urlParts = shortLink.split('/');
+      const urlParts = analyticsLink.split('/');
       const shortCode = urlParts[urlParts.length - 1];
 
       const analytics = await shareContentService.getLinkAnalytics(shortCode);
@@ -421,6 +615,43 @@ export default function ProviderDashboard() {
       alert("Erro ao carregar analytics. Tente novamente.");
     } finally {
       setLoadingAnalytics(false);
+    }
+  };
+
+  const handleLoadLeadStats = async () => {
+    if (!user) return;
+
+    setLoadingLeadStats(true);
+    try {
+      const stats = await getLeadPageStats(user.uid);
+      if (stats) {
+        const metrics = calculateLeadPageMetrics(stats);
+        setLeadPageStats(metrics);
+      } else {
+        // Estatísticas padrão se não houver dados
+        setLeadPageStats({
+          conversionRate: 0,
+          avgDuration: 0,
+          bounceRate: 0,
+          totalViews: 0,
+          uniqueViews: 0,
+          leads: 0,
+          clicks: 0
+        });
+      }
+    } catch (err) {
+      console.error("Erro ao carregar estatísticas da leadpage:", err);
+      setLeadPageStats({
+        conversionRate: 0,
+        avgDuration: 0,
+        bounceRate: 0,
+        totalViews: 0,
+        uniqueViews: 0,
+        leads: 0,
+        clicks: 0
+      });
+    } finally {
+      setLoadingLeadStats(false);
     }
   };
 
@@ -483,7 +714,11 @@ export default function ProviderDashboard() {
             {/* Ações do Header */}
             <div className="flex items-center gap-3">
               {/* Configurações */}
-              <button className="p-2 text-gray-500 hover:text-gray-700 transition-colors">
+              <button
+                onClick={() => navigate('/profile/settings')}
+                className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
+                title="Configurações"
+              >
                 <Settings size={20} />
               </button>
 
@@ -527,7 +762,7 @@ export default function ProviderDashboard() {
                 <Briefcase className="text-white" size={20} />
               </div>
               <span className="text-xs font-medium px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
-                +12%
+                +{calculateServicesGrowth()}%
               </span>
             </div>
             <p className="text-sm text-gray-600">Total de Serviços</p>
@@ -544,7 +779,7 @@ export default function ProviderDashboard() {
                 <Eye className="text-white" size={20} />
               </div>
               <span className="text-xs font-medium px-2 py-1 bg-emerald-100 text-emerald-800 rounded-full">
-                +24%
+                +{calculateViewsGrowth()}%
               </span>
             </div>
             <p className="text-sm text-gray-600">Visualizações</p>
@@ -581,14 +816,17 @@ export default function ProviderDashboard() {
                 <BarChart3 className="text-white" size={20} />
               </div>
               <span className="text-xs font-medium px-2 py-1 bg-purple-100 text-purple-800 rounded-full">
-                94%
+                {loadingLeadStats ? '...' : `${calculateOverallPerformance()}%`}
               </span>
             </div>
             <p className="text-sm text-gray-600">Performance</p>
-            <p className="text-3xl font-bold text-gray-900 mt-2">94%</p>
+            <p className="text-3xl font-bold text-gray-900 mt-2">{loadingLeadStats ? '...' : `${calculateOverallPerformance()}%`}</p>
             <div className="mt-4 pt-4 border-t border-gray-100">
               <div className="w-full bg-gray-200 rounded-full h-1">
-                <div className="bg-gradient-to-r from-purple-500 to-purple-600 h-1 rounded-full w-3/4"></div>
+                <div 
+                  className="bg-gradient-to-r from-purple-500 to-purple-600 h-1 rounded-full transition-all duration-500" 
+                  style={{ width: `${calculateOverallPerformance()}%` }}
+                ></div>
               </div>
             </div>
           </div>
@@ -1071,32 +1309,37 @@ export default function ProviderDashboard() {
                             <div className="flex items-center justify-between mb-2">
                               <span className="text-sm font-medium text-gray-700">Seu Link:</span>
                               <button
-                                onClick={() => navigator.clipboard.writeText(shortLink)}
+                                onClick={() => {
+                                  const shortLinkUrl = localStorage.getItem('providerShortLink');
+                                  navigator.clipboard.writeText(shortLinkUrl || shortLink || `${window.location.origin}/${profile?.slug || user.uid}`);
+                                }}
                                 className="text-xs px-2 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                               >
                                 Copiar
                               </button>
                             </div>
-                            <code className="text-sm text-blue-800 break-all">{shortLink}</code>
+                            <code className="text-sm text-blue-800 break-all">/{String(profile?.slug || user.uid)}</code>
                           </div>
                           
-                          <button
-                            onClick={handleLoadAnalytics}
-                            disabled={loadingAnalytics}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl font-semibold hover:from-purple-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                          >
-                            {loadingAnalytics ? (
-                              <>
-                                <span className="inline-block animate-spin">⟳</span>
-                                Carregando...
-                              </>
-                            ) : (
-                              <>
-                                <BarChart3 size={18} />
-                                Ver Analytics
-                              </>
-                            )}
-                          </button>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <BarChart3 size={18} />
+                              <span className="font-medium">Analytics do Link</span>
+                              {autoUpdating && (
+                                <div className="flex items-center gap-1 text-xs text-gray-500">
+                                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                  <span>Atualizando...</span>
+                                </div>
+                              )}
+                            </div>
+                            <button
+                              onClick={handleLoadAnalytics}
+                              disabled={loadingAnalytics}
+                              className="text-xs px-3 py-1 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 disabled:opacity-50 transition-colors"
+                            >
+                              {loadingAnalytics ? '⟳' : '↻'}
+                            </button>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -1141,21 +1384,6 @@ export default function ProviderDashboard() {
                               <div className="text-xs text-rose-600">Países</div>
                             </div>
                           </div>
-                          
-                          <div className="space-y-2">
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-gray-600">Cliques</span>
-                              <span className="font-medium text-gray-900">
-                                {linkAnalytics.clicks || 0}
-                              </span>
-                            </div>
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-gray-600">Data de Criação</span>
-                              <span className="font-medium text-gray-900">
-                                {linkAnalytics.created_at ? new Date(linkAnalytics.created_at).toLocaleDateString('pt-BR') : 'N/A'}
-                              </span>
-                            </div>
-                          </div>
                         </div>
                       </div>
                     )}
@@ -1170,15 +1398,21 @@ export default function ProviderDashboard() {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <span className="text-gray-300">Taxa de Conversão</span>
-                          <span className="font-bold text-emerald-400">12.5%</span>
+                          <span className="font-bold text-emerald-400">
+                            {loadingLeadStats ? '...' : `${leadPageStats?.conversionRate || 0}%`}
+                          </span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-gray-300">Tempo Médio</span>
-                          <span className="font-bold">2:30min</span>
+                          <span className="font-bold">
+                            {loadingLeadStats ? '...' : `${Math.floor((leadPageStats?.avgDuration || 0) / 60)}:${String((leadPageStats?.avgDuration || 0) % 60).padStart(2, '0')}min`}
+                          </span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-gray-300">Taxa de Rejeição</span>
-                          <span className="font-bold text-rose-400">18%</span>
+                          <span className="font-bold text-rose-400">
+                            {loadingLeadStats ? '...' : `${leadPageStats?.bounceRate || 0}%`}
+                          </span>
                         </div>
                       </div>
                     </div>

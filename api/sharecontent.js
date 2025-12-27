@@ -63,7 +63,14 @@ async function createShortLinkDirect(token, url, title, shortCode) {
 
   const result = await response.json();
   console.log('[DEBUG] Short link created successfully:', result.short_url);
-  return result;
+
+  // Adicionar data de criação se não existir
+  const enhancedResult = {
+    ...result,
+    created_at: result.created_at || result.createdAt || new Date().toISOString(),
+  };
+
+  return enhancedResult;
 }
 
 async function getLinkAnalyticsDirect(token, shortCode) {
@@ -80,7 +87,7 @@ async function getLinkAnalyticsDirect(token, shortCode) {
   if (!analyticsResponse.ok) {
     const errorText = await analyticsResponse.text();
     console.error('[ERROR] Analytics API error:', analyticsResponse.status, errorText);
-    // Se analytics não estiver disponível, retornar dados básicos
+    // Se analytics não estiver disponível, retornar dados vazios (não simulados)
     return {
       slug: shortCode,
       totalViews: 0,
@@ -89,13 +96,21 @@ async function getLinkAnalyticsDirect(token, shortCode) {
       topCountries: [],
       deviceTypes: {},
       browsers: {},
+      clicks: 0, // Dados reais - 0 se não disponível
+      created_at: null, // Dados reais - null se não disponível
       note: 'Analytics may not be available for this link yet or the link does not exist'
     };
   }
 
   const analytics = await analyticsResponse.json();
   console.log('[DEBUG] Analytics retrieved successfully');
-  return analytics;
+
+  // Retornar apenas dados reais da API, sem simulações
+  return {
+    ...analytics,
+    clicks: analytics.clicks || 0, // Usar 0 se não existir (dados reais)
+    created_at: analytics.created_at || analytics.createdAt || null, // Usar null se não existir (dados reais)
+  };
 }
 
 async function listShortLinksDirect(token) {

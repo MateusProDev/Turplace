@@ -19,10 +19,10 @@ const LeadPage = () => {
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
 
   // Função para lidar com cliques em botões CTA
-  const handleButtonClick = async (_e: React.MouseEvent, buttonLink: string) => {
+  const handleButtonClick = async (e: React.MouseEvent, buttonLink: string) => {
     if (user) {
       try {
-        await trackLeadPageClick(user.uid);
+        await trackLeadPageClick(user.uid, sessionId);
       } catch (error) {
         console.error('Error tracking click:', error);
       }
@@ -67,6 +67,7 @@ const LeadPage = () => {
       console.error('Error finding user:', error);
       return null;
     }
+  };
   };
 
   // Detecta se é mobile baseado no tamanho da tela
@@ -230,9 +231,9 @@ const LeadPage = () => {
 
                   {/* CTA Button com responsividade */}
                   <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center">
-                    <a
+                    <a 
                       href={merged.buttonLink}
-                      onClick={(e) => merged.buttonLink && handleButtonClick(e, merged.buttonLink)}
+                      onClick={(e) => handleButtonClick(e, merged.buttonLink)}
                       className="w-full sm:w-auto bg-yellow-500 hover:bg-yellow-400 text-black px-6 py-3 md:px-8 md:py-4 rounded-full font-bold text-base md:text-lg transition-all transform hover:scale-105 active:scale-95 shadow-2xl"
                     >
                       {merged.buttonText}
@@ -268,9 +269,9 @@ const LeadPage = () => {
                     loading="lazy"
                   />
                 )}
-                <a
+                <a 
                   href={merged.buttonLink}
-                  onClick={(e) => merged.buttonLink && handleButtonClick(e, merged.buttonLink)}
+                  onClick={(e) => handleButtonClick(e, merged.buttonLink)}
                   className="inline-block bg-white text-blue-600 px-6 py-3 md:px-8 md:py-4 rounded-lg font-semibold hover:bg-gray-100 active:bg-gray-200 transition-colors text-base md:text-lg"
                 >
                   {merged.buttonText}
@@ -681,7 +682,7 @@ const LeadPage = () => {
                     <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center md:justify-start items-center">
                       <a 
                         href={merged.buttonLink}
-                        onClick={(e) => merged.buttonLink && handleButtonClick(e, merged.buttonLink)}
+                        onClick={(e) => handleButtonClick(e, merged.buttonLink)}
                         className="w-full sm:w-auto bg-yellow-500 hover:bg-yellow-400 text-black px-6 py-3 md:px-8 md:py-4 rounded-full font-bold text-base md:text-lg transition-all transform hover:scale-105 active:scale-95 shadow-2xl"
                       >
                         {merged.buttonText}
