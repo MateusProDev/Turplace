@@ -60,6 +60,7 @@ const Wallet = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [pendingExpanded, setPendingExpanded] = useState(false);
 
   useEffect(() => {
     if (user?.uid) {
@@ -373,7 +374,7 @@ const Wallet = () => {
           )}
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Vendas Realizadas */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
             <div className="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
@@ -386,7 +387,8 @@ const Wallet = () => {
               </div>
             </div>
             
-            <div className="overflow-x-auto">
+            {/* Tabela para desktop */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50">
@@ -430,62 +432,105 @@ const Wallet = () => {
                 </tbody>
               </table>
             </div>
+
+            {/* Cards para mobile */}
+            <div className="md:hidden p-6">
+              {refreshing && data.sales.length === 0 ? (
+                <div className="text-center py-8">
+                  <Loader className="animate-spin mx-auto" size={24} />
+                </div>
+              ) : data.sales.length > 0 ? (
+                <div className="space-y-4">
+                  {data.sales.map(sale => (
+                    <div key={sale.id} className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm text-gray-600">{formatDate(sale.date)}</span>
+                        <TrendingUp className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-xs text-gray-500 uppercase tracking-wider">Valor</p>
+                          <p className="text-sm font-medium text-gray-900">{formatCurrency(sale.amount)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500 uppercase tracking-wider">Comissão</p>
+                          <p className="text-sm text-red-600">-{formatCurrency(sale.commission)}</p>
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-xs text-gray-500 uppercase tracking-wider">Recebido</p>
+                          <p className="text-lg font-bold text-green-600">{formatCurrency(sale.received)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  Nenhuma venda realizada ainda
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Vendas Pendentes */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-            <div className="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+            <div 
+              className="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white cursor-pointer hover:bg-gray-100 transition-colors"
+              onClick={() => setPendingExpanded(!pendingExpanded)}
+            >
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                   <Clock className="w-5 h-5 text-amber-600" />
                   Vendas Pendentes
                 </h2>
-                <span className="text-sm text-gray-500">{data.pendingSales.length} pendentes</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500">{data.pendingSales.length} pendentes</span>
+                  <svg 
+                    className={`w-5 h-5 text-gray-500 transition-transform ${pendingExpanded ? 'rotate-180' : ''}`}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
               </div>
             </div>
             
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-gray-50">
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Data</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Valor</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {refreshing && data.pendingSales.length === 0 ? (
-                    <tr>
-                      <td colSpan={3} className="px-6 py-8 text-center">
-                        <Loader className="animate-spin mx-auto" size={24} />
-                      </td>
-                    </tr>
-                  ) : data.pendingSales.length > 0 ? (
-                    data.pendingSales.map(sale => (
-                      <tr key={sale.id} className="hover:bg-gray-50 transition">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                          {formatDate(sale.date)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {formatCurrency(sale.amount)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-3 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded-full">
-                            Pendente
-                          </span>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={3} className="px-6 py-8 text-center text-gray-500">
-                        Nenhuma venda pendente
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+            {pendingExpanded && (
+              <div className="p-6">
+                {refreshing && data.pendingSales.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Loader className="animate-spin mx-auto" size={24} />
+                  </div>
+                ) : data.pendingSales.length > 0 ? (
+                  <div className="space-y-4">
+                    {data.pendingSales.map(sale => (
+                      <div key={sale.id} className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Clock className="w-4 h-4 text-amber-600" />
+                              <span className="text-sm font-medium text-gray-900">{formatDate(sale.date)}</span>
+                            </div>
+                            <p className="text-lg font-bold text-gray-900">{formatCurrency(sale.amount)}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="px-3 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded-full">
+                              Pendente
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    Nenhuma venda pendente
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -501,7 +546,8 @@ const Wallet = () => {
             </div>
           </div>
           
-          <div className="overflow-x-auto">
+          {/* Tabela para desktop */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50">
@@ -582,6 +628,72 @@ const Wallet = () => {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Cards para mobile */}
+          <div className="md:hidden p-6">
+            {refreshing && (!data.payouts || data.payouts.length === 0) ? (
+              <div className="text-center py-8">
+                <Loader className="animate-spin mx-auto" size={24} />
+              </div>
+            ) : data.payouts && data.payouts.length > 0 ? (
+              <div className="space-y-4">
+                {data.payouts.map(payout => (
+                  <div key={payout.id} className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm text-gray-600">{formatDate(payout.createdAt)}</span>
+                      <div className="flex items-center gap-2">
+                        {payout.method === 'pix' ? (
+                          <Smartphone className="w-4 h-4 text-green-600" />
+                        ) : (
+                          <CreditCard className="w-4 h-4 text-purple-600" />
+                        )}
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 mb-3">
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wider">Valor</p>
+                        <p className="text-sm font-medium text-gray-900">{formatCurrency(payout.amount)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wider">Método</p>
+                        <p className="text-sm">{payout.method === 'pix' ? 'PIX' : 'Stripe'}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2 h-2 rounded-full ${
+                          payout.status === 'completed' ? 'bg-green-500' :
+                          payout.status === 'processing' ? 'bg-blue-500' :
+                          payout.status === 'failed' ? 'bg-red-500' :
+                          'bg-gray-500'
+                        }`} />
+                        <span className={`text-sm font-medium ${
+                          payout.status === 'completed' ? 'text-green-700' :
+                          payout.status === 'processing' ? 'text-blue-700' :
+                          payout.status === 'failed' ? 'text-red-700' :
+                          'text-gray-700'
+                        }`}>
+                          {payout.status === 'completed' ? 'Concluído' :
+                           payout.status === 'processing' ? 'Processando' :
+                           payout.status === 'failed' ? 'Falhou' :
+                           'Pendente'}
+                        </span>
+                      </div>
+                      <span className="text-xs text-gray-500 font-mono">{payout.id.substring(0, 8)}...</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <div className="flex flex-col items-center gap-2">
+                  <History className="w-12 h-12 text-gray-300" />
+                  <p>Nenhum saque realizado ainda</p>
+                  <p className="text-sm text-gray-400">Seu histórico de saques aparecerá aqui</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
