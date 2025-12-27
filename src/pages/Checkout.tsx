@@ -508,7 +508,7 @@ export default function Checkout() {
                     <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
                       <CreditCard className="w-5 h-5 text-white" />
                     </div>
-                    <div>
+                    <div> 
                       <div className="font-semibold text-gray-900">Assinatura Mensal</div>
                       <div className="text-sm text-gray-600">Pagamento recorrente via cartão de crédito</div>
                     </div>
