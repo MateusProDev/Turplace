@@ -1,15 +1,52 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { getUserLeadPage, getDefaultTemplate } from '../utils/leadpage';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { db } from '../utils/firebase';
 import type { LeadPageTemplate, UserLeadPage, LeadPageSection } from '../types/leadpage';
 
 const LeadPage = () => {
-  const { userId } = useParams<{ userId: string }>();
+  const { userSlug } = useParams<{ userSlug: string }>();
+  
+  // Se o userSlug começa com "lead/", extrair o slug real (para compatibilidade com URLs antigas)
+  const actualSlug = userSlug?.startsWith('lead/') ? userSlug.substring(5) : userSlug;
   const [template, setTemplate] = useState<LeadPageTemplate | null>(null);
   const [userData, setUserData] = useState<UserLeadPage | null>(null);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [forceMobilePreview, setForceMobilePreview] = useState(false);
+
+  // Função para buscar usuário pelo slug ou UID
+  const getUserBySlugOrId = async (slugOrId: string) => {
+    try {
+      // Primeiro tenta buscar por slug
+      const slugQuery = query(collection(db, "users"), where("slug", "==", slugOrId));
+      const slugSnapshot = await getDocs(slugQuery);
+      
+      if (!slugSnapshot.empty) {
+        const userDoc = slugSnapshot.docs[0];
+        return { uid: userDoc.id, ...userDoc.data() };
+      }
+      
+      // Se não encontrou por slug, tenta buscar diretamente pelo ID (para compatibilidade com UIDs legados)
+      try {
+        const userDoc = await getDocs(query(collection(db, "users")));
+        const foundUser = userDoc.docs.find(doc => doc.id === slugOrId);
+        if (foundUser) {
+          return { uid: foundUser.id, ...foundUser.data() };
+        }
+      } catch (error) {
+        console.error('Error fetching user by UID:', error);
+      }
+      
+      // Se ainda não encontrou, assume que é um UID legado (fallback)
+      console.log('User not found by slug or UID, assuming legacy UID:', slugOrId);
+      return { uid: slugOrId };
+    } catch (error) {
+      console.error('Error finding user:', error);
+      return null;
+    }
+  };
 
   // Detecta se é mobile baseado no tamanho da tela
   useEffect(() => {
@@ -30,11 +67,19 @@ const LeadPage = () => {
 
   useEffect(() => {
     const loadData = async () => {
-      if (!userId) return;
+      if (!actualSlug) return;
       try {
+        // Primeiro buscar o usuário pelo slug/UID
+        const user = await getUserBySlugOrId(actualSlug);
+        if (!user) {
+          console.error('User not found for slug/id:', actualSlug);
+          setLoading(false);
+          return;
+        }
+        
         const [tmpl, data] = await Promise.all([
           getDefaultTemplate(),
-          getUserLeadPage(userId)
+          getUserLeadPage(user.uid)
         ]);
         setTemplate(tmpl);
         setUserData(data);
@@ -45,7 +90,7 @@ const LeadPage = () => {
       }
     };
     loadData();
-  }, [userId]);
+  }, [actualSlug]);
 
   if (loading) {
     return (

@@ -142,20 +142,6 @@ export default function ProviderDashboard() {
     }
   ], []);
 
-  const applyDashboardSettings = useCallback((settings: Record<string, unknown>) => {
-    const root = document.documentElement;
-    if (settings.primaryColor) root.style.setProperty('--dashboard-primary', settings.primaryColor as string);
-    if (settings.secondaryColor) root.style.setProperty('--dashboard-secondary', settings.secondaryColor as string);
-    if (settings.backgroundColor) root.style.setProperty('--dashboard-background', settings.backgroundColor as string);
-    if (settings.fontFamily) {
-      root.style.setProperty('--dashboard-font-family', settings.fontFamily as string);
-      document.body.style.fontFamily = settings.fontFamily as string;
-    }
-    if (settings.fontSize) {
-      root.style.setProperty('--dashboard-font-size', settings.fontSize as string);
-    }
-  }, []);
-
   // Carregar dados do usuário e serviços
   useEffect(() => {
     if (!user) return;
@@ -186,7 +172,7 @@ export default function ProviderDashboard() {
       }
     };
 
-    const unsubProfile = onSnapshot(doc(db, "users", user.uid), (docSnap) => {
+    const unsubProfile = onSnapshot(doc(db, "users", user.uid), async (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
         console.log('Loading user data for uid:', user.uid, 'data keys:', Object.keys(data));
@@ -198,6 +184,22 @@ export default function ProviderDashboard() {
         setSpecialties(data.specialties as string[] || []);
         setExperience(data.experience as string || "");
         setPhoto(data.photoURL as string || null);
+        
+        // Generate and save slug if not exists or name changed
+        const currentName = data.name as string || "";
+        const currentSlug = data.slug as string;
+        if (currentName && (!currentSlug || generateSlug(currentName) !== currentSlug)) {
+          try {
+            const newSlug = await generateUniqueUserSlug(currentName, user.uid);
+            await updateDoc(doc(db, "users", user.uid), {
+              slug: newSlug,
+              updatedAt: new Date()
+            });
+            console.log('Generated and saved user slug:', newSlug);
+          } catch (error) {
+            console.error('Error generating user slug:', error);
+          }
+        }
         
         // Load short link from Firestore
         const firestoreShortLink = data.shortLink as string;
@@ -336,6 +338,36 @@ export default function ProviderDashboard() {
     return { total, published, pending, views };
   }, [services]);
 
+  // Função para gerar slug único do usuário
+  const generateUniqueUserSlug = async (name: string, userId: string): Promise<string> => {
+    let slug = generateSlug(name);
+    if (!slug) slug = `user-${userId.slice(0, 8)}`; // Fallback se o nome estiver vazio
+    
+    try {
+      // Verificar se o slug já existe
+      const existingUsers = await getDocs(query(collection(db, "users"), where("slug", "==", slug)));
+      if (existingUsers.empty) {
+        return slug;
+      }
+      
+      // Se existe, adicionar sufixo numérico
+      let counter = 1;
+      let uniqueSlug = `${slug}-${counter}`;
+      while (true) {
+        const checkQuery = query(collection(db, "users"), where("slug", "==", uniqueSlug));
+        const checkResult = await getDocs(checkQuery);
+        if (checkResult.empty) {
+          return uniqueSlug;
+        }
+        counter++;
+        uniqueSlug = `${slug}-${counter}`;
+      }
+    } catch (error) {
+      console.error('Error checking slug uniqueness:', error);
+      return slug; // Retornar slug básico em caso de erro
+    }
+  };
+
   // Manipuladores de link encurtado
   const handleGenerateShortLink = async () => {
     if (!user) return;
@@ -347,7 +379,8 @@ export default function ProviderDashboard() {
 
     setGeneratingLink(true);
     try {
-      const leadPageUrl = `${window.location.origin}/lead/${user.uid}`;
+      const userSlug = profile?.slug as string || user.uid;
+      const leadPageUrl = `${window.location.origin}/${userSlug}`;
       const shortLinkData = await shareContentService.createShortLink(
         leadPageUrl,
         `Lead Page de ${profile?.name || user.displayName || 'Usuário'}`,
@@ -959,7 +992,7 @@ export default function ProviderDashboard() {
                         {/* Overlay com CTA */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-xl flex items-end justify-center p-6">
                           <a
-                            href={`/lead/${user.uid}`}
+                            href={`/${profile?.slug || user.uid}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-2 px-5 py-3 bg-white text-gray-900 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
@@ -985,7 +1018,7 @@ export default function ProviderDashboard() {
                         
                         <button
                           onClick={() => {
-                            navigator.clipboard.writeText(`${window.location.origin}/lead/${user.uid}`);
+                            navigator.clipboard.writeText(`${window.location.origin}/${profile?.slug || user.uid}`);
                             alert('Link copiado!');
                           }}
                           className="flex items-center justify-center gap-2 p-4 bg-white border border-gray-200 rounded-xl hover:border-emerald-400 hover:bg-emerald-50 transition-colors"

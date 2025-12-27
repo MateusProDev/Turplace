@@ -11,6 +11,7 @@ interface UserData {
   isAdmin?: boolean;
   chavePix?: string;
   stripeAccountId?: string;
+  slug?: string;
   // outros campos
 }
 

@@ -250,7 +250,7 @@ const LeadPageEditor = () => {
   };
 
   const handleShare = async () => {
-    const link = `${window.location.origin}/lead/${user?.uid}`;
+    const link = `${window.location.origin}/${userData?.slug || user?.uid}`;
     try {
       await navigator.clipboard.writeText(link);
       setCopied(true);
@@ -471,7 +471,7 @@ const LeadPageEditor = () => {
               )}
 
               <button
-                onClick={() => window.open(`${window.location.origin}/lead/${user?.uid}`, '_blank')}
+                onClick={() => window.open(`${window.location.origin}/${userData?.slug || user?.uid}`, '_blank')}
                 className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-all"
               >
                 <Eye className="w-4 h-4" />

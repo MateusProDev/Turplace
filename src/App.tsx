@@ -29,7 +29,6 @@ function App() {
         <Route path="/profile" element={<Navigate to="/profile/settings" replace />} />
         <Route path="/profile/settings" element={<ProfileSettings />} />
         <Route path="/profile/leadpage" element={<RequireAuth><LeadPageEditor /></RequireAuth>} />
-        <Route path="/lead/:userId" element={<LeadPage />} />
         <Route path="/login" element={user ? <RequireAuth><ProviderDashboard /></RequireAuth> : <Login />} />
         <Route path="/dashboard" element={<RequireAuth><ServiceForm /></RequireAuth>} />
         <Route path="/dashboard/service/new" element={<RequireAuth><ServiceForm /></RequireAuth>} />
@@ -44,6 +43,7 @@ function App() {
         <Route path="/partnerships" element={<Partnerships />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/wallet" element={<RequireAuth><Wallet /></RequireAuth>} />
+        <Route path="/:userSlug" element={<LeadPage />} />
       </Routes>
     </BrowserRouter>
   );
