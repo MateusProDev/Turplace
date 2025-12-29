@@ -8,8 +8,8 @@ const rateLimitStore = new Map();
 
 // Security configuration
 const SECURITY_CONFIG = {
-  MAX_REQUESTS_PER_MINUTE: 10,
-  MAX_REQUESTS_PER_HOUR: 50,
+  MAX_REQUESTS_PER_MINUTE: 30, // Requests por minuto (aumentado)
+  MAX_REQUESTS_PER_HOUR: 200,  // Requests por hora (aumentado)
   SUSPICIOUS_PATTERNS: [
     /<script/i,
     /javascript:/i,
