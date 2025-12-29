@@ -22,6 +22,7 @@ const SECURITY_CONFIG = {
   ],
   ALLOWED_ORIGINS: [
     'https://turplace.turvia.com.br',
+    'https://marketplace.turvia.com.br',
     'http://localhost:5173',
     'http://localhost:3000'
   ]
