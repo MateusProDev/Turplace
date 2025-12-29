@@ -162,8 +162,10 @@ function validateOrigin(req) {
 
   try {
     const originUrl = new URL(origin);
+    const originDomain = `${originUrl.protocol}//${originUrl.hostname}`;
+
     return SECURITY_CONFIG.ALLOWED_ORIGINS.some(allowed =>
-      allowed === origin || originUrl.hostname === 'localhost'
+      allowed === originDomain || originUrl.hostname === 'localhost'
     );
   } catch {
     return false;
