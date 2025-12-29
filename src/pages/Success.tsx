@@ -14,7 +14,7 @@ export default function Success() {
   const fetchOrderDetails = useCallback(async () => { 
     try {
       const params = new URLSearchParams();
-      if (sessionId) params.append('session_id', sessionId);
+      if (sessionId) params.append('session_id', sessionId); 
       if (orderId) params.append('order_id', orderId);
 
       const response = await fetch(`/api/get-order-details?${params.toString()}`);
