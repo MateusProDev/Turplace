@@ -4,6 +4,7 @@
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import AbacatePay from 'abacatepay-nodejs-sdk';
 import initFirestore from './_lib/firebaseAdmin.js';
+import { paymentValidation } from '../src/middleware/paymentValidation.js';
 
 const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN || process.env.REACT_APP_MERCADO_PAGO_ACCESS_TOKEN;
 const abacateApiKey = process.env.ABACATEPAY_API_KEY;
@@ -24,83 +25,90 @@ const abacate = AbacatePay.default(abacateApiKey);
 console.log('[MercadoPago Checkout] Cliente AbacatePay inicializado com sucesso');
 
 export default async function handler(req, res) {
-  console.log('[MercadoPago Checkout] Iniciando processamento', {
+  const clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+                   req.headers['x-real-ip'] ||
+                   req.connection?.remoteAddress ||
+                   req.socket?.remoteAddress ||
+                   'unknown';
+
+  // Log seguro (sem dados sensíveis)
+  console.log('[MercadoPago Checkout] Requisição recebida', {
     method: req.method,
-    headers: Object.keys(req.headers),
-    body: req.body
+    ip: clientIP,
+    userAgent: req.headers['user-agent']?.substring(0, 100),
+    timestamp: new Date().toISOString()
   });
 
   // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Origin', 'https://turplace.turvia.com.br');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Max-Age', '86400'); // 24 horas
     return res.status(200).end();
   }
 
-  console.log('[MercadoPago Checkout] Environment check:', {
-    hasAccessToken: !!process.env.MERCADO_PAGO_ACCESS_TOKEN,
-    accessTokenLength: process.env.MERCADO_PAGO_ACCESS_TOKEN?.length,
-    hasWebhookSecret: !!process.env.MERCADO_PAGO_WEBHOOK_SECRET,
-    webhookSecretLength: process.env.MERCADO_PAGO_WEBHOOK_SECRET?.length,
-    nodeEnv: process.env.NODE_ENV
-  });
-
-  if (!accessToken) {
-    console.error('[MercadoPago Checkout] Access token não configurado');
-    return res.status(500).json({ error: 'Configuração do Mercado Pago não encontrada' });
-  }
-
-  console.log('[MercadoPago Checkout] Mercado Pago configurado com sucesso');
-
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-  if (req.method === 'GET') {
-    console.log('[MercadoPago Checkout] GET request - retornando status');
-    return res.status(200).json({
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      environment: {
-        hasAccessToken: !!process.env.MERCADO_PAGO_ACCESS_TOKEN,
-        accessTokenPrefix: process.env.MERCADO_PAGO_ACCESS_TOKEN?.substring(0, 10) + '...',
-        hasWebhookSecret: !!process.env.MERCADO_PAGO_WEBHOOK_SECRET,
-        webhookSecretPrefix: process.env.MERCADO_PAGO_WEBHOOK_SECRET?.substring(0, 10) + '...',
-        hasFirebaseSA: !!process.env.FIREBASE_SERVICE_ACCOUNT_JSON,
-        nodeEnv: process.env.NODE_ENV
-      }
-    });
-  }
-
+  // Apenas POST permitido
   if (req.method !== 'POST') {
+    console.warn('[MercadoPago Checkout] Método não permitido', {
+      method: req.method,
+      ip: clientIP
+    });
     return res.status(405).json({ error: 'Método não permitido' });
   }
 
   try {
-    const { valor, metodoPagamento, packageData, reservaData, cardToken, installments, payerData } = req.body;
+    const requestData = req.body;
 
-    console.log('[MercadoPago Checkout] Dados recebidos:', {
-      valor,
+    // 🔒 VALIDAÇÃO DE SEGURANÇA - Rate limiting e detecção de ataques
+    const rateLimitCheck = securityMiddleware.checkRateLimit(clientIP, req.url, req.headers['user-agent']);
+    if (!rateLimitCheck.allowed) {
+      console.warn('[SECURITY] Rate limit excedido', {
+        ip: clientIP,
+        reason: rateLimitCheck.reason
+      });
+      return res.status(429).json({
+        error: 'Muitas tentativas. Aguarde alguns minutos.',
+        retryAfter: 300
+      });
+    }
+
+    // 🔒 DETECÇÃO DE ATAQUES
+    const attacks = securityMiddleware.detectAttacks(requestData, clientIP, req.headers['user-agent']);
+    if (attacks.length > 0) {
+      console.error('[SECURITY] Ataque detectado no checkout', {
+        ip: clientIP,
+        attacks: attacks.map(a => ({ type: a.type, severity: a.severity }))
+      });
+      return res.status(400).json({ error: 'Requisição inválida' });
+    }
+
+    // 🔒 VALIDAÇÃO DE ENTRADA PARA PIX
+    const { valor, metodoPagamento, packageData, reservaData, cardToken, installments, payerData } = requestData;
+
+    if (metodoPagamento === 'pix') {
+      const validation = paymentValidation.validatePixCheckout(requestData, clientIP);
+      if (!validation.valid) {
+        console.warn('[VALIDATION] Dados de checkout PIX inválidos', {
+          ip: clientIP,
+          errors: validation.errors
+        });
+        return res.status(400).json({
+          error: 'Dados inválidos',
+          details: validation.errors
+        });
+      }
+
+      // Usar dados sanitizados
+      const sanitizedData = paymentValidation.sanitizePaymentData(validation.sanitized);
+      Object.assign(requestData, sanitizedData);
+    }
+
+    console.log('[MercadoPago Checkout] Dados validados e sanitizados', {
       metodoPagamento,
-      packageData,
-      reservaData,
-      hasCardToken: !!cardToken,
-      installments
+      valor: metodoPagamento === 'pix' ? valor : '[REDACTED]',
+      ip: clientIP
     });
-
-    if (!valor || !metodoPagamento) {
-      console.error('[MercadoPago Checkout] Dados obrigatórios faltando');
-      return res.status(400).json({ error: 'Dados obrigatórios não fornecidos' });
-    }
-
-    const valorFinal = metodoPagamento === 'pix' ? Math.round((valor * 0.95) * 100) / 100 : Math.round(valor * 100) / 100;
-    console.log('[MercadoPago Checkout] Valor calculado:', { valorOriginal: valor, valorFinal });
-
-    if (!valorFinal || valorFinal <= 0) {
-      console.error('[MercadoPago Checkout] Valor inválido');
-      return res.status(400).json({ error: 'Valor inválido' });
-    }
     if (metodoPagamento === 'pix') {
       console.log('[MercadoPago Checkout] Processando pagamento Pix com AbacatePay (QRCode direto)');
 
@@ -188,6 +196,26 @@ export default async function handler(req, res) {
     }
     if (metodoPagamento === 'cartao' && cardToken) {
       console.log('[MercadoPago Checkout] Processando pagamento com cartão');
+
+      // 🔒 VALIDAÇÃO DE NEGÓCIO PARA CARTÃO
+      const businessValidation = paymentValidation.validateCardBusinessRules({
+        valor,
+        packageData,
+        reservaData,
+        cardToken,
+        installments
+      });
+
+      if (!businessValidation.valid) {
+        console.warn('[BUSINESS] Regras de negócio violadas para cartão', {
+          ip: clientIP,
+          errors: businessValidation.errors
+        });
+        return res.status(400).json({
+          error: 'Dados inválidos para pagamento com cartão',
+          details: businessValidation.errors
+        });
+      }
 
       // Criar pedido no Firestore antes de criar o pagamento
       const db = initFirestore();

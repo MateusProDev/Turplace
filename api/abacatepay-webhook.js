@@ -3,6 +3,8 @@
 
 import crypto from 'crypto';
 import initFirestore from './_lib/firebaseAdmin.js';
+import securityMiddleware from '../src/middleware/security.js';
+import paymentValidation from '../src/middleware/paymentValidation.js';
 
 const ABACATEPAY_PUBLIC_KEY = process.env.ABACATEPAY_PUBLIC_KEY || 't9dXRhHHo3yDEj5pVDYz0frf7q6bMKyMRmxxCPIPp3RCplBfXRxqlC6ZpiWmOqj4L63qEaeUOtrCI8P0VMUgo6iIga2ri9ogaHFs0WIIywSMg0q7RmBfybe1E5XJcfC4IW3alNqym0tXoAKkzvfEjZxV6bE0oG2zJrNNYmUCKZyV0KZ3JS8Votf9EAWWYdiDkMkpbMdPggfh1EqHlVkMiTady6jOR3hyzGEHrIz2Ret0xHKMbiqkr9HS1JhNHDX9';
 
@@ -21,17 +23,75 @@ export function verifyAbacateSignature(rawBody, signatureFromHeader) {
 }
 
 export default async function handler(req, res) {
+  // 🔒 EXTRAIR IP DO CLIENTE PARA LOGGING SEGURO
+  const clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+                   req.headers['x-real-ip'] ||
+                   req.connection?.remoteAddress ||
+                   req.socket?.remoteAddress ||
+                   'unknown';
+
   console.log('[AbacatePay Webhook] Recebendo webhook', {
     method: req.method,
-    headers: Object.keys(req.headers),
-    body: req.body
+    ip: clientIP,
+    userAgent: req.headers['user-agent']?.substring(0, 100)
   });
 
   if (req.method !== 'POST') {
+    console.warn('[AbacatePay Webhook] Método não permitido', {
+      method: req.method,
+      ip: clientIP
+    });
     return res.status(405).json({ error: 'Método não permitido' });
   }
 
   try {
+    const requestData = req.body;
+
+    // 🔒 VALIDAÇÃO DE SEGURANÇA - Rate limiting específico para webhooks
+    const rateLimitCheck = securityMiddleware.checkRateLimit(clientIP, req.url, req.headers['user-agent']);
+    if (!rateLimitCheck.allowed) {
+      console.warn('[SECURITY] Rate limit excedido no webhook', {
+        ip: clientIP,
+        reason: rateLimitCheck.reason
+      });
+      return res.status(429).json({
+        error: 'Muitas tentativas. Aguarde alguns minutos.',
+        retryAfter: 300
+      });
+    }
+
+    // 🔒 DETECÇÃO DE ATAQUES NO WEBHOOK
+    const attacks = securityMiddleware.detectAttacks(requestData, clientIP, req.headers['user-agent']);
+    if (attacks.length > 0) {
+      console.error('[SECURITY] Ataque detectado no webhook', {
+        ip: clientIP,
+        attacks: attacks.map(a => ({ type: a.type, severity: a.severity }))
+      });
+      return res.status(400).json({ error: 'Requisição inválida' });
+    }
+
+    // 🔒 VALIDAÇÃO DE ENTRADA PARA WEBHOOK
+    const validation = paymentValidation.validateWebhookData(requestData, clientIP);
+    if (!validation.valid) {
+      console.warn('[VALIDATION] Dados de webhook inválidos', {
+        ip: clientIP,
+        errors: validation.errors
+      });
+      return res.status(400).json({
+        error: 'Dados inválidos',
+        details: validation.errors
+      });
+    }
+
+    // Usar dados sanitizados
+    const sanitizedData = paymentValidation.sanitizeWebhookData(validation.sanitized);
+    Object.assign(requestData, sanitizedData);
+
+    console.log('[AbacatePay Webhook] Dados validados e sanitizados', {
+      event: requestData.event,
+      ip: clientIP
+    });
+
     // Verificar assinatura HMAC
     const signature = req.headers['x-webhook-signature'];
     const rawBody = JSON.stringify(req.body);
