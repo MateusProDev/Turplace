@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
-import { useAuth } from '../hooks/useAuth';
 import { db } from "../utils/firebase";
 import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
-import { useNavigate } from 'react-router-dom';
 import { BarChart3, Users, DollarSign, ShoppingCart, CreditCard, TrendingUp, CheckCircle, XCircle, Shield, AlertTriangle, Eye, Lock } from 'lucide-react';
 
 interface Stats {
@@ -73,8 +71,6 @@ interface SecurityStats {
 }
 
 export default function AdminDashboard() {
-  const { user, userData } = useAuth();
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'payouts' | 'users' | 'services' | 'security'>('overview');
   const [stats, setStats] = useState<Stats>({
     totalUsers: 0,
@@ -104,12 +100,8 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user || !userData?.isAdmin) {
-      navigate('/');
-      return;
-    }
     loadData();
-  }, [user, userData, navigate]);
+  }, []);
 
   const loadData = async () => {
     try {
