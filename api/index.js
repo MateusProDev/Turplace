@@ -15,6 +15,8 @@ import wallet from './_handlers/wallet.js';
 import webhook from './_handlers/webhook.js';
 import sharecontent from './_handlers/sharecontent.js';
 import mercadopagoCheckout from './mercadopago-checkout.js';
+import abacatepayPixCheckout from './abacatepay-pix-checkout.js';
+import abacatepayWebhook from './abacatepay-webhook.js';
 
 const handlers = {
   'create-checkout-session': createCheckoutSession,
@@ -30,7 +32,9 @@ const handlers = {
   'wallet': wallet,
   'webhook': webhook,
   'sharecontent': sharecontent,
-  'mercadopago-checkout': mercadopagoCheckout
+  'mercadopago-checkout': mercadopagoCheckout,
+  'abacatepay-pix-checkout': abacatepayPixCheckout,
+  'abacatepay-webhook': abacatepayWebhook
 };
 
 export default async (req, res) => {

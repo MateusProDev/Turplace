@@ -2,9 +2,11 @@
 // Caminho sugerido: api/mercadopago-checkout.js
 
 import { MercadoPagoConfig, Payment } from 'mercadopago';
+import AbacatePay from 'abacatepay-nodejs-sdk';
 import initFirestore from './_lib/firebaseAdmin.js';
 
 const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN || process.env.REACT_APP_MERCADO_PAGO_ACCESS_TOKEN;
+const abacateApiKey = process.env.ABACATEPAY_API_KEY;
 
 console.log('[MercadoPago Checkout] Inicializando cliente Mercado Pago...');
 
@@ -17,12 +19,24 @@ const payment = new Payment(client);
 
 console.log('[MercadoPago Checkout] Cliente Mercado Pago inicializado com sucesso');
 
+const abacate = AbacatePay.default(abacateApiKey);
+
+console.log('[MercadoPago Checkout] Cliente AbacatePay inicializado com sucesso');
+
 export default async function handler(req, res) {
   console.log('[MercadoPago Checkout] Iniciando processamento', {
     method: req.method,
     headers: Object.keys(req.headers),
     body: req.body
   });
+
+  // Handle preflight OPTIONS request
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    return res.status(200).end();
+  }
 
   console.log('[MercadoPago Checkout] Environment check:', {
     hasAccessToken: !!process.env.MERCADO_PAGO_ACCESS_TOKEN,
@@ -88,7 +102,12 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Valor inválido' });
     }
     if (metodoPagamento === 'pix') {
-      console.log('[MercadoPago Checkout] Processando pagamento Pix');
+      console.log('[MercadoPago Checkout] Processando pagamento Pix com AbacatePay (QRCode direto)');
+
+      if (!abacateApiKey) {
+        console.error('[MercadoPago Checkout] API key do AbacatePay não configurada');
+        return res.status(500).json({ error: 'Configuração do AbacatePay não encontrada' });
+      }
 
       // Criar pedido no Firestore antes de criar o pagamento
       console.log('[MercadoPago Checkout] Inicializando Firestore...');
@@ -120,7 +139,7 @@ export default async function handler(req, res) {
         status: 'pending',
         paymentMethod: 'pix',
         createdAt: new Date().toISOString(),
-        mercadopagoPaymentId: null, // Será atualizado após criação do pagamento
+        abacatepayPixId: null, // Será atualizado após criação do QRCode
         customerName,
         customerEmail,
         customerCPF,
@@ -130,52 +149,41 @@ export default async function handler(req, res) {
       console.log('[MercadoPago Checkout] Criando pedido no Firestore:', order);
       await orderRef.set(order);
 
-      const paymentData = {
-        transaction_amount: valorFinal,
-        description: `Pagamento Pix - ${packageData?.title || 'Produto'}`,
-        payment_method_id: 'pix',
-        payer: {
-          email: customerEmail,
-          first_name: customerName.split(' ')[0] || 'Cliente',
-          last_name: customerName.split(' ').slice(1).join(' ') || 'Test',
-          identification: {
-            type: 'CPF',
-            number: customerCPF.replace(/\D/g, '') // Remove caracteres não numéricos
-          },
-          phone: customerPhone ? {
-            area_code: customerPhone.replace(/\D/g, '').substring(0, 2),
-            number: customerPhone.replace(/\D/g, '').substring(2)
-          } : undefined
-        },
-        notification_url: process.env.MERCADO_PAGO_WEBHOOK_URL || '',
+      // Criar QRCode PIX direto usando a API específica
+      const valorEmCentavos = Math.round(valor * 100);
+      const pixData = {
+        amount: valorEmCentavos,
+        description: `Pagamento PIX - ${packageData?.title || 'Produto'}`,
         metadata: {
           orderId: orderRef.id,
           customerData: JSON.stringify(reservaData),
-          packageData: JSON.stringify(packageData),
-          metodo_pagamento: metodoPagamento,
-          valor_original: valor,
-          valor_final: valorFinal
+          packageData: JSON.stringify(packageData)
         }
       };
 
-      console.log('[MercadoPago Checkout] Criando pagamento no Mercado Pago:', paymentData);
-      const result = await payment.create({ body: paymentData });
-      console.log('[MercadoPago Checkout] Pagamento criado:', result);
+      console.log('[MercadoPago Checkout] Criando QRCode PIX direto:', pixData);
+      const pixResponse = await abacate.pixQrCode.create(pixData);
+      console.log('[MercadoPago Checkout] QRCode PIX criado:', pixResponse);
 
-      // Atualizar pedido com o paymentId
+      if (!pixResponse || !pixResponse.data) {
+        throw new Error('Erro ao criar QRCode PIX no AbacatePay');
+      }
+
+      // Atualizar pedido com o pixId
       await orderRef.update({
-        mercadopagoPaymentId: result.id
+        abacatepayPixId: pixResponse.data.id
       });
 
       return res.status(200).json({
         success: true,
-        payment_id: result.id,
+        pix_id: pixResponse.data.id,
         orderId: orderRef.id,
-        status: result.status,
-        qrCode: result.point_of_interaction?.transaction_data?.qr_code || '',
-        qrCodeBase64: result.point_of_interaction?.transaction_data?.qr_code_base64 || '',
-        ticket_url: result.point_of_interaction?.transaction_data?.ticket_url || '',
-        expiration_date: result.date_of_expiration
+        status: pixResponse.data.status,
+        qrCode: pixResponse.data.brCode || '',
+        qrCodeBase64: pixResponse.data.brCodeBase64 || '',
+        expiration_date: pixResponse.data.expiresAt,
+        amount: pixResponse.data.amount,
+        description: pixResponse.data.description
       });
     }
     if (metodoPagamento === 'cartao' && cardToken) {

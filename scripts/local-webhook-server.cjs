@@ -78,5 +78,48 @@ app.post('/api/webhook', express.raw({ type: 'application/json' }), async (req, 
   }
 });
 
+// Webhook para AbacatePay
+app.post('/api/abacatepay-webhook', express.json(), async (req, res) => {
+  console.log('[Local Webhook Server] AbacatePay webhook received:', req.body);
+
+  try {
+    const event = req.body;
+
+    if (event.event === 'billing.paid') {
+      console.log('[Local Webhook Server] Processing billing.paid event');
+
+      const metadata = event.data.billing?.metadata || {};
+      const orderId = metadata.orderId;
+
+      if (orderId) {
+        const orderRef = db.collection('orders').doc(orderId);
+        const orderSnap = await orderRef.get();
+        if (!orderSnap.exists) {
+          console.warn('[Local Webhook Server] Order not found:', orderId);
+        } else {
+          const order = orderSnap.data();
+          if (order.status !== 'paid') {
+            await orderRef.update({
+              status: 'paid',
+              paidAt: new Date().toISOString(),
+              abacatepayEventData: event
+            });
+            console.log('[Local Webhook Server] Order updated to paid:', orderId);
+          } else {
+            console.log('[Local Webhook Server] Order already paid:', orderId);
+          }
+        }
+      } else {
+        console.warn('[Local Webhook Server] No orderId in metadata');
+      }
+    }
+
+    res.json({ received: true });
+  } catch (err) {
+    console.error('[Local Webhook Server] Processing AbacatePay webhook failed:', err);
+    res.status(500).send('Internal error');
+  }
+});
+
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Local webhook server running at http://localhost:${port}/api/webhook`));

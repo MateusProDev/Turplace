@@ -14,6 +14,15 @@ MERCADO_PAGO_WEBHOOK_URL=https://your-domain.com/api/mercadopago-webhook
 MERCADO_PAGO_WEBHOOK_SECRET=...
 ```
 
+### AbacatePay (Produção)
+```bash
+ABACATEPAY_API_KEY=your_abacatepay_api_key
+ABACATEPAY_RETURN_URL=https://your-domain.com/return
+ABACATEPAY_COMPLETION_URL=https://your-domain.com/payment/success
+ABACATEPAY_WEBHOOK_URL=https://your-domain.com/api/abacatepay-webhook
+ABACATEPAY_PUBLIC_KEY=t9dXRhHHo3yDEj5pVDYz0frf7q6bMKyMRmxxCPIPp3RCplBfXRxqlC6ZpiWmOqj4L63qEaeUOtrCI8P0VMUgo6iIga2ri9ogaHFs0WIIywSMg0q7RmBfybe1E5XJcfC4IW3alNqym0tXoAKkzvfEjZxV6bE0oG2zJrNNYmUCKZyV0KZ3JS8Votf9EAWWYdiDkMkpbMdPggfh1EqHlVkMiTady6jOR3hyzGEHrIz2Ret0xHKMbiqkr9HS1JhNHDX9
+```
+
 ### Stripe (Produção)
 ```bash
 STRIPE_SECRET_KEY=sk_live_...
