@@ -211,10 +211,10 @@ export default function ProviderDashboard() {
         setExperience(data.experience as string || "");
         setPhoto(data.photoURL as string || null);
         
-        // Generate and save slug if not exists or name changed
+        // Generate and save slug if not exists (only once)
         const currentName = data.name as string || "";
         const currentSlug = data.slug as string;
-        if (currentName && (!currentSlug || generateSlug(currentName) !== currentSlug)) {
+        if (currentName && !currentSlug) {
           try {
             const newSlug = await generateUniqueUserSlug(currentName, user.uid);
             await updateDoc(doc(db, "users", user.uid), {

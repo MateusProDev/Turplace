@@ -1,11 +1,21 @@
 import initFirestore from '../_lib/firebaseAdmin.js';
-import { securityMiddleware } from '../_lib/securityMiddleware.js';
+import { securityMiddleware, validateAndSanitizeInput } from '../_lib/securityMiddleware.js';
 
 async function walletHandler(req, res) {
   if (req.method !== 'GET') return res.status(405).send('Method Not Allowed');
 
   const db = initFirestore();
-  const { userId } = req.sanitizedBody || req.query;
+
+  // Sanitizar query parameters para GET requests
+  let sanitizedQuery;
+  try {
+    sanitizedQuery = validateAndSanitizeInput(req.query);
+  } catch (error) {
+    console.error('[wallet] Query validation failed:', error.message);
+    return res.status(400).json({ error: 'Invalid query parameters' });
+  }
+
+  const { userId } = sanitizedQuery;
 
   if (!userId) return res.status(400).json({ error: 'userId required' });
 
