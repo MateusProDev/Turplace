@@ -2,25 +2,49 @@ import initFirestore from '../_lib/firebaseAdmin.js';
 import { securityMiddleware, validateAndSanitizeInput } from '../_lib/securityMiddleware.js';
 
 async function walletHandler(req, res) {
-  if (req.method !== 'GET') return res.status(405).send('Method Not Allowed');
+  // Método HTTP validation
+  if (req.method !== 'GET') {
+    console.log('[wallet] ❌ Método não permitido:', req.method);
+    return res.status(405).json({ error: 'Method Not Allowed' });
+  }
 
-  const db = initFirestore();
+  console.log('[wallet] 📨 Nova requisição recebida');
+
+  let db;
+  try {
+    db = initFirestore();
+    console.log('[wallet] ✅ Firebase inicializado com sucesso');
+  } catch (error) {
+    console.error('[wallet] ❌ Erro na inicialização do Firebase:', error.message);
+    return res.status(500).json({
+      error: 'Database connection failed',
+      details: error.message
+    });
+  }
 
   // Sanitizar query parameters para GET requests
   let sanitizedQuery;
   try {
     sanitizedQuery = validateAndSanitizeInput(req.query);
+    console.log('[wallet] ✅ Query parameters sanitizados');
   } catch (error) {
-    console.error('[wallet] Query validation failed:', error.message);
-    return res.status(400).json({ error: 'Invalid query parameters' });
+    console.error('[wallet] ❌ Query validation failed:', error.message);
+    return res.status(400).json({
+      error: 'Invalid query parameters',
+      details: error.message
+    });
   }
 
   const { userId } = sanitizedQuery;
 
-  if (!userId) return res.status(400).json({ error: 'userId required' });
+  if (!userId) {
+    console.log('[wallet] ❌ userId não informado');
+    return res.status(400).json({ error: 'userId required' });
+  }
+
+  console.log('[wallet] 🚀 Iniciando busca para userId:', userId);
 
   try {
-    console.log('[wallet] 🚀 Iniciando busca para userId:', userId);
 
     // 🔒 VERIFICAÇÃO DE AUTORIZAÇÃO - Usuário só pode ver sua própria wallet
     // Nota: Em produção, implementar verificação de token JWT/Firebase Auth
@@ -32,9 +56,19 @@ async function walletHandler(req, res) {
 
     // Buscar orders onde o usuário é provider (via serviceId) - OTIMIZADO
     // Primeiro buscar todos os serviços do usuário
-    const servicesSnapshot = await db.collection('services')
-      .where('ownerId', '==', userId)
-      .get();
+    let servicesSnapshot;
+    try {
+      servicesSnapshot = await db.collection('services')
+        .where('ownerId', '==', userId)
+        .get();
+      console.log('[wallet] ✅ Query de serviços executada');
+    } catch (error) {
+      console.error('[wallet] ❌ Erro na query de serviços:', error.message);
+      return res.status(500).json({
+        error: 'Failed to fetch services',
+        details: error.message
+      });
+    }
 
     const serviceIds = servicesSnapshot.docs.map(doc => doc.id);
     console.log('[wallet] ✅ Serviços encontrados:', serviceIds.length, 'IDs:', serviceIds);
@@ -80,10 +114,17 @@ async function walletHandler(req, res) {
         console.log(`[wallet] 🔍 Buscando orders para serviço: ${serviceId}`);
 
         // Buscar orders por serviceId primeiro (query simples)
-        const serviceOrdersSnapshot = await db.collection('orders')
-          .where('serviceId', '==', serviceId)
-          .limit(50) // Limitar por serviço
-          .get();
+        let serviceOrdersSnapshot;
+        try {
+          serviceOrdersSnapshot = await db.collection('orders')
+            .where('serviceId', '==', serviceId)
+            .limit(50) // Limitar por serviço
+            .get();
+          console.log(`[wallet] ✅ Query de orders para serviço ${serviceId} executada`);
+        } catch (error) {
+          console.error(`[wallet] ❌ Erro na query de orders para serviço ${serviceId}:`, error.message);
+          continue; // Pular este serviço e continuar com os outros
+        }
 
         console.log(`[wallet] 📊 Orders encontradas para serviço ${serviceId}:`, serviceOrdersSnapshot.size);
 
@@ -119,11 +160,22 @@ async function walletHandler(req, res) {
     console.log('[wallet] 👤 Buscando dados do provider...');
 
     // Buscar dados do provider uma vez só
-    const providerDoc = await db.collection('users').doc(userId).get();
-    const provider = providerDoc.data();
-    const planId = provider?.planId || 'free';
+    let providerDoc;
+    let provider;
+    try {
+      providerDoc = await db.collection('users').doc(userId).get();
+      provider = providerDoc.data();
+      console.log('[wallet] ✅ Provider data encontrado:', !!provider);
+    } catch (error) {
+      console.error('[wallet] ❌ Erro ao buscar dados do provider:', error.message);
+      return res.status(500).json({
+        error: 'Failed to fetch provider data',
+        details: error.message
+      });
+    }
 
-    console.log('[wallet] ✅ Provider data encontrado:', !!provider, 'planId:', planId);
+    const planId = provider?.planId || 'free';
+    console.log('[wallet] ✅ Plan ID:', planId);
 
     console.log('[wallet] 🧮 Processando orders pagas...');
 
@@ -226,19 +278,29 @@ async function walletHandler(req, res) {
     console.log('[wallet] Orders pendentes processadas. Pending amount:', pendingAmount);
 
     // Buscar payouts pendentes - OTIMIZADO
-    console.log('[wallet] Buscando payouts...');
+    console.log('[wallet] 💸 Buscando payouts...');
 
-    const payoutsSnapshot = await db.collection('payouts')
-      .where('userId', '==', userId)
-      .where('status', '==', 'pending')
-      .get();
+    let payoutsSnapshot;
+    try {
+      payoutsSnapshot = await db.collection('payouts')
+        .where('userId', '==', userId)
+        .where('status', '==', 'pending')
+        .get();
+      console.log('[wallet] ✅ Query de payouts executada');
+    } catch (error) {
+      console.error('[wallet] ❌ Erro na query de payouts:', error.message);
+      return res.status(500).json({
+        error: 'Failed to fetch payouts',
+        details: error.message
+      });
+    }
 
     let withdrawnAmount = 0;
     payoutsSnapshot.forEach(doc => {
       withdrawnAmount += doc.data().amount || 0;
     });
 
-    console.log('[wallet] Payouts processados. Withdrawn amount:', withdrawnAmount);
+    console.log('[wallet] ✅ Payouts processados. Withdrawn amount:', withdrawnAmount);
 
     const availableBalance = totalReceived - withdrawnAmount;
 
