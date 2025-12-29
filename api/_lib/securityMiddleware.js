@@ -261,6 +261,7 @@ export function securityMiddleware(handler) {
 
 // Export utilities for use in handlers
 export {
+  securityMiddleware,
   generateRequestFingerprint,
   containsSuspiciousPatterns,
   validateAndSanitizeInput,
