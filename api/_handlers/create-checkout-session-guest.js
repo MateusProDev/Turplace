@@ -1,8 +1,14 @@
 import Stripe from 'stripe';
 import initFirestore from '../_lib/firebaseAdmin.js';
+import { securityMiddleware } from '../_lib/securityMiddleware.js';
+import { fraudDetection } from '../_lib/fraudDetection.js';
 
-export default async (req, res) => {
-  console.log('[create-checkout-session-guest] Entrada', { method: req.method, url: req.url, body: req.body });
+async function createCheckoutSessionGuestHandler(req, res) {
+  console.log('[create-checkout-session-guest] Entrada segura', {
+    method: req.method,
+    sanitizedBody: req.sanitizedBody,
+    ip: req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip
+  });
 
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const db = initFirestore();
@@ -14,7 +20,8 @@ export default async (req, res) => {
         ok: true,
         route: '/api/create-checkout-session-guest',
         method: 'GET',
-        msg: 'Guest checkout function is deployed'
+        msg: 'Guest checkout function is deployed',
+        security: 'enabled'
       });
     }
 
@@ -22,7 +29,7 @@ export default async (req, res) => {
       return res.status(405).send('Method Not Allowed');
     }
 
-    const { serviceId, successUrl, cancelUrl } = req.body;
+    const { serviceId, successUrl, cancelUrl } = req.sanitizedBody;
 
     if (!serviceId) {
       console.warn('[create-checkout-session-guest] serviceId não informado');
@@ -75,7 +82,49 @@ export default async (req, res) => {
     const commissionAmount = Math.round(totalAmount * (commissionPercent / 100));
     console.log('[create-checkout-session-guest] Valores calculados', { isSubscription, rawPrice, priceValue, unitAmount, totalAmount, commissionAmount });
 
-    // Cria order no Firestore
+    // 🔒 AVALIAÇÃO DE RISCO DE FRAUDE
+    const paymentData = {
+      amount: totalAmount,
+      ip: req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip,
+      userAgent: req.headers['user-agent'],
+      timestamp: new Date().toISOString()
+    };
+
+    const riskAssessment = await fraudDetection.calculateRiskScore(paymentData, {
+      country: req.headers['cf-ipcountry'] || req.headers['x-country'],
+      formCompletionTime: req.sanitizedBody?.formCompletionTime
+    });
+
+    console.log('[create-checkout-session-guest] Avaliação de risco', {
+      score: riskAssessment.score,
+      level: riskAssessment.level,
+      action: riskAssessment.recommendedAction,
+      factors: riskAssessment.factors
+    });
+
+    // Log security event
+    await fraudDetection.logSecurityEvent('PAYMENT_ATTEMPT', {
+      serviceId,
+      providerId,
+      amount: totalAmount,
+      riskScore: riskAssessment.score,
+      riskLevel: riskAssessment.level,
+      ip: paymentData.ip
+    }, riskAssessment);
+
+    // 🚫 BLOQUEAR PAGAMENTOS DE ALTO RISCO
+    if (riskAssessment.recommendedAction === 'block') {
+      console.warn('[create-checkout-session-guest] Pagamento bloqueado por alto risco', riskAssessment);
+      return res.status(403).json({
+        error: 'Payment blocked due to security concerns',
+        code: 'PAYMENT_BLOCKED'
+      });
+    }
+
+    // ⚠️ ADICIONAR VERIFICAÇÃO EXTRA PARA RISCO MÉDIO
+    const requiresAdditionalVerification = riskAssessment.recommendedAction === 'require_3ds';
+
+    // Cria order no Firestore com dados de segurança
     const orderRef = db.collection('orders').doc();
     const order = {
       serviceId,
@@ -90,10 +139,29 @@ export default async (req, res) => {
       isSubscription,
       serviceTitle: service.title,
       providerName: provider.name || service.ownerName,
-      providerEmail: provider.email || service.ownerEmail
+      providerEmail: provider.email || service.ownerEmail,
+      // 🔒 Dados de segurança
+      security: {
+        riskScore: riskAssessment.score,
+        riskLevel: riskAssessment.level,
+        riskFactors: riskAssessment.factors,
+        ip: paymentData.ip,
+        userAgent: req.headers['user-agent']?.substring(0, 200),
+        fingerprint: require('crypto').createHash('sha256')
+          .update(`${paymentData.ip}|${req.headers['user-agent'] || ''}`)
+          .digest('hex'),
+        requiresAdditionalVerification,
+        geoLocation: {
+          country: req.headers['cf-ipcountry'] || req.headers['x-country'],
+          region: req.headers['cf-region'] || req.headers['x-region']
+        }
+      }
     };
     await orderRef.set(order);
-    console.log('[create-checkout-session-guest] Ordem criada', { orderId: orderRef.id, order });
+    console.log('[create-checkout-session-guest] Ordem criada com segurança', {
+      orderId: orderRef.id,
+      riskScore: riskAssessment.score
+    });
 
     // Cria Checkout Session com Connect se provider tiver connectedAccountId
     let lineItems;
@@ -195,3 +263,6 @@ export default async (req, res) => {
     return res.status(500).json({ error: err.message || 'Internal error' });
   }
 };
+
+// Export with security middleware
+export default securityMiddleware(createCheckoutSessionGuestHandler);

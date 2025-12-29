@@ -1,19 +1,35 @@
 import Stripe from 'stripe';
 import initFirestore from '../_lib/firebaseAdmin.js';
+import { securityMiddleware } from '../_lib/securityMiddleware.js';
+import { fraudDetection } from '../_lib/fraudDetection.js';
 
-export default async (req, res) => {
-  console.log('[create-checkout-session] Entrada', { method: req.method, url: req.url, body: req.body });
+async function createCheckoutSessionHandler(req, res) {
+  console.log('[create-checkout-session] Entrada segura', {
+    method: req.method,
+    sanitizedBody: req.sanitizedBody,
+    ip: req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip
+  });
+
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
   const db = initFirestore();
-  console.log('[debug] create-checkout-session invoked', { method: req.method, headers: Object.keys(req.headers || {}), body: req.body });
+
   try {
     // Allow GET for healthcheck/debug
     if (req.method === 'GET') {
-      return res.status(200).json({ ok: true, route: '/api/create-checkout-session', method: 'GET', msg: 'Function is deployed' });
+      return res.status(200).json({
+        ok: true,
+        route: '/api/create-checkout-session',
+        method: 'GET',
+        msg: 'Function is deployed',
+        security: 'enabled'
+      });
     }
-    if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
-    const { serviceId, agencyId, quantity = 1 } = req.body;
+    if (req.method !== 'POST') {
+      return res.status(405).send('Method Not Allowed');
+    }
+
+    const { serviceId, agencyId, quantity = 1 } = req.sanitizedBody;
     if (!serviceId) {
       console.warn('[create-checkout-session] serviceId não informado');
       return res.status(400).json({ error: 'serviceId required' });
@@ -49,6 +65,48 @@ export default async (req, res) => {
     const commissionAmount = Math.round(totalAmount * (commissionPercent / 100));
     console.log('[create-checkout-session] Valores calculados', { unitAmount, totalAmount, commissionAmount });
 
+    // 🔒 AVALIAÇÃO DE RISCO DE FRAUDE
+    const paymentData = {
+      amount: totalAmount,
+      ip: req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.ip,
+      userAgent: req.headers['user-agent'],
+      timestamp: new Date().toISOString()
+    };
+
+    const riskAssessment = await fraudDetection.calculateRiskScore(paymentData, {
+      country: req.headers['cf-ipcountry'] || req.headers['x-country'],
+      formCompletionTime: req.sanitizedBody?.formCompletionTime
+    });
+
+    console.log('[create-checkout-session] Avaliação de risco', {
+      score: riskAssessment.score,
+      level: riskAssessment.level,
+      action: riskAssessment.recommendedAction,
+      factors: riskAssessment.factors
+    });
+
+    // Log security event
+    await fraudDetection.logSecurityEvent('PAYMENT_ATTEMPT', {
+      serviceId,
+      providerId,
+      amount: totalAmount,
+      riskScore: riskAssessment.score,
+      riskLevel: riskAssessment.level,
+      ip: paymentData.ip
+    }, riskAssessment);
+
+    // 🚫 BLOQUEAR PAGAMENTOS DE ALTO RISCO
+    if (riskAssessment.recommendedAction === 'block') {
+      console.warn('[create-checkout-session] Pagamento bloqueado por alto risco', riskAssessment);
+      return res.status(403).json({
+        error: 'Payment blocked due to security concerns',
+        code: 'PAYMENT_BLOCKED'
+      });
+    }
+
+    // ⚠️ ADICIONAR VERIFICAÇÃO EXTRA PARA RISCO MÉDIO
+    const requiresAdditionalVerification = riskAssessment.recommendedAction === 'require_3ds';
+
     // Cria order no Firestore
     const orderRef = db.collection('orders').doc();
     const order = {
@@ -61,6 +119,22 @@ export default async (req, res) => {
       providerAmount: totalAmount - commissionAmount,
       status: 'pending',
       createdAt: new Date().toISOString(),
+      // 🔒 Dados de segurança
+      security: {
+        riskScore: riskAssessment.score,
+        riskLevel: riskAssessment.level,
+        riskFactors: riskAssessment.factors,
+        ip: paymentData.ip,
+        userAgent: req.headers['user-agent']?.substring(0, 200),
+        fingerprint: require('crypto').createHash('sha256')
+          .update(`${paymentData.ip}|${req.headers['user-agent'] || ''}`)
+          .digest('hex'),
+        requiresAdditionalVerification,
+        geoLocation: {
+          country: req.headers['cf-ipcountry'] || req.headers['x-country'],
+          region: req.headers['cf-region'] || req.headers['x-region']
+        }
+      }
     };
     await orderRef.set(order);
     console.log('[create-checkout-session] Ordem criada', { orderId: orderRef.id, order });
@@ -107,3 +181,6 @@ export default async (req, res) => {
     return res.status(500).json({ error: err.message || 'Internal error' });
   }
 };
+
+// Export with security middleware
+export default securityMiddleware(createCheckoutSessionHandler);

@@ -1,0 +1,242 @@
+// Automated Security Alert System
+// Sends real-time alerts for critical security events
+
+import initFirestore from './firebaseAdmin.js';
+
+class SecurityAlertSystem {
+  constructor() {
+    this.db = null;
+    this.alertCooldowns = new Map(); // Prevent alert spam
+    this.cooldownPeriod = 5 * 60 * 1000; // 5 minutes
+  }
+
+  async init() {
+    if (!this.db) {
+      this.db = initFirestore();
+    }
+  }
+
+  // Check if alert should be sent (prevent spam)
+  shouldSendAlert(alertType, identifier) {
+    const key = `${alertType}:${identifier}`;
+    const lastSent = this.alertCooldowns.get(key);
+
+    if (!lastSent || Date.now() - lastSent > this.cooldownPeriod) {
+      this.alertCooldowns.set(key, Date.now());
+      return true;
+    }
+
+    return false;
+  }
+
+  // Send critical security alert
+  async sendCriticalAlert(eventType, details, riskAssessment = null) {
+    await this.init();
+
+    if (!this.shouldSendAlert('critical', eventType)) {
+      return; // Cooldown active
+    }
+
+    const alert = {
+      type: 'CRITICAL_SECURITY_ALERT',
+      eventType,
+      details,
+      riskAssessment,
+      timestamp: new Date().toISOString(),
+      severity: 'critical',
+      sent: false
+    };
+
+    // Store alert in database
+    await this.db.collection('security_alerts').add(alert);
+
+    // In a production environment, you would integrate with:
+    // - Email service (SendGrid, AWS SES)
+    // - SMS service (Twilio, AWS SNS)
+    // - Slack/Discord webhooks
+    // - PagerDuty/OpsGenie
+
+    console.error('🚨 CRITICAL SECURITY ALERT:', {
+      eventType,
+      details,
+      riskScore: riskAssessment?.score,
+      riskLevel: riskAssessment?.level,
+      timestamp: alert.timestamp
+    });
+
+    // Simulate alert sending (replace with actual service calls)
+    await this.sendEmailAlert(alert);
+    await this.sendSMSAlert(alert);
+    await this.sendSlackAlert(alert);
+
+    // Mark as sent
+    alert.sent = true;
+    alert.sentAt = new Date().toISOString();
+  }
+
+  // Send high-priority alert
+  async sendHighPriorityAlert(eventType, details, riskAssessment = null) {
+    await this.init();
+
+    if (!this.shouldSendAlert('high', eventType)) {
+      return;
+    }
+
+    const alert = {
+      type: 'HIGH_PRIORITY_SECURITY_ALERT',
+      eventType,
+      details,
+      riskAssessment,
+      timestamp: new Date().toISOString(),
+      severity: 'high',
+      sent: false
+    };
+
+    await this.db.collection('security_alerts').add(alert);
+
+    console.warn('⚠️ HIGH PRIORITY SECURITY ALERT:', {
+      eventType,
+      details,
+      riskScore: riskAssessment?.score,
+      riskLevel: riskAssessment?.level,
+      timestamp: alert.timestamp
+    });
+
+    // Send to secondary channels (email only, no SMS for high priority)
+    await this.sendEmailAlert(alert);
+    await this.sendSlackAlert(alert);
+
+    alert.sent = true;
+    alert.sentAt = new Date().toISOString();
+  }
+
+  // Send email alert
+  async sendEmailAlert(alert) {
+    // Placeholder for email service integration
+    const emailData = {
+      to: process.env.SECURITY_ALERT_EMAIL || 'security@turplace.com.br',
+      subject: `[${alert.severity.toUpperCase()}] Security Alert: ${alert.eventType}`,
+      body: this.formatAlertEmail(alert),
+      priority: alert.severity === 'critical' ? 'high' : 'normal'
+    };
+
+    console.log('📧 Email alert prepared:', emailData);
+
+    // In production:
+    // const emailService = new SendGridService();
+    // await emailService.send(emailData);
+  }
+
+  // Send SMS alert
+  async sendSMSAlert(alert) {
+    if (alert.severity !== 'critical') return;
+
+    // Placeholder for SMS service integration
+    const smsData = {
+      to: process.env.SECURITY_ALERT_PHONE || '+5511999999999',
+      message: this.formatAlertSMS(alert)
+    };
+
+    console.log('📱 SMS alert prepared:', smsData);
+
+    // In production:
+    // const smsService = new TwilioService();
+    // await smsService.send(smsData);
+  }
+
+  // Send Slack alert
+  async sendSlackAlert(alert) {
+    // Placeholder for Slack integration
+    const slackData = {
+      webhook: process.env.SECURITY_SLACK_WEBHOOK,
+      message: this.formatAlertSlack(alert),
+      channel: '#security-alerts'
+    };
+
+    console.log('💬 Slack alert prepared:', slackData);
+
+    // In production:
+    // const slackService = new SlackService();
+    // await slackService.send(slackData);
+  }
+
+  // Format email content
+  formatAlertEmail(alert) {
+    return `
+🚨 Security Alert - ${alert.severity.toUpperCase()}
+
+Event Type: ${alert.eventType}
+Timestamp: ${alert.timestamp}
+
+Details:
+${JSON.stringify(alert.details, null, 2)}
+
+${alert.riskAssessment ? `
+Risk Assessment:
+- Score: ${alert.riskAssessment.score}
+- Level: ${alert.riskAssessment.level}
+- Factors: ${alert.riskAssessment.factors.join(', ')}
+- Recommended Action: ${alert.riskAssessment.recommendedAction}
+` : ''}
+
+This alert was automatically generated by the Turplace Security System.
+Please investigate immediately.
+    `.trim();
+  }
+
+  // Format SMS content (keep it short)
+  formatAlertSMS(alert) {
+    const riskInfo = alert.riskAssessment ?
+      `Risk: ${alert.riskAssessment.level} (${alert.riskAssessment.score})` : '';
+
+    return `🚨 CRITICAL: ${alert.eventType} at ${new Date(alert.timestamp).toLocaleTimeString()}. ${riskInfo}. Check dashboard immediately.`;
+  }
+
+  // Format Slack message
+  formatAlertSlack(alert) {
+    const color = alert.severity === 'critical' ? 'danger' : 'warning';
+    const emoji = alert.severity === 'critical' ? '🚨' : '⚠️';
+
+    return {
+      attachments: [{
+        color,
+        title: `${emoji} Security Alert - ${alert.severity.toUpperCase()}`,
+        fields: [
+          { title: 'Event Type', value: alert.eventType, short: true },
+          { title: 'Timestamp', value: alert.timestamp, short: true },
+          { title: 'Risk Score', value: alert.riskAssessment?.score?.toString() || 'N/A', short: true },
+          { title: 'Risk Level', value: alert.riskAssessment?.level || 'N/A', short: true }
+        ],
+        text: `Details: ${JSON.stringify(alert.details)}`,
+        footer: 'Turplace Security System',
+        ts: Math.floor(new Date(alert.timestamp).getTime() / 1000)
+      }]
+    };
+  }
+
+  // Process security event and determine if alert should be sent
+  async processSecurityEvent(eventType, details, riskAssessment = null) {
+    // Critical alerts
+    if (
+      eventType === 'PAYMENT_ATTEMPT' && riskAssessment?.recommendedAction === 'block' ||
+      eventType === 'FRAUD_ATTEMPT' ||
+      riskAssessment?.level === 'critical' ||
+      details?.severity === 'critical'
+    ) {
+      await this.sendCriticalAlert(eventType, details, riskAssessment);
+    }
+
+    // High priority alerts
+    else if (
+      eventType === 'BRUTE_FORCE' ||
+      eventType === 'SQL_INJECTION' ||
+      riskAssessment?.level === 'high' ||
+      details?.blockedPayments > 10
+    ) {
+      await this.sendHighPriorityAlert(eventType, details, riskAssessment);
+    }
+  }
+}
+
+// Export singleton instance
+export const securityAlerts = new SecurityAlertSystem();
