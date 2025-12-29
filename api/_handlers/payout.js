@@ -34,12 +34,19 @@ async function getUserAvailableBalance(db, userId) {
       const provider = providerDoc.data();
       const planId = provider?.planId || 'free';
 
-      const commissions = {
-        free: 12,
-        professional: 8,
-        premium: 3.99
-      };
-      const commissionPercent = commissions[planId] || 15;
+      let commissionPercent;
+      if (order.paymentMethod === 'pix') {
+        // PIX sempre 1,99% (já inclui todas as taxas)
+        commissionPercent = 1.99;
+      } else {
+        // Cartão: baseado no plano (já inclui taxas do Stripe)
+        const commissions = {
+          free: 9,
+          professional: 7,
+          premium: 6
+        };
+        commissionPercent = commissions[planId] || 9;
+      }
       const commission = (amount * commissionPercent) / 100;
 
       totalEarnings += amount;

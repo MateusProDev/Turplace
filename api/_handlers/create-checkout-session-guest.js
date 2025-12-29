@@ -62,7 +62,7 @@ export default async (req, res) => {
     const planId = provider.planId || 'free';
     const planSnap = await db.collection('plans').doc(planId).get();
     const plan = planSnap.exists ? planSnap.data() : null;
-    const commissionPercent = plan ? plan.commissionPercent : 15;
+    const commissionPercent = plan ? plan.commissionPercent : 9; // Free plan default
     console.log('[create-checkout-session-guest] Plano e comissão', { planId, commissionPercent });
 
     // Calcula valores baseado no tipo de cobrança

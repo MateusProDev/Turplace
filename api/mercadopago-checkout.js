@@ -137,13 +137,31 @@ export default async function handler(req, res) {
         customerPhone
       });
 
+      // Buscar plano do provider para calcular comissão
+      let commissionPercent = 9; // Default para free
+      if (packageData?.providerId) {
+        try {
+          const providerDoc = await db.collection('users').doc(packageData.providerId).get();
+          const provider = providerDoc.data();
+          const planId = provider?.planId || 'free';
+          const commissions = {
+            free: 9,
+            professional: 7,
+            premium: 6
+          };
+          commissionPercent = commissions[planId] || 9;
+        } catch (error) {
+          console.warn('[MercadoPago Checkout] Erro ao buscar plano do provider:', error);
+        }
+      }
+
       const order = {
         serviceId: packageData?.serviceId || null,
         providerId: packageData?.providerId || null,
         totalAmount: valor,
-        commissionPercent: 0.05, // 5% de comissão
-        commissionAmount: valor * 0.05,
-        providerAmount: valor * 0.95,
+        commissionPercent: commissionPercent,
+        commissionAmount: valor * (commissionPercent / 100),
+        providerAmount: valor * (1 - commissionPercent / 100),
         status: 'pending',
         paymentMethod: 'pix',
         createdAt: new Date().toISOString(),
@@ -234,13 +252,31 @@ export default async function handler(req, res) {
         customerPhone
       });
 
+      // Buscar plano do provider para calcular comissão
+      let commissionPercent = 9; // Default para free
+      if (packageData?.providerId) {
+        try {
+          const providerDoc = await db.collection('users').doc(packageData.providerId).get();
+          const provider = providerDoc.data();
+          const planId = provider?.planId || 'free';
+          const commissions = {
+            free: 9,
+            professional: 7,
+            premium: 6
+          };
+          commissionPercent = commissions[planId] || 9;
+        } catch (error) {
+          console.warn('[MercadoPago Checkout] Erro ao buscar plano do provider:', error);
+        }
+      }
+
       const order = {
         serviceId: packageData?.serviceId || null,
         providerId: packageData?.providerId || null,
         totalAmount: valor,
-        commissionPercent: 0.05, // 5% de comissão
-        commissionAmount: valor * 0.05,
-        providerAmount: valor * 0.95,
+        commissionPercent: commissionPercent,
+        commissionAmount: valor * (commissionPercent / 100),
+        providerAmount: valor * (1 - commissionPercent / 100),
         status: 'pending',
         paymentMethod: 'card',
         createdAt: new Date().toISOString(),

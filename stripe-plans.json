@@ -4,39 +4,53 @@
     "stripeProductId": "prod_TcD5BlvVW7yXDQ",
     "stripePriceId": "price_1SeyezKlR2RHdJ4pFFVMA5fb",
     "name": "Free",
-    "commissionPercent": 12,
+    "commissionPercent": 9,
     "features": [
-      "Sem destaque",
-      "Sem analytics"
+      "Taxa de 9% por transação",
+      "Acesso completo à plataforma",
+      "Até 10 serviços cadastrados",
+      "Lead page personalizada",
+      "Suporte básico"
     ],
     "price_cents": 0,
-    "createdAt": "2025-12-21T11:49:47.597Z"
+    "createdAt": "2025-12-29T18:20:14.368Z"
   },
   {
     "planId": "professional",
     "stripeProductId": "prod_TcD5tDMGDeijyC",
     "stripePriceId": "price_1SfknSKlR2RHdJ4pIHlUPAzv",
     "name": "Pro",
-    "commissionPercent": 8,
+    "commissionPercent": 7,
     "features": [
+      "Taxa reduzida de 7% por transação",
       "Destaque no catálogo",
-      "Perfil verificado"
+      "Perfil verificado",
+      "Até 20 serviços cadastrados",
+      "3 modelos de lead page",
+      "Domínio personalizado",
+      "Suporte prioritário"
     ],
     "price_cents": 999,
-    "createdAt": "2025-12-21T11:49:47.977Z"
+    "createdAt": "2025-12-29T18:20:18.924Z"
   },
   {
     "planId": "premium",
     "stripeProductId": "prod_TcD5orvNfZFAmn",
     "stripePriceId": "price_1SfknTKlR2RHdJ4pxcTgIRql",
     "name": "Premium",
-    "commissionPercent": 3.99,
+    "commissionPercent": 6,
     "features": [
+      "Taxa mínima de 6% por transação",
       "Topo da categoria",
       "Leads prioritários",
-      "Analytics avançado"
+      "Até 100 serviços cadastrados",
+      "5 modelos de lead page",
+      "Domínio personalizado",
+      "Analytics avançado",
+      "Suporte VIP 24/7",
+      "Relatórios personalizados"
     ],
     "price_cents": 1999,
-    "createdAt": "2025-12-21T11:49:48.538Z"
+    "createdAt": "2025-12-29T18:20:21.905Z"
   }
 ]

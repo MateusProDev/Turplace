@@ -10,12 +10,12 @@ const PLANS = [
     name: 'Free',
     priceText: 'Gratuito',
     priceId: 'price_1SeyezKlR2RHdJ4pFFVMA5fb',
-    commission: '12%',
+    commission: '9%',
     icon: Shield,
     color: 'gray',
     description: 'Perfeito para começar',
     features: [
-      'Taxa de 12% por transação',
+      'Taxa de 9% por transação',
       'Acesso completo à plataforma',
       'Até 10 serviços cadastrados',
       'Lead page personalizada',
@@ -27,12 +27,12 @@ const PLANS = [
     name: 'Pro',
     priceText: 'R$9,99 / mês',
     priceId: 'price_1Seyf0KlR2RHdJ4ptJNmAuKi',
-    commission: '8%',
+    commission: '7%',
     icon: Star,
     color: 'blue',
     description: 'Para profissionais estabelecidos',
     features: [
-      'Taxa reduzida de 8% por transação',
+      'Taxa reduzida de 7% por transação',
       'Destaque no catálogo',
       'Perfil verificado',
       'Até 20 serviços cadastrados',
@@ -46,12 +46,12 @@ const PLANS = [
     name: 'Premium',
     priceText: 'R$19,99 / mês',
     priceId: 'price_1Seyf1KlR2RHdJ4psFoH3WrA',
-    commission: '3,99%',
+    commission: '6%',
     icon: Crown,
     color: 'purple',
     description: 'Máximo desempenho',
     features: [
-      'Taxa mínima de 3,99% por transação',
+      'Taxa mínima de 6% por transação',
       'Topo da categoria',
       'Leads prioritários',
       'Até 100 serviços cadastrados',
@@ -146,33 +146,47 @@ export default function Pricing() {
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">Comparação de Taxas</h2>
             <div className="grid md:grid-cols-3 gap-6">
               <div className="text-center p-4 bg-gray-50 rounded-lg">
-                <div className="text-3xl font-bold text-gray-600 mb-2">12%</div>
+                <div className="text-3xl font-bold text-gray-600 mb-2">9%</div>
                 <div className="text-sm text-gray-600">Plano Free</div>
               </div>
               <div className="text-center p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
-                <div className="text-3xl font-bold text-blue-600 mb-2">8%</div>
+                <div className="text-3xl font-bold text-blue-600 mb-2">7%</div>
                 <div className="text-sm text-blue-600">Plano Pro</div>
-                <div className="text-xs text-blue-500 mt-1">Economia de 4%</div>
+                <div className="text-xs text-blue-500 mt-1">Economia de 2%</div>
               </div>
               <div className="text-center p-4 bg-purple-50 rounded-lg border-2 border-purple-200">
-                <div className="text-3xl font-bold text-purple-600 mb-2">3,99%</div>
+                <div className="text-3xl font-bold text-purple-600 mb-2">6%</div>
                 <div className="text-sm text-purple-600">Plano Premium</div>
-                <div className="text-xs text-purple-500 mt-1">Economia de 8,01%</div>
+                <div className="text-xs text-purple-500 mt-1">Economia de 3%</div>
               </div>
             </div>
             <p className="text-sm text-gray-500 mt-4">
-              * Taxas calculadas sobre o valor de cada transação realizada na plataforma<br/>
+              * Taxas totais incluindo todas as taxas dos processadores de pagamento<br/>
               <strong>Sem taxa fixa por venda. Sem surpresa. Sem letra miúda.</strong>
             </p>
             <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
-              <h3 className="text-lg font-semibold text-green-800 mb-2">Comparação com o Mercado</h3>
+              <h3 className="text-lg font-semibold text-green-800 mb-2">💳 Pagamento por Cartão</h3>
               <p className="text-sm text-green-700">
-                Hotmart/Eduzz: ~11% a 14%<br/>
-                Turplace Pro: ~12,4%<br/>
-                Turplace Premium: ~8,3% ✅
+                <strong>Taxas totais incluindo processadores:</strong><br/>
+                Turplace Free: 9% (já inclui Stripe ~2,9% + R$0,30)<br/>
+                Turplace Pro: 7% (já inclui Stripe ~2,9% + R$0,30)<br/>
+                Turplace Premium: 6% (já inclui Stripe ~2,9% + R$0,30)<br/>
+                <em>Hotmart/Eduzz: ~11% a 14%</em>
               </p>
               <p className="text-xs text-green-600 mt-2">
-                Para venda de R$100 no cartão, incluindo taxa do Stripe (~2,9% + R$0,30).
+                Para venda de R$100, você fica com mais dinheiro no bolso! 💰
+              </p>
+            </div>
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <h3 className="text-lg font-semibold text-blue-800 mb-2">💰 Pagamento por PIX</h3>
+              <p className="text-sm text-blue-700">
+                <strong>Turplace: 1,99% TOTAL - A MENOR TAXA DO BRASIL! 🇧🇷</strong><br/>
+                (já inclui taxa do processador AbacatePay)<br/>
+                <em>Hotmart/Eduzz: ~4% a 6%</em><br/>
+                <em>Outros marketplaces: ~3% a 5%</em>
+              </p>
+              <p className="text-xs text-blue-600 mt-2">
+                Taxa total por transação PIX, incluindo todas as taxas processadoras.
               </p>
             </div>
           </div>

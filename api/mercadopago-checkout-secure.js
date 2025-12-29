@@ -95,13 +95,16 @@ async function handler(req, res) {
 
       // Criação segura do pedido
       const orderRef = db.collection('orders').doc();
+      // Buscar plano do provider para calcular comissão
+      let commissionPercent = 1.99; // PIX sempre 1,99% (já inclui todas as taxas)
+
       const order = {
         serviceId: packageData?.serviceId || null,
         providerId: packageData?.providerId || null,
         totalAmount: valor,
-        commissionPercent: 0.05,
-        commissionAmount: valor * 0.05,
-        providerAmount: valor * 0.95,
+        commissionPercent: commissionPercent,
+        commissionAmount: valor * (commissionPercent / 100),
+        providerAmount: valor * (1 - commissionPercent / 100),
         status: 'pending',
         paymentMethod: 'pix',
         createdAt: new Date().toISOString(),
