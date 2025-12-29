@@ -16,7 +16,7 @@ interface Order {
   id: string;
   amount: number;
   status: string;
-  createdAt: string;
+  createdAt: any; // Firestore Timestamp or string
   serviceId: string;
   userId: string;
 }
@@ -25,7 +25,7 @@ interface Payout {
   id: string;
   amount: number;
   status: string;
-  createdAt: string;
+  createdAt: any; // Firestore Timestamp or string
   userId: string;
   chavePix: string;
 }
@@ -35,7 +35,7 @@ interface User {
   name: string;
   email: string;
   plan: string;
-  createdAt: string;
+  createdAt: any; // Firestore Timestamp or string
 }
 
 interface Service {
@@ -71,6 +71,30 @@ interface SecurityStats {
 }
 
 export default function AdminDashboard() {
+  // Helper function to format dates safely
+  const formatDate = (date: any): string => {
+    if (!date) return 'N/A';
+    try {
+      if (date.toDate) {
+        // Firestore Timestamp
+        return date.toDate().toLocaleDateString('pt-BR');
+      } else if (typeof date === 'string') {
+        return new Date(date).toLocaleDateString('pt-BR');
+      } else if (date instanceof Date) {
+        return date.toLocaleDateString('pt-BR');
+      }
+      return 'N/A';
+    } catch (error) {
+      console.error('Error formatting date:', error, date);
+      return 'N/A';
+    }
+  };
+
+  // Helper function to format currency safely
+  const formatCurrency = (value: any): string => {
+    const num = Number(value) || 0;
+    return `R$ ${num.toFixed(2).replace('.', ',')}`;
+  };
   const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'payouts' | 'users' | 'services' | 'security'>('overview');
   const [stats, setStats] = useState<Stats>({
     totalUsers: 0,
@@ -134,17 +158,17 @@ export default function AdminDashboard() {
       const totalUsers = usersData.length;
       const totalProviders = usersData.filter(u => u.plan && u.plan !== 'free').length;
       const totalOrders = ordersData.length;
-      const totalSales = ordersData.reduce((sum, o) => sum + (o.amount || 0), 0);
+      const totalSales = ordersData.reduce((sum, o) => sum + (Number(o.amount) || 0), 0);
       const pendingPayouts = payoutsData.filter(p => p.status === 'pending').length;
-      const totalPayouts = payoutsData.reduce((sum, p) => sum + (p.amount || 0), 0);
+      const totalPayouts = payoutsData.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
 
       setStats({
-        totalUsers,
-        totalProviders,
-        totalOrders,
-        totalSales,
-        pendingPayouts,
-        totalPayouts,
+        totalUsers: Number(totalUsers) || 0,
+        totalProviders: Number(totalProviders) || 0,
+        totalOrders: Number(totalOrders) || 0,
+        totalSales: Number(totalSales) || 0,
+        pendingPayouts: Number(pendingPayouts) || 0,
+        totalPayouts: Number(totalPayouts) || 0,
       });
 
       // Calculate security stats
@@ -269,7 +293,7 @@ export default function AdminDashboard() {
               <div className="bg-white p-6 rounded-lg shadow">
                 <DollarSign className="text-yellow-600 mb-2" size={24} />
                 <h3 className="text-lg font-semibold">Vendas Totais</h3>
-                <p className="text-2xl font-bold">R$ {stats.totalSales.toFixed(2)}</p>
+                <p className="text-2xl font-bold">{formatCurrency(stats.totalSales)}</p>
               </div>
               <div className="bg-white p-6 rounded-lg shadow">
                 <CreditCard className="text-red-600 mb-2" size={24} />
@@ -279,7 +303,7 @@ export default function AdminDashboard() {
               <div className="bg-white p-6 rounded-lg shadow">
                 <TrendingUp className="text-indigo-600 mb-2" size={24} />
                 <h3 className="text-lg font-semibold">Total Saques</h3>
-                <p className="text-2xl font-bold">R$ {stats.totalPayouts.toFixed(2)}</p>
+                <p className="text-2xl font-bold">{formatCurrency(stats.totalPayouts)}</p>
               </div>
             </div>
 
@@ -291,7 +315,7 @@ export default function AdminDashboard() {
                   {orders.slice(0, 5).map(order => (
                     <div key={order.id} className="flex justify-between">
                       <span>{order.id.slice(0, 8)}...</span>
-                      <span>R$ {order.amount.toFixed(2)}</span>
+                      <span>{formatCurrency(order.amount)}</span>
                       <span className={`px-2 py-1 rounded text-xs ${order.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
                         {order.status}
                       </span>
@@ -304,8 +328,8 @@ export default function AdminDashboard() {
                 <div className="space-y-2">
                   {payouts.slice(0, 5).map(payout => (
                     <div key={payout.id} className="flex justify-between">
-                      <span>{payout.userId.slice(0, 8)}...</span>
-                      <span>R$ {payout.amount.toFixed(2)}</span>
+                      <span>{(payout.userId || '').slice(0, 8)}...</span>
+                      <span>{formatCurrency(payout.amount)}</span>
                       <span className={`px-2 py-1 rounded text-xs ${payout.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
                         {payout.status}
                       </span>
@@ -335,15 +359,15 @@ export default function AdminDashboard() {
                 {orders.map(order => (
                   <tr key={order.id} className="border-t">
                     <td className="p-2">{order.id.slice(0, 8)}...</td>
-                    <td className="p-2">{order.userId.slice(0, 8)}...</td>
-                    <td className="p-2">{order.serviceId.slice(0, 8)}...</td>
-                    <td className="p-2">R$ {order.amount.toFixed(2)}</td>
+                    <td className="p-2">{(order.userId || '').slice(0, 8)}...</td>
+                    <td className="p-2">{(order.serviceId || '').slice(0, 8)}...</td>
+                    <td className="p-2">{formatCurrency(order.amount)}</td>
                     <td className="p-2">
                       <span className={`px-2 py-1 rounded text-xs ${order.status === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
                         {order.status}
                       </span>
                     </td>
-                    <td className="p-2">{new Date(order.createdAt).toLocaleDateString()}</td>
+                    <td className="p-2">{formatDate(order.createdAt)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -369,15 +393,15 @@ export default function AdminDashboard() {
                 {payouts.map(payout => (
                   <tr key={payout.id} className="border-t">
                     <td className="p-2">{payout.id.slice(0, 8)}...</td>
-                    <td className="p-2">{payout.userId.slice(0, 8)}...</td>
-                    <td className="p-2">{payout.chavePix}</td>
-                    <td className="p-2">R$ {payout.amount.toFixed(2)}</td>
+                    <td className="p-2">{(payout.userId || '').slice(0, 8)}...</td>
+                    <td className="p-2">{payout.chavePix || 'N/A'}</td>
+                    <td className="p-2">{formatCurrency(payout.amount)}</td>
                     <td className="p-2">
                       <span className={`px-2 py-1 rounded text-xs ${payout.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
                         {payout.status}
                       </span>
                     </td>
-                    <td className="p-2">{new Date(payout.createdAt).toLocaleDateString()}</td>
+                    <td className="p-2">{formatDate(payout.createdAt)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -405,7 +429,7 @@ export default function AdminDashboard() {
                     <td className="p-2">{user.name || 'N/A'}</td>
                     <td className="p-2">{user.email}</td>
                     <td className="p-2">{user.plan || 'free'}</td>
-                    <td className="p-2">{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</td>
+                    <td className="p-2">{formatDate(user.createdAt)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -587,7 +611,7 @@ export default function AdminDashboard() {
                             {attack.level.toUpperCase()}
                           </span>
                           <span className="text-xs text-gray-500">
-                            {attack.timestamp?.toDate?.() ? attack.timestamp.toDate().toLocaleString() : 'N/A'}
+                            {formatDate(attack.timestamp)}
                           </span>
                         </div>
                         <p className="text-sm font-medium mb-1">{attack.message}</p>
@@ -626,7 +650,7 @@ export default function AdminDashboard() {
                     {securityLogs.slice(0, 50).map(log => (
                       <tr key={log.id} className="border-t">
                         <td className="p-2 text-sm">
-                          {log.timestamp?.toDate?.() ? log.timestamp.toDate().toLocaleString() : 'N/A'}
+                          {formatDate(log.timestamp)}
                         </td>
                         <td className="p-2">
                           <span className={`px-2 py-1 rounded text-xs font-semibold ${
