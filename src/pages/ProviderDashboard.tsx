@@ -130,7 +130,7 @@ export default function ProviderDashboard() {
   const shareContentService = new ShareContentService();
 
   // Configurações de tabs modernas
-  const tabs: Tab[] = useMemo(() => [
+  const tabs: Tab[] = useMemo(() => [ 
     { 
       id: 'services', 
       label: 'Serviços', 
