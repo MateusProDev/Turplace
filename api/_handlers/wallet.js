@@ -28,6 +28,8 @@ async function walletHandler(req, res) {
     //   return res.status(403).json({ error: 'Unauthorized' });
     // }
 
+    console.log('[wallet] Iniciando busca de serviços...');
+
     // Buscar orders onde o usuário é provider (via serviceId) - OTIMIZADO
     // Primeiro buscar todos os serviços do usuário
     const servicesSnapshot = await db.collection('services')
@@ -35,9 +37,10 @@ async function walletHandler(req, res) {
       .get();
 
     const serviceIds = servicesSnapshot.docs.map(doc => doc.id);
-    console.log('[wallet] Serviços encontrados para o usuário:', serviceIds.length);
+    console.log('[wallet] Serviços encontrados para o usuário:', serviceIds.length, 'IDs:', serviceIds);
 
     if (serviceIds.length === 0) {
+      console.log('[wallet] Usuário não tem serviços, retornando dados vazios');
       // Usuário não tem serviços, retornar dados vazios
       return res.json({
         totalSales: 0,
@@ -52,27 +55,61 @@ async function walletHandler(req, res) {
       });
     }
 
-    // Buscar orders pagas para estes serviços
-    const ordersSnapshot = await db.collection('orders')
-      .where('serviceId', 'in', serviceIds.slice(0, 10)) // Firestore limita a 10 valores no 'in'
-      .where('status', '==', 'paid')
-      .orderBy('createdAt', 'desc')
-      .limit(100) // Limitar para performance
-      .get();
+    console.log('[wallet] Buscando orders pagas...');
 
-    console.log('[wallet] Orders pagas encontradas:', ordersSnapshot.size);
+    // Buscar orders pagas para estes serviços - VERSÃO ULTRA SIMPLES PARA EVITAR PROBLEMAS DE ÍNDICE
+    let allPaidOrders = [];
+    for (const serviceId of serviceIds.slice(0, 5)) { // Limitar a 5 serviços para performance
+      try {
+        // Buscar orders por serviceId primeiro (query simples)
+        const serviceOrdersSnapshot = await db.collection('orders')
+          .where('serviceId', '==', serviceId)
+          .limit(50) // Limitar por serviço
+          .get();
+
+        console.log(`[wallet] Orders encontradas para serviço ${serviceId}:`, serviceOrdersSnapshot.size);
+
+        // Filtrar apenas as pagas no código
+        const paidOrders = serviceOrdersSnapshot.docs.filter(doc => {
+          const data = doc.data();
+          return data.status === 'paid';
+        });
+
+        console.log(`[wallet] Orders pagas para serviço ${serviceId}:`, paidOrders.length);
+        allPaidOrders = allPaidOrders.concat(paidOrders);
+      } catch (err) {
+        console.error(`[wallet] Erro ao buscar orders para serviço ${serviceId}:`, err.message);
+        // Continue com outros serviços
+      }
+    }
+
+    console.log('[wallet] Total orders pagas encontradas:', allPaidOrders.length);
+
+    // Ordenar por data (mais recente primeiro) e limitar
+    allPaidOrders.sort((a, b) => {
+      const dateA = a.data().createdAt?.toDate?.() || new Date(0);
+      const dateB = b.data().createdAt?.toDate?.() || new Date(0);
+      return dateB.getTime() - dateA.getTime();
+    });
+    allPaidOrders = allPaidOrders.slice(0, 100); // Limitar a 100 orders pagas
 
     let totalSales = 0;
     let totalCommissions = 0;
     let totalReceived = 0;
     const sales = [];
 
+    console.log('[wallet] Buscando dados do provider...');
+
     // Buscar dados do provider uma vez só
     const providerDoc = await db.collection('users').doc(userId).get();
     const provider = providerDoc.data();
     const planId = provider?.planId || 'free';
 
-    for (const doc of ordersSnapshot.docs) {
+    console.log('[wallet] Provider data encontrado:', !!provider, 'planId:', planId);
+
+    console.log('[wallet] Processando orders pagas...');
+
+    for (const doc of allPaidOrders) {
       const order = doc.data();
       if (!order.serviceId) continue; // Skip subscription orders
 
@@ -109,19 +146,49 @@ async function walletHandler(req, res) {
       });
     }
 
-    // Buscar pagamentos pendentes (orders pending) - OTIMIZADO
-    const pendingSnapshot = await db.collection('orders')
-      .where('serviceId', 'in', serviceIds.slice(0, 10))
-      .where('status', '==', 'pending')
-      .orderBy('createdAt', 'desc')
-      .limit(50)
-      .get();
+    console.log('[wallet] Orders pagas processadas. Total sales:', totalSales);
 
-    console.log('[wallet] Orders pendentes encontradas:', pendingSnapshot.size);
+    // Buscar pagamentos pendentes (orders pending) - VERSÃO ULTRA SIMPLES PARA EVITAR PROBLEMAS DE ÍNDICE
+    console.log('[wallet] Buscando orders pendentes...');
+
+    let allPendingOrders = [];
+    for (const serviceId of serviceIds.slice(0, 5)) { // Limitar a 5 serviços para performance
+      try {
+        // Buscar orders por serviceId primeiro (query simples)
+        const serviceOrdersSnapshot = await db.collection('orders')
+          .where('serviceId', '==', serviceId)
+          .limit(30) // Limitar por serviço
+          .get();
+
+        console.log(`[wallet] Orders encontradas para serviço ${serviceId}:`, serviceOrdersSnapshot.size);
+
+        // Filtrar apenas as pendentes no código
+        const pendingOrders = serviceOrdersSnapshot.docs.filter(doc => {
+          const data = doc.data();
+          return data.status === 'pending';
+        });
+
+        console.log(`[wallet] Orders pendentes para serviço ${serviceId}:`, pendingOrders.length);
+        allPendingOrders = allPendingOrders.concat(pendingOrders);
+      } catch (err) {
+        console.error(`[wallet] Erro ao buscar orders pendentes para serviço ${serviceId}:`, err.message);
+        // Continue com outros serviços
+      }
+    }
+
+    console.log('[wallet] Total orders pendentes encontradas:', allPendingOrders.length);
+
+    // Ordenar por data (mais recente primeiro) e limitar
+    allPendingOrders.sort((a, b) => {
+      const dateA = a.data().createdAt?.toDate?.() || new Date(0);
+      const dateB = b.data().createdAt?.toDate?.() || new Date(0);
+      return dateB.getTime() - dateA.getTime();
+    });
+    allPendingOrders = allPendingOrders.slice(0, 50); // Limitar a 50 orders pendentes
 
     let pendingAmount = 0;
     const pendingSales = [];
-    for (const doc of pendingSnapshot.docs) {
+    for (const doc of allPendingOrders) {
       const order = doc.data();
       if (!order.serviceId) continue; // Skip subscription orders
 
@@ -136,7 +203,11 @@ async function walletHandler(req, res) {
       });
     }
 
+    console.log('[wallet] Orders pendentes processadas. Pending amount:', pendingAmount);
+
     // Buscar payouts pendentes - OTIMIZADO
+    console.log('[wallet] Buscando payouts...');
+
     const payoutsSnapshot = await db.collection('payouts')
       .where('userId', '==', userId)
       .where('status', '==', 'pending')
@@ -146,6 +217,8 @@ async function walletHandler(req, res) {
     payoutsSnapshot.forEach(doc => {
       withdrawnAmount += doc.data().amount || 0;
     });
+
+    console.log('[wallet] Payouts processados. Withdrawn amount:', withdrawnAmount);
 
     const availableBalance = totalReceived - withdrawnAmount;
 
@@ -178,6 +251,12 @@ async function walletHandler(req, res) {
     });
   } catch (err) {
     console.error('[wallet] Error:', err);
+    console.error('[wallet] Error stack:', err.stack);
+    console.error('[wallet] Error details:', {
+      message: err.message,
+      code: err.code,
+      details: err.details
+    });
     res.status(500).json({ error: 'Internal error' });
   }
 };
