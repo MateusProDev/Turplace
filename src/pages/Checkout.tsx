@@ -25,6 +25,7 @@ interface ServiceData {
   ownerName: string;
   images?: string[];
   description?: string;
+  type?: 'service' | 'course';
 }
 
 interface CustomerData {
@@ -70,44 +71,57 @@ export default function Checkout() {
 
   // @ts-ignore
   const serviceId = searchParams.get('serviceId');
+  // @ts-ignore
+  const courseId = searchParams.get('courseId');
 
   useEffect(() => {
-    console.log('[Checkout] Iniciando carregamento, serviceId:', serviceId);
+    console.log('[Checkout] Iniciando carregamento, serviceId:', serviceId, 'courseId:', courseId);
     console.log('[Checkout] searchParams:', searchParams.toString());
-    if (!serviceId) {
-      console.warn('[Checkout] serviceId não fornecido, redirecionando para home');
+    if (!serviceId && !courseId) {
+      console.warn('[Checkout] serviceId ou courseId não fornecido, redirecionando para home');
       navigate('/');
       return;
     }
 
-    const loadService = async () => {
-      console.log('[Checkout] Executando loadService para serviceId:', serviceId);
+    const loadItem = async () => {
+      console.log('[Checkout] Executando loadItem');
       try {
-        console.log('[Checkout] Carregando serviço do Firestore');
-        console.log('[Checkout] db object:', db);
-        const ref = doc(db, "services", serviceId);
-        console.log('[Checkout] Referência do documento:', ref.path);
-        const snap = await getDoc(ref);
-        console.log('[Checkout] Snapshot exists:', snap.exists());
-        if (snap.exists()) {
-          const serviceData = { id: snap.id, ...snap.data() } as ServiceData;
-          console.log('[Checkout] Serviço carregado:', serviceData);
-          setService(serviceData);
-        } else {
-          console.error('[Checkout] Serviço não encontrado no Firestore');
-          setError("Serviço não encontrado");
+        let ref;
+        let itemType: 'service' | 'course' = 'service';
+
+        if (serviceId) {
+          console.log('[Checkout] Carregando serviço do Firestore');
+          ref = doc(db, "services", serviceId);
+        } else if (courseId) {
+          console.log('[Checkout] Carregando curso do Firestore');
+          ref = doc(db, "courses", courseId);
+          itemType = 'course';
+        }
+
+        if (ref) {
+          console.log('[Checkout] Referência do documento:', ref.path);
+          const snap = await getDoc(ref);
+          console.log('[Checkout] Snapshot exists:', snap.exists());
+          if (snap.exists()) {
+            const itemData = { id: snap.id, ...snap.data(), type: itemType } as ServiceData;
+            console.log('[Checkout] Item carregado:', itemData);
+            setService(itemData);
+          } else {
+            console.error('[Checkout] Item não encontrado no Firestore');
+            setError(itemType === 'course' ? "Curso não encontrado" : "Serviço não encontrado");
+          }
         }
       } catch (err) {
-        console.error("[Checkout] Erro ao carregar serviço:", err);
+        console.error("[Checkout] Erro ao carregar item:", err);
         console.error("[Checkout] Stack trace:", err instanceof Error ? err.stack : 'No stack trace');
-        setError("Erro ao carregar serviço");
+        setError("Erro ao carregar item");
       } finally {
         console.log('[Checkout] Finalizando carregamento, setLoading(false)');
         setLoading(false);
       }
     };
 
-    loadService();
+    loadItem();
   }, []);
 
   useEffect(() => {
@@ -182,7 +196,7 @@ export default function Checkout() {
 
   const handlePayment = async () => {
     if (!service) {
-      console.error('[Checkout] Serviço não disponível para pagamento');
+      console.error('[Checkout] Item não disponível para pagamento');
       return;
     }
 
@@ -205,7 +219,7 @@ export default function Checkout() {
       // Para subscriptions, usar Stripe
       if (service.billingType === 'subscription') {
         if (!service.priceId) {
-          throw new Error('Serviço não configurado para assinatura');
+          throw new Error('Item não configurado para assinatura');
         }
 
         console.log('[Checkout] Criando sessão de assinatura Stripe');
@@ -234,7 +248,7 @@ export default function Checkout() {
       // Para pagamentos únicos, usar Mercado Pago
       const valor = service.price;
       if (!valor) {
-        throw new Error('Valor do serviço não definido');
+        throw new Error('Valor do item não definido');
       }
 
       // Converter valor para número
@@ -357,7 +371,7 @@ export default function Checkout() {
             <AlertCircle className="w-10 h-10 text-red-600" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-3">Ops, algo deu errado</h2>
-          <p className="text-gray-600 mb-8">{error || "Serviço não encontrado"}</p>
+          <p className="text-gray-600 mb-8">{error || (service?.type === 'course' ? "Curso não encontrado" : "Serviço não encontrado")}</p>
           <div className="space-y-4">
             <button
               onClick={() => navigate('/')}

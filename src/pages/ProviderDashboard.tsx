@@ -1414,7 +1414,10 @@ export default function ProviderDashboard() {
                           </div>
                           <div className="flex gap-2">
                             <button
-                              onClick={() => setEditingCourse(course)}
+                              onClick={() => {
+                                setEditingCourse(course);
+                                setCourseModal(true);
+                              }}
                               className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
                             >
                               Editar

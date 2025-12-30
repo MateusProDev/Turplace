@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../utils/firebase';
 import { generateSlug } from '../utils/slug';
+import ShareContentService from '../services/shareContentService';
 import {
   ArrowLeft,
   Clock,
@@ -12,7 +13,11 @@ import {
   BookOpen,
   CheckCircle,
   ShoppingCart,
-  Heart
+  Heart,
+  DollarSign,
+  Shield,
+  Lock,
+  Share2
 } from 'lucide-react';
 
 interface CourseSection {
@@ -28,7 +33,9 @@ interface Course {
   id: string;
   title: string;
   description: string;
-  price: number;
+  price?: string;
+  priceMonthly?: string;
+  billingType?: 'one-time' | 'subscription';
   image?: string;
   sections: CourseSection[];
   status: 'draft' | 'published';
@@ -44,6 +51,8 @@ export default function CourseDetail() {
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [contacting, setContacting] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -76,6 +85,73 @@ export default function CourseDetail() {
 
     fetchCourse();
   }, [slug]);
+
+  const handleContact = async () => {
+    if (!course) return;
+
+    setContacting(true);
+    try {
+      // Para cursos com preço, redirecionar para checkout
+      if (course.price || course.priceMonthly) {
+        window.location.href = `/checkout?courseId=${course.id}`;
+        return;
+      } else {
+        // Para cursos sem preço, mostrar mensagem
+        setSuccess("Este curso será gratuito em breve!");
+        setTimeout(() => setSuccess(null), 3000);
+      }
+    } catch (err) {
+      console.error("Erro ao processar:", err);
+      setError("Erro ao processar. Tente novamente.");
+    } finally {
+      setContacting(false);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!course) return;
+
+    try {
+      const shareContentService = new ShareContentService();
+      const shortLink = await shareContentService.createShortLink(
+        window.location.href,
+        course.title,
+        `curso-${generateSlug(course.title)}`
+      );
+
+      const shareData = {
+        title: course.title,
+        text: course.description?.substring(0, 100) + "...",
+        url: shortLink.short_url,
+      };
+
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shortLink.short_url || window.location.href);
+        setSuccess("Link copiado para a área de transferência!");
+        setTimeout(() => setSuccess(null), 3000);
+      }
+    } catch (err) {
+      console.error("Erro ao compartilhar:", err);
+      // Fallback
+      try {
+        if (navigator.share) {
+          await navigator.share({
+            title: course.title,
+            text: course.description?.substring(0, 100) + "...",
+            url: window.location.href,
+          });
+        } else {
+          await navigator.clipboard.writeText(window.location.href);
+          setSuccess("Link copiado para a área de transferência!");
+          setTimeout(() => setSuccess(null), 3000);
+        }
+      } catch (fallbackErr) {
+        console.error("Erro no fallback:", fallbackErr);
+      }
+    }
+  };
 
   if (loading) {
     return (
@@ -198,22 +274,82 @@ export default function CourseDetail() {
           {/* Sidebar */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl shadow-lg p-6 sticky top-6">
-              <div className="text-center mb-6">
-                <div className="text-3xl font-bold text-gray-900 mb-2">
-                  R$ {course.price?.toFixed(2).replace('.', ',') || '0,00'}
+              {success && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+                  {success}
                 </div>
-                <p className="text-sm text-gray-500">valor único</p>
-              </div>
+              )}
 
-              <button className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition mb-4 flex items-center justify-center gap-2">
-                <ShoppingCart size={20} />
-                Comprar Agora
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                  {error}
+                </div>
+              )}
+
+              {(course.price || course.priceMonthly) && (
+                <div className="text-left mb-4">
+                  <div className="flex items-center justify-start gap-2 mb-2">
+                    <DollarSign className="text-red-600" size={20} />
+                    <span className="text-sm font-medium text-gray-600">Valor</span>
+                  </div>
+                  <div className="text-3xl font-bold text-red-700">
+                    R$ {(() => {
+                      const displayPrice = course.billingType === 'subscription' ? course.priceMonthly : course.price;
+                      return displayPrice ? parseFloat(displayPrice.replace(',', '.'))?.toFixed(2).replace('.', ',') : '0,00';
+                    })()}
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    {course.billingType === 'subscription' ? 'por mês' : 'valor único'}
+                  </p>
+                </div>
+              )}
+
+              <button
+                onClick={handleContact}
+                disabled={contacting}
+                className="w-full px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-semibold rounded-xl hover:from-green-700 hover:to-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 text-lg mb-4"
+              >
+                {contacting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                    Processando...
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart size={20} />
+                    {course.price || course.priceMonthly ? "Comprar Agora" : "Acessar Curso"}
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={handleShare}
+                className="w-full border border-gray-300 text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-50 transition flex items-center justify-center gap-2 mb-4"
+              >
+                <Share2 size={20} />
+                Compartilhar
               </button>
 
               <button className="w-full border border-gray-300 text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-50 transition flex items-center justify-center gap-2">
                 <Heart size={20} />
                 Adicionar aos Favoritos
               </button>
+
+              {/* Informações de Segurança */}
+              <div className="space-y-3 mb-6 mt-6">
+                <div className="flex items-center gap-3 text-gray-600">
+                  <Shield className="w-5 h-5 text-green-600" />
+                  <span className="text-sm font-medium">Pagamento 100% Seguro</span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-600">
+                  <Lock className="w-5 h-5 text-blue-600" />
+                  <span className="text-sm">Protegido por criptografia SSL</span>
+                </div>
+                <div className="flex items-center gap-3 text-gray-600">
+                  <CheckCircle className="w-5 h-5 text-emerald-600" />
+                  <span className="text-sm">Garantia de reembolso</span>
+                </div>
+              </div>
 
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <h3 className="font-semibold text-gray-900 mb-4">Este curso inclui:</h3>
