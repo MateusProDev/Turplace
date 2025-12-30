@@ -54,6 +54,7 @@ export default function CourseDetail() {
   const [error, setError] = useState<string | null>(null);
   const [contacting, setContacting] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
+  const [viewsIncremented, setViewsIncremented] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -80,10 +81,13 @@ export default function CourseDetail() {
           const courseData = { id: courseDoc.id, ...courseDoc.data() } as Course;
           setCourse(courseData);
           
-          // Increment views
-          await updateDoc(doc(db, 'courses', courseDoc.id), {
-            views: increment(1)
-          });
+          // Increment views only once per course visit
+          if (viewsIncremented !== courseDoc.id) {
+            await updateDoc(doc(db, 'courses', courseDoc.id), {
+              views: increment(1)
+            });
+            setViewsIncremented(courseDoc.id);
+          }
         } else {
           setError('Curso não encontrado');
         }
@@ -96,6 +100,11 @@ export default function CourseDetail() {
     };
 
     fetchCourse();
+  }, [slug]);
+
+  // Reset views incremented when slug changes
+  useEffect(() => {
+    setViewsIncremented(null);
   }, [slug]);
 
   const handleContact = async () => {

@@ -5,6 +5,8 @@ import iconLogo from '../assets/iconlogo.png';
 import { getCategoriesWithProducts } from "../utils/getCategoriesWithProducts";
 import { getTopRatedProducts, type Product } from "../utils/getTopRatedProducts";
 import { generateSlug } from "../utils/slug";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "../utils/firebase";
 import { 
   MapPin, 
   Star, 
@@ -120,6 +122,7 @@ const siteGradient = 'from-blue-600 to-cyan-500';
 
 export default function Landing() {
   const [categories, setCategories] = useState<CategoryData[]>([]);
+  const [courses, setCourses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -134,6 +137,17 @@ export default function Landing() {
       ]);
       setCategories(categoriesData as CategoryData[]);
       setTopProducts(topProductsData);
+
+      // Fetch courses
+      try {
+        const coursesQuery = query(collection(db, 'courses'), where('status', '==', 'published'));
+        const coursesSnap = await getDocs(coursesQuery);
+        const coursesData = coursesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setCourses(coursesData);
+      } catch (error) {
+        console.error('Erro ao carregar cursos:', error);
+      }
+
       setLoading(false);
     };
 
@@ -471,36 +485,6 @@ export default function Landing() {
               </Link>
             ))}
           </div>
-
-          {/* Banner Promocional entre as seções */}
-          <div className="mt-16 mb-8 max-w-6xl mx-auto">
-            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-blue-600 to-cyan-500 p-8 sm:p-12">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32"></div>
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full translate-y-24 -translate-x-24"></div>
-              
-              <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8">
-                <div className="text-white">
-                  <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full mb-6">
-                    <Zap className="w-5 h-5" />
-                    <span className="font-semibold">Oferta Limitada</span>
-                  </div>
-                  <h3 className="text-2xl sm:text-3xl font-bold mb-4">
-                    Cadastre seu serviço e ganhe 3 meses de visibilidade premium!
-                  </h3>
-                  <p className="text-blue-100 max-w-xl">
-                    Promoção válida para os primeiros 50 prestadores cadastrados este mês.
-                  </p>
-                </div>
-                
-                <Link
-                  to="/dashboard"
-                  className="flex-shrink-0 px-8 py-4 bg-white text-blue-700 font-bold rounded-xl hover:bg-gray-50 transition-all shadow-2xl hover:shadow-2xl hover:scale-105"
-                >
-                  Quero me cadastrar
-                </Link>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
@@ -713,6 +697,79 @@ export default function Landing() {
           )}
         </div>
       </section>
+
+      {/* Courses Section */}
+      {courses.length > 0 && (
+        <section className="py-16 sm:py-24 bg-white">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-4xl mx-auto text-center mb-16">
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-50 to-pink-50 text-purple-700 px-6 py-3 rounded-full mb-6">
+                <BookOpen size={20} />
+                <span className="font-semibold">Aprenda e Evolua</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
+                Cursos <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500">Online</span>
+              </h2>
+              <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
+                Desenvolva suas habilidades com nossos cursos especializados
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+              {courses.slice(0, 6).map((course) => (
+                <Link
+                  key={course.id}
+                  to={`/course/${generateSlug(course.title)}`}
+                  className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden hover:scale-105"
+                >
+                  <div className="aspect-video bg-gradient-to-br from-purple-400 to-pink-600 flex items-center justify-center">
+                    {course.image ? (
+                      <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <BookOpen className="w-12 h-12 text-white" />
+                    )}
+                  </div>
+                  <div className="p-6">
+                    <h3 className="font-bold text-gray-900 mb-2 line-clamp-2">{course.title}</h3>
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">{course.description}</p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Star className="text-yellow-400 fill-current" size={16} />
+                        <span className="text-sm font-medium">{course.rating || 0}</span>
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {course.views || 0} visualizações
+                      </div>
+                    </div>
+                    {(course.price || course.priceMonthly) && (
+                      <div className="mt-4 pt-4 border-t border-gray-100">
+                        <div className="text-lg font-bold text-purple-600">
+                          R$ {(() => {
+                            const displayPrice = course.billingType === 'subscription' ? course.priceMonthly : course.price;
+                            return displayPrice ? parseFloat(String(displayPrice).replace(',', '.'))?.toFixed(2).replace('.', ',') : '0,00';
+                          })()}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {courses.length > 6 && (
+              <div className="text-center mt-12">
+                <Link
+                  to="/catalog?type=course"
+                  className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-500 text-white rounded-2xl font-bold hover:from-purple-700 hover:to-pink-600 transition-all shadow-xl hover:shadow-2xl group"
+                >
+                  <span>Ver Todos os Cursos</span>
+                  <ArrowRight className="transform group-hover:translate-x-2 transition-transform" size={20} />
+                </Link>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* How It Works - Professional */}
       <section className="py-16 sm:py-24 bg-gradient-to-b from-gray-50 to-white">
