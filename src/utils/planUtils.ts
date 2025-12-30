@@ -1,4 +1,5 @@
 // Utilitários para gestão de planos
+import type { LeadPageTemplate } from '../types/leadpage';
 export interface PlanFeatures {
   maxServices: number;
   maxLeadPages: number;
@@ -85,4 +86,13 @@ export function hasPrioritySupport(userPlanId: string): boolean {
 export function getCommissionRate(userPlanId: string): number {
   const plan = getPlanLimits(userPlanId);
   return plan.features.commissionRate;
+}
+
+export function getAvailableTemplates(userPlanId: string, allTemplates: LeadPageTemplate[]): LeadPageTemplate[] {
+  if (userPlanId === 'free') {
+    // Plano free: apenas o template padrão
+    return allTemplates.filter(template => template.id === 'default-tourism');
+  }
+  // Planos pagos: todos os templates
+  return allTemplates;
 }

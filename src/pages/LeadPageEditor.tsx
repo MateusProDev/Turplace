@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { usePlanLimits } from '../hooks/usePlanLimits';
 import { getUserLeadPage, getTemplate, getAllTemplates, saveUserLeadPage, updateLeadPageSection, getLeadPageStats, calculateLeadPageMetrics } from '../utils/leadpage';
+import { getAvailableTemplates } from '../utils/planUtils';
 import type { LeadPageTemplate, UserLeadPage, LeadPageSection } from '../types/leadpage';
 import { 
   Eye, 
@@ -229,6 +231,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
 
 const LeadPageEditor = () => {
   const { user, userData } = useAuth();
+  const { planId } = usePlanLimits();
   const [template, setTemplate] = useState<LeadPageTemplate | null>(null);
   const [allTemplates, setAllTemplates] = useState<LeadPageTemplate[]>([]);
   const [userLeadPage, setUserLeadPage] = useState<UserLeadPage | null>(null);
@@ -311,12 +314,32 @@ const LeadPageEditor = () => {
 
         setAllTemplates(templates);
 
+        // Filtrar templates baseado no plano do usuário
+        const availableTemplates = getAvailableTemplates(planId, templates);
+        setAllTemplates(availableTemplates);
+
         if (data) {
           const userTemplate = await getTemplate(data.templateId);
-          setTemplate(userTemplate);
-          setUserLeadPage(data);
+          // Verificar se o template do usuário está disponível no plano atual
+          const isTemplateAvailable = availableTemplates.some(t => t.id === data.templateId);
+          if (userTemplate && isTemplateAvailable) {
+            setTemplate(userTemplate);
+            setUserLeadPage(data);
+          } else {
+            // Template não disponível no plano atual, usar template padrão disponível
+            const defaultAvailableTemplate = availableTemplates.find(t => t.id === 'default-tourism') || availableTemplates[0];
+            if (defaultAvailableTemplate) {
+              setTemplate(defaultAvailableTemplate);
+              const updated: UserLeadPage = {
+                ...data,
+                templateId: defaultAvailableTemplate.id
+              };
+              await saveUserLeadPage(user.uid, updated);
+              setUserLeadPage(updated);
+            }
+          }
         } else {
-          const defaultTemplate = templates.find(t => t.id === 'default-tourism') || templates[0];
+          const defaultTemplate = availableTemplates.find(t => t.id === 'default-tourism') || availableTemplates[0];
           if (defaultTemplate) {
             setTemplate(defaultTemplate);
             const initial: UserLeadPage = {
@@ -862,9 +885,9 @@ const LeadPageEditor = () => {
               </div>
 
               <div className="p-6">
-                <div className="bg-gray-100 rounded-2xl p-4 mx-auto max-w-sm">
+                <div className="bg-gray-100 rounded-2xl p-4 mx-auto" style={{ maxWidth: '500px' }}>
                   <div className="bg-white rounded-xl overflow-hidden shadow-lg min-h-[600px] max-h-[700px] overflow-y-auto">
-                    <div className="[&>*]:!rounded-none [&_section]:!py-6 [&_section]:!px-4 [&_.container]:!px-0">
+                    <div className="[&>*]:!rounded-none [&_section]:!py-6 [&_section]:!px-6 [&_.container]:!px-0">
                       {template.sections
                         .filter(section => {
                           const custom = userLeadPage?.customData?.[section.id] || {};
