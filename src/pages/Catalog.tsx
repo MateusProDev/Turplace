@@ -36,8 +36,29 @@ interface Service {
   billingType?: string;
 }
 
+interface Course {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  image?: string;
+  sections: any[];
+  status: 'draft' | 'published';
+  createdAt: any;
+  updatedAt: any;
+  instructorId: string;
+  totalStudents?: number;
+  rating?: number;
+}
+
+interface CatalogItem extends Service {
+  type: 'service' | 'course';
+  courseData?: Course;
+}
+
 export default function Catalog() {
   const [services, setServices] = useState<Service[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
@@ -46,57 +67,96 @@ export default function Catalog() {
   const [cities, setCities] = useState<string[]>([]);
   const [activeFilters, setActiveFilters] = useState<{category?: string, city?: string}>({});
   const [showMobileFilters, setShowMobileFilters] = useState(false);
-  const [filtered, setFiltered] = useState<Service[]>([]);
+  const [filtered, setFiltered] = useState<CatalogItem[]>([]);
 
   useEffect(() => {
-    const q = query(collection(db, "services"), where("status", "==", "approved"));
-    const unsub = onSnapshot(q, snapshot => {
-      const data = snapshot.docs.map(doc => ({ 
+    const servicesQuery = query(collection(db, "services"), where("status", "==", "approved"));
+    const coursesQuery = query(collection(db, "courses"), where("status", "==", "published"));
+    
+    const unsubServices = onSnapshot(servicesQuery, snapshot => {
+      const servicesData = snapshot.docs.map(doc => ({ 
         id: doc.id, 
         ...doc.data(),
         views: doc.data().views || 0,
         leads: doc.data().leads || 0
-      }));
-      setServices(data);
-      setLoading(false);
-      
-      // Extrair categorias e cidades únicas
-      const uniqueCategories = [...new Set(data.map((s: Service) => s.category).filter((c): c is string => c !== undefined))];
-      const uniqueCities = [...new Set(data.map((s: Service) => s.city).filter((c): c is string => c !== undefined))];
-      
-      // Ordenar alfabeticamente
-      setCategories(uniqueCategories.sort());
-      setCities(uniqueCities.sort());
+      })) as Service[];
+      setServices(servicesData);
     });
-    return () => unsub();
+
+    const unsubCourses = onSnapshot(coursesQuery, snapshot => {
+      const coursesData = snapshot.docs.map(doc => ({ 
+        id: doc.id, 
+        ...doc.data()
+      })) as Course[];
+      setCourses(coursesData);
+    });
+
+    // Aguardar ambos os snapshots iniciais
+    setTimeout(() => setLoading(false), 1000);
+
+    return () => {
+      unsubServices();
+      unsubCourses();
+    };
   }, []);
 
+  // Extrair categorias e cidades únicas
   useEffect(() => {
-    let result = services;
+    const serviceCategories = [...new Set(services.map((s: Service) => s.category).filter((c): c is string => c !== undefined))];
+    const courseCategories = courses.length > 0 ? ["Cursos"] : [];
+    const uniqueCategories = [...new Set([...serviceCategories, ...courseCategories])];
+    
+    const uniqueCities = [...new Set(services.map((s: Service) => s.city).filter((c): c is string => c !== undefined))];
+    
+    // Ordenar alfabeticamente
+    setCategories(uniqueCategories.sort());
+    setCities(uniqueCities.sort());
+  }, [services, courses]);
+
+  useEffect(() => {
+    // Combinar serviços e cursos
+    const allItems: CatalogItem[] = [
+      ...services.map(service => ({ ...service, type: 'service' as const })),
+      ...courses.map(course => ({
+        id: course.id,
+        title: course.title,
+        description: course.description,
+        category: 'Cursos',
+        images: course.image ? [course.image] : [],
+        price: course.price?.toString(),
+        billingType: 'one-time',
+        type: 'course' as const,
+        courseData: course,
+        views: course.totalStudents || 0,
+        rating: course.rating || 0
+      }))
+    ];
+    
+    let result = allItems;
     
     if (search) {
       const searchLower = search.toLowerCase();
-      result = result.filter((s: Service) =>
-        s.title?.toLowerCase().includes(searchLower) ||
-        s.description?.toLowerCase().includes(searchLower) ||
-        s.category?.toLowerCase().includes(searchLower)
+      result = result.filter((item: CatalogItem) =>
+        item.title?.toLowerCase().includes(searchLower) ||
+        item.description?.toLowerCase().includes(searchLower) ||
+        item.category?.toLowerCase().includes(searchLower)
       );
     }
     
     if (category) {
-      result = result.filter((s: Service) => s.category === category);
+      result = result.filter((item: CatalogItem) => item.category === category);
     }
     
     if (city) {
-      result = result.filter((s: Service) => s.city === city);
+      result = result.filter((item: CatalogItem) => item.city === city);
     }
     
     // Ordenar por visualizações (mais populares primeiro)
-    result = result.sort((a: Service, b: Service) => (b.views || 0) - (a.views || 0));
+    result = result.sort((a: CatalogItem, b: CatalogItem) => (b.views || 0) - (a.views || 0));
     
     setFiltered(result);
     setActiveFilters({ category, city });
-  }, [services, search, category, city]);
+  }, [services, courses, search, category, city]);
 
   const clearFilters = () => {
     setSearch("");
@@ -142,8 +202,8 @@ export default function Catalog() {
           <div className="flex justify-center items-center gap-2 sm:gap-4 md:gap-6 text-center flex-row flex-nowrap mb-2 mt-4">
             <div className="flex flex-col items-center bg-white/20 backdrop-blur-sm rounded-lg px-2 py-2 min-w-[80px]">
               <Eye className="text-blue-100 mb-1" size={20} />
-              <span className="text-lg font-bold leading-none">{services.length}</span>
-              <span className="text-xs opacity-90 leading-none">Serviços</span>
+              <span className="text-lg font-bold leading-none">{services.length + courses.length}</span>
+              <span className="text-xs opacity-90 leading-none">Serviços & Cursos</span>
             </div>
             <div className="flex flex-col items-center bg-white/20 backdrop-blur-sm rounded-lg px-2 py-2 min-w-[80px]">
               <Tag className="text-blue-100 mb-1" size={20} />
@@ -164,7 +224,7 @@ export default function Catalog() {
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Serviços Disponíveis
+              Serviços e Cursos Disponíveis
               {search && ` para "${search}"`}
             </h2>
             
@@ -335,7 +395,7 @@ export default function Catalog() {
                   <Search className="text-gray-400" size={32} />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  Nenhum serviço encontrado
+                  Nenhum serviço ou curso encontrado
                 </h3>
                 <p className="text-gray-600 mb-6 max-w-md mx-auto">
                   Tente ajustar seus filtros de busca ou explore outras categorias.
@@ -349,17 +409,17 @@ export default function Catalog() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                {filtered.map((service: Service) => (
+                {filtered.map((item: CatalogItem) => (
                   <div 
-                    key={service.id} 
+                    key={item.id} 
                     className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-blue-200 group"
                   >
-                    {/* Imagem do serviço */}
+                    {/* Imagem do item */}
                     <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
-                      {service.images && service.images.length > 0 ? (
+                      {item.images && item.images.length > 0 ? (
                         <img 
-                          src={service.images?.[0]} 
-                          alt={service.title || ''}
+                          src={item.images?.[0]} 
+                          alt={item.title || ''}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
@@ -370,14 +430,14 @@ export default function Catalog() {
                       
                       {/* Badges */}
                       <div className="absolute top-3 left-3 flex flex-col gap-2">
-                        {service.views && service.views > 100 && (
+                        {item.views && item.views > 100 && (
                           <span className="bg-black/70 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1">
                             <Eye size={10} />
-                            {formatNumber(service.views || 0)}
+                            {formatNumber(item.views || 0)}
                           </span>
                         )}
                         <span className="bg-blue-600 text-white px-2 py-1 rounded-full text-xs">
-                          {service.category}
+                          {item.category}
                         </span>
                       </div>
                       
@@ -393,33 +453,33 @@ export default function Catalog() {
                     <div className="p-5 flex flex-col h-[calc(100%-12rem)]">
                       <div className="mb-3">
                         <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-1 group-hover:text-blue-700 transition">
-                          {service.title}
+                          {item.title}
                         </h3>
                         
                         <div className="flex items-center gap-2 mb-2">
                           <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
-                            {service.category}
+                            {item.category}
                           </span>
                           <div className="flex items-center gap-1 text-amber-500">
                             <Star className="w-3 h-3 fill-current" />
-                            <span className="text-xs font-bold">{service.rating || 0}</span>
-                            <span className="text-gray-400 text-xs">({service.bookings || 0})</span>
+                            <span className="text-xs font-bold">{item.rating || 0}</span>
+                            <span className="text-gray-400 text-xs">({item.bookings || item.courseData?.totalStudents || 0})</span>
                           </div>
                         </div>
                         
                         <p className="text-gray-600 text-sm line-clamp-2 mb-3">
-                          Por <span className="font-medium text-gray-900">{service.ownerName || 'Prestador'}</span>
+                          Por <span className="font-medium text-gray-900">{item.ownerName || 'Instrutor'}</span>
                         </p>
                         
                         {/* Stats */}
                         <div className="flex items-center gap-3 mb-3">
                           <div className="flex items-center gap-1 text-gray-600">
                             <Eye className="w-3 h-3" />
-                            <span className="text-xs font-medium">{service.views?.toLocaleString() || 0}</span>
+                            <span className="text-xs font-medium">{item.views?.toLocaleString() || 0}</span>
                           </div>
                           <div className="flex items-center gap-1 text-gray-600">
                             <Heart className="w-3 h-3 text-rose-500" />
-                            <span className="text-xs font-medium">{service.bookings || 0}</span>
+                            <span className="text-xs font-medium">{item.bookings || item.courseData?.totalStudents || 0}</span>
                           </div>
                         </div>
                       </div>
@@ -429,15 +489,15 @@ export default function Catalog() {
                         <div className="flex items-center justify-between mb-3">
                           <div>
                             <div className="text-lg font-bold text-gray-900">
-                              R$ {service.price ? parseFloat(service.price.replace(',', '.'))?.toFixed(2).replace('.', ',') : '0,00'}
+                              R$ {item.price ? parseFloat(item.price.replace(',', '.'))?.toFixed(2).replace('.', ',') : '0,00'}
                             </div> 
                             <p className="text-xs text-gray-500">
-                              {service.billingType === 'subscription' ? 'por mês' : 'valor único'}
+                              {item.billingType === 'subscription' ? 'por mês' : 'valor único'}
                             </p>
                           </div>
                           
                           <Link 
-                            to={`/service/${generateSlug(service.title || '')}`}
+                            to={item.type === 'course' ? `/course/${generateSlug(item.title || '')}` : `/service/${generateSlug(item.title || '')}`}
                             className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-green-600 to-emerald-500 text-white font-medium rounded-lg hover:from-green-700 hover:to-emerald-600 transition-all shadow-sm hover:shadow-md group/btn text-xs"
                           >
                             <Eye className="w-3.5 h-3.5" />
@@ -460,16 +520,16 @@ export default function Catalog() {
                   <span className="font-semibold text-gray-900">{Math.min(filtered.length, 9)}</span>
                   <span className="text-gray-600">de</span>
                   <span className="font-semibold text-gray-900">{filtered.length}</span>
-                  <span className="text-gray-600">serviços</span>
+                  <span className="text-gray-600">serviços e cursos</span>
                 </div>
               </div>
             )}
             
             {/* CTA final */}
             <div className="mt-12 bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-8 text-center text-white">
-              <h3 className="text-2xl font-bold mb-4">Seu serviço não está aqui?</h3>
+              <h3 className="text-2xl font-bold mb-4">Seu serviço ou curso não está aqui?</h3>
               <p className="text-lg mb-6 opacity-90">
-                Cadastre gratuitamente e alcance centenas de agências e viajantes
+                Cadastre gratuitamente e alcance centenas de agências, viajantes e alunos
               </p>
               <Link
                 to="/dashboard"

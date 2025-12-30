@@ -399,7 +399,7 @@ export default function ServiceForm({ editMode = false, serviceData, onClose }: 
     ],
     "Educação e Capacitação": [
       "Cursos Online", "Workshops", "Treinamentos", "Palestras", "Mentoria",
-      "Consultoria Educacional", "Capacitação Profissional", "Aulas Particulares"
+      "Consultoria Educacional", "Capacitação Profissional", "Aulas Particulares", "Cursos"
     ],
     "Saúde e Bem-estar": [
       "Massagens", "Terapias Alternativas", "Consultoria Nutricional",

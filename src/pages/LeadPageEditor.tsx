@@ -885,7 +885,7 @@ const LeadPageEditor = () => {
               </div>
 
               <div className="p-6">
-                <div className="bg-gray-100 rounded-2xl p-4 mx-auto" style={{ maxWidth: '500px' }}>
+                <div className="bg-gray-100 rounded-2xl p-4 mx-auto max-w-lg">
                   <div className="bg-white rounded-xl overflow-hidden shadow-lg min-h-[600px] max-h-[700px] overflow-y-auto">
                     <div className="[&>*]:!rounded-none [&_section]:!py-6 [&_section]:!px-6 [&_.container]:!px-0">
                       {template.sections

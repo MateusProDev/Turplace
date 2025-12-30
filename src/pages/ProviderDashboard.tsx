@@ -19,9 +19,10 @@ import {
   Settings,
   Share2,
   TrendingUp,
-  Link as LinkIcon
+  Link as LinkIcon,
+  BookOpen
 } from 'lucide-react';
-import { collection, query, where, getDocs, deleteDoc, doc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, getDocs, deleteDoc, doc, updateDoc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from '../utils/firebase';
 import { updateProfile } from 'firebase/auth';
 import { useAuth } from '../hooks/useAuth';
@@ -59,12 +60,340 @@ interface Service {
   [key: string]: unknown;
 }
 
+interface CourseSection {
+  id: string;
+  title: string;
+  description?: string;
+  videoUrl: string;
+  duration?: string;
+  order: number;
+}
+
+interface Course {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  image?: string;
+  sections: CourseSection[];
+  status: 'draft' | 'published';
+  createdAt: any;
+  updatedAt: any;
+  instructorId: string;
+  totalStudents?: number;
+  rating?: number;
+}
+
 interface Tab {
-  id: 'services' | 'profile' | 'plans' | 'wallet' | 'leadpage' | 'leadpage-editor';
+  id: 'services' | 'courses' | 'profile' | 'plans' | 'wallet' | 'leadpage' | 'leadpage-editor';
   label: string;
   icon: React.ComponentType<any>;
   color: string;
   gradient: string;
+}
+
+interface CourseFormProps {
+  course?: Course;
+  onSave: (course: Omit<Course, 'id' | 'createdAt' | 'updatedAt' | 'instructorId' | 'totalStudents' | 'rating'>) => void;
+  onCancel: () => void;
+}
+
+function CourseForm({ course, onSave, onCancel }: CourseFormProps) {
+  const [title, setTitle] = useState(course?.title || '');
+  const [description, setDescription] = useState(course?.description || '');
+  const [price, setPrice] = useState(course?.price?.toString() || '');
+  const [image, setImage] = useState(course?.image || '');
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [status, setStatus] = useState<'draft' | 'published'>(course?.status || 'draft');
+  const [sections, setSections] = useState<CourseSection[]>(course?.sections || []);
+
+  const addSection = () => {
+    const newSection: CourseSection = {
+      id: Date.now().toString(),
+      title: '',
+      description: '',
+      videoUrl: '',
+      duration: '',
+      order: sections.length
+    };
+    setSections([...sections, newSection]);
+  };
+
+  const updateSection = (id: string, field: keyof CourseSection, value: string | number) => {
+    setSections(sections.map(section => 
+      section.id === id ? { ...section, [field]: value } : section
+    ));
+  };
+
+  const removeSection = (id: string) => {
+    setSections(sections.filter(section => section.id !== id));
+  };
+
+  const handleImageUpload = async (file: File) => {
+    if (!file) return;
+    
+    setUploadingImage(true);
+    try {
+      const imageUrl = await uploadToCloudinary(file);
+      setImage(imageUrl);
+    } catch (error) {
+      console.error('Erro ao fazer upload da imagem:', error);
+      alert('Erro ao fazer upload da imagem. Tente novamente.');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!title.trim() || !description.trim()) {
+      alert('Título e descrição são obrigatórios');
+      return;
+    }
+
+    if (sections.length === 0) {
+      alert('Adicione pelo menos uma seção ao curso');
+      return;
+    }
+
+    const courseData = {
+      title: title.trim(),
+      description: description.trim(),
+      price: parseFloat(price) || 0,
+      image: image.trim(),
+      status,
+      sections: sections.map((section, index) => ({ ...section, order: index }))
+    };
+
+    onSave(courseData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Informações Básicas */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Título do Curso *
+          </label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            placeholder="Ex: Introdução ao Turismo Sustentável"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Preço (R$)
+          </label>
+          <input
+            type="number"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            placeholder="0.00"
+            min="0"
+            step="0.01"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Descrição *
+        </label>
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={4}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          placeholder="Descreva o que os alunos aprenderão neste curso..."
+          required
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Imagem do Curso
+          </label>
+          
+          {/* Preview da imagem */}
+          {image && (
+            <div className="mb-3">
+              <img 
+                src={image} 
+                alt="Preview do curso" 
+                className="w-full h-32 object-cover rounded-lg border border-gray-200"
+              />
+            </div>
+          )}
+
+          {/* Upload de imagem */}
+          <div className="space-y-2">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  handleImageUpload(file);
+                }
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              disabled={uploadingImage}
+            />
+            
+            {uploadingImage && (
+              <div className="flex items-center gap-2 text-sm text-blue-600">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                Fazendo upload...
+              </div>
+            )}
+            
+            <p className="text-xs text-gray-500">
+              Formatos aceitos: JPG, PNG, GIF. Tamanho máximo: 5MB
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Status
+          </label>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value as 'draft' | 'published')}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          >
+            <option value="draft">Rascunho</option>
+            <option value="published">Publicado</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Seções do Curso */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Seções do Curso</h3>
+          <button
+            type="button"
+            onClick={addSection}
+            className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
+          >
+            <Plus size={16} />
+            Adicionar Seção
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          {sections.map((section, index) => (
+            <div key={section.id} className="border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="font-medium text-gray-900">Seção {index + 1}</h4>
+                <button
+                  type="button"
+                  onClick={() => removeSection(section.id)}
+                  className="text-red-600 hover:text-red-800 transition-colors"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Título da Seção *
+                  </label>
+                  <input
+                    type="text"
+                    value={section.title}
+                    onChange={(e) => updateSection(section.id, 'title', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Ex: Introdução ao Tema"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Duração (opcional)
+                  </label>
+                  <input
+                    type="text"
+                    value={section.duration}
+                    onChange={(e) => updateSection(section.id, 'duration', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    placeholder="Ex: 15 min"
+                  />
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Descrição (opcional)
+                </label>
+                <textarea
+                  value={section.description}
+                  onChange={(e) => updateSection(section.id, 'description', e.target.value)}
+                  rows={2}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="Breve descrição do conteúdo desta seção..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Link do Vídeo *
+                </label>
+                <input
+                  type="url"
+                  value={section.videoUrl}
+                  onChange={(e) => updateSection(section.id, 'videoUrl', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Cole o link do vídeo do YouTube, Vimeo ou outra plataforma
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {sections.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <p>Nenhuma seção adicionada ainda</p>
+            <p className="text-sm">Clique em "Adicionar Seção" para começar</p>
+          </div>
+        )}
+      </div>
+
+      {/* Botões */}
+      <div className="flex gap-4 pt-6 border-t border-gray-200">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+        >
+          {course ? 'Atualizar Curso' : 'Criar Curso'}
+        </button>
+      </div>
+    </form>
+  );
 }
 
 export default function ProviderDashboard() {
@@ -75,7 +404,7 @@ export default function ProviderDashboard() {
   const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentTab, setCurrentTab] = useState<'services' | 'profile' | 'plans' | 'wallet' | 'leadpage' | 'leadpage-editor'>('services');
+  const [currentTab, setCurrentTab] = useState<'services' | 'courses' | 'profile' | 'plans' | 'wallet' | 'leadpage' | 'leadpage-editor'>('services');
   
   // Estados do perfil
   const [editMode, setEditMode] = useState(false);
@@ -93,6 +422,12 @@ export default function ProviderDashboard() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingService, setEditingService] = useState<Service | undefined>(undefined);
   const [editServiceModal, setEditServiceModal] = useState(false);
+  
+  // Estados de cursos
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [editingCourse, setEditingCourse] = useState<Course | undefined>(undefined);
+  const [courseModal, setCourseModal] = useState(false);
+  const [deleteCourseId, setDeleteCourseId] = useState<string | null>(null);
   
   // Estados do link encurtado
   const [shortLink, setShortLink] = useState<string | null>(null);
@@ -137,6 +472,13 @@ export default function ProviderDashboard() {
       icon: Briefcase, 
       color: 'text-blue-600', 
       gradient: 'from-blue-500 to-blue-600' 
+    },
+    { 
+      id: 'courses', 
+      label: 'Cursos', 
+      icon: BookOpen, 
+      color: 'text-green-600', 
+      gradient: 'from-green-500 to-green-600' 
     },
     { 
       id: 'profile', 
@@ -260,6 +602,9 @@ export default function ProviderDashboard() {
     };
 
     fetchServices();
+    
+    loadCourses();
+    
     // Carregar estatísticas da leadpage
     handleLoadLeadStats();
     return () => unsubProfile();
@@ -376,6 +721,35 @@ export default function ProviderDashboard() {
     } catch (err) {
       console.error("Erro ao excluir serviço:", err);
       alert("Erro ao excluir serviço.");
+    }
+  };
+
+  const handleDeleteCourse = async () => {
+    if (!deleteCourseId) return;
+
+    try {
+      await deleteDoc(doc(db, "courses", deleteCourseId));
+      setCourses(prev => prev.filter(c => c.id !== deleteCourseId));
+      setDeleteCourseId(null);
+    } catch (err) {
+      console.error("Erro ao excluir curso:", err);
+      alert("Erro ao excluir curso.");
+    }
+  };
+
+  const loadCourses = async () => {
+    if (!user) return;
+    
+    try {
+      const q = query(collection(db, "courses"), where("instructorId", "==", user.uid));
+      const snapshot = await getDocs(q);
+      const coursesData = snapshot.docs.map(doc => ({ 
+        id: doc.id, 
+        ...doc.data() 
+      } as Course));
+      setCourses(coursesData);
+    } catch (error) {
+      console.error("Erro ao carregar cursos:", error);
     }
   };
 
@@ -984,6 +1358,83 @@ export default function ProviderDashboard() {
             </div>
           )}
 
+          {/* Courses Tab */}
+          {currentTab === 'courses' && (
+            <div className="p-6">
+              <div className="max-w-6xl mx-auto">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Meus Cursos</h2>
+                    <p className="text-gray-600 mt-1">Crie e gerencie seus cursos online</p>
+                  </div>
+                  <button
+                    onClick={() => setCourseModal(true)}
+                    className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors"
+                  >
+                    <Plus size={18} />
+                    Novo Curso
+                  </button>
+                </div>
+
+                {courses.length === 0 ? (
+                  <div className="bg-white rounded-2xl p-12 text-center border border-gray-200">
+                    <BookOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">Nenhum curso criado ainda</h3>
+                    <p className="text-gray-600 mb-6">Comece criando seu primeiro curso online</p>
+                    <button
+                      onClick={() => setCourseModal(true)}
+                      className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
+                    >
+                      Criar Primeiro Curso
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {courses.map((course) => (
+                      <div key={course.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
+                        <div className="aspect-video bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
+                          {course.image ? (
+                            <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
+                          ) : (
+                            <BookOpen className="w-12 h-12 text-white" />
+                          )}
+                        </div>
+                        <div className="p-6">
+                          <h3 className="font-semibold text-gray-900 mb-2">{course.title}</h3>
+                          <p className="text-gray-600 text-sm mb-4 line-clamp-2">{course.description}</p>
+                          <div className="flex items-center justify-between mb-4">
+                            <span className="text-lg font-bold text-green-600">R$ {course.price.toFixed(2)}</span>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              course.status === 'published' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {course.status === 'published' ? 'Publicado' : 'Rascunho'}
+                            </span>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setEditingCourse(course)}
+                              className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                            >
+                              Editar
+                            </button>
+                            <button
+                              onClick={() => setDeleteCourseId(course.id)}
+                              className="px-3 py-2 border border-red-300 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors"
+                            >
+                              Excluir
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Profile Tab */}
           {currentTab === 'profile' && (
             <div className="p-6">
@@ -1457,6 +1908,15 @@ export default function ProviderDashboard() {
         onConfirm={handleDelete}
       />
 
+      {/* Modal de Confirmação para Cursos */}
+      <ConfirmModal
+        open={!!deleteCourseId}
+        title="Excluir Curso"
+        description="Tem certeza que deseja excluir este curso? Esta ação não pode ser desfeita e todos os alunos perderão acesso."
+        onCancel={() => setDeleteCourseId(null)}
+        onConfirm={handleDeleteCourse}
+      />
+
       {/* Modal de Edição de Serviço */}
       {editServiceModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -1494,6 +1954,70 @@ export default function ProviderDashboard() {
                       setServices(servicesData);
                     });
                   }
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Cursos */}
+      {courseModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900">
+                {editingCourse ? "Editar Curso" : "Criar Novo Curso"}
+              </h2>
+              <button
+                onClick={() => {
+                  setCourseModal(false);
+                  setEditingCourse(undefined);
+                }}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <Trash2 size={24} />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <CourseForm
+                course={editingCourse}
+                onSave={async (courseData) => {
+                  try {
+                    if (editingCourse) {
+                      // Atualizar curso existente
+                      await updateDoc(doc(db, 'courses', editingCourse.id), {
+                        ...courseData,
+                        updatedAt: new Date()
+                      });
+                    } else {
+                      // Criar novo curso
+                      const courseRef = doc(collection(db, 'courses'));
+                      await setDoc(courseRef, {
+                        ...courseData,
+                        id: courseRef.id,
+                        instructorId: user?.uid,
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                        totalStudents: 0,
+                        rating: 0
+                      });
+                    }
+                    
+                    // Recarregar cursos
+                    await loadCourses();
+                    
+                    setCourseModal(false);
+                    setEditingCourse(undefined);
+                  } catch (error) {
+                    console.error('Erro ao salvar curso:', error);
+                    alert('Erro ao salvar curso. Tente novamente.');
+                  }
+                }}
+                onCancel={() => {
+                  setCourseModal(false);
+                  setEditingCourse(undefined);
                 }}
               />
             </div>
