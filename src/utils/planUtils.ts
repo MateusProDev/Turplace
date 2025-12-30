@@ -1,5 +1,5 @@
 // Utilitários para gestão de planos
-import type { LeadPageTemplate } from '../types/leadpage';
+import type { LeadPageTemplate } from '../types/leadpage.js';
 export interface PlanFeatures {
   maxServices: number;
   maxLeadPages: number;

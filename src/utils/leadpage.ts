@@ -1,6 +1,6 @@
 import { doc, getDoc, setDoc, updateDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from './firebase';
-import type { LeadPageTemplate, UserLeadPage } from '../types/leadpage';
+import type { LeadPageTemplate, UserLeadPage } from '../types/leadpage.js';
 
 // Função para obter template padrão
 export async function getDefaultTemplate(): Promise<LeadPageTemplate | null> {

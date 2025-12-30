@@ -6,7 +6,7 @@ import {
   hasAnalyticsAccess,
   hasPrioritySupport,
   getCommissionRate
-} from '../utils/planUtils';
+} from '../utils/planUtils.js';
 
 export function usePlanLimits() {
   const { userData } = useAuth();
