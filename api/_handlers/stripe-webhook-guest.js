@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import initFirestore from '../_lib/firebaseAdmin.js';
+import { getPlanLimits } from '../../src/utils/planUtils.js';
 
 export default async (req, res) => {
   console.log('[stripe-webhook] Entrada', { method: req.method, headers: Object.keys(req.headers || {}) });
@@ -51,6 +52,40 @@ export default async (req, res) => {
 
             if (session.mode === 'subscription') {
               updateData.stripeSubscriptionId = session.subscription;
+
+              // Atualizar plano do usuário se for uma assinatura
+              if (session.metadata && session.metadata.userId) {
+                const userId = session.metadata.userId;
+                const priceId = session.line_items?.data?.[0]?.price?.id;
+
+                if (priceId) {
+                  // Mapear priceId para planId
+                  const planMapping = {
+                    'price_1SeyezKlR2RHdJ4pFFVMA5fb': 'free', // Este é o plano free, mas não deveria ser usado para subscriptions
+                    'price_1Seyf0KlR2RHdJ4ptJNmAuKi': 'professional',
+                    'price_1Seyf1KlR2RHdJ4psFoH3WrA': 'premium'
+                  };
+
+                  const planId = planMapping[priceId];
+                  if (planId && planId !== 'free') {
+                    try {
+                      const planLimits = getPlanLimits(planId);
+                      await db.collection('users').doc(userId).update({
+                        planId: planId,
+                        planActivatedAt: new Date().toISOString(),
+                        planExpiresAt: null, // Subscriptions don't expire until canceled
+                        stripeSubscriptionId: session.subscription,
+                        stripeCustomerId: session.customer,
+                        planFeatures: planLimits.features,
+                        updatedAt: new Date().toISOString()
+                      });
+                      console.log('[stripe-webhook] Plano do usuário atualizado', { userId, planId, subscriptionId: session.subscription });
+                    } catch (planErr) {
+                      console.error('[stripe-webhook] Erro ao atualizar plano do usuário', { userId, planId, error: planErr });
+                    }
+                  }
+                }
+              }
             }
 
             // Atualizar status da ordem
@@ -113,6 +148,26 @@ export default async (req, res) => {
 
         if (!canceledOrdersSnap.empty) {
           const orderDoc = canceledOrdersSnap.docs[0];
+          const orderData = orderDoc.data();
+
+          // Reverter usuário para plano free
+          if (orderData.userId) {
+            try {
+              const freePlanLimits = getPlanLimits('free');
+              await db.collection('users').doc(orderData.userId).update({
+                planId: 'free',
+                planActivatedAt: new Date().toISOString(),
+                planExpiresAt: null,
+                stripeSubscriptionId: null, // Remove subscription reference
+                planFeatures: freePlanLimits.features,
+                updatedAt: new Date().toISOString()
+              });
+              console.log('[stripe-webhook] Usuário revertido para plano free', { userId: orderData.userId });
+            } catch (planErr) {
+              console.error('[stripe-webhook] Erro ao reverter plano do usuário', { userId: orderData.userId, error: planErr });
+            }
+          }
+
           await orderDoc.ref.update({
             status: 'canceled',
             canceledAt: new Date().toISOString()

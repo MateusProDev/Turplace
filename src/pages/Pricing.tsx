@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { usePlanLimits } from '../hooks/usePlanLimits';
 import { loadStripe } from '@stripe/stripe-js';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, Star, Zap, Crown, TrendingUp, Users, BarChart3, Shield } from 'lucide-react';
@@ -69,6 +70,7 @@ export default function Pricing() {
   const [loading, setLoading] = useState<string | false>(false);
   const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
+  const { planId, maxServices, maxLeadPages, commissionRate, isFreePlan } = usePlanLimits();
 
   async function handleSubscribe(priceId: string) {
     if (loading) return;
@@ -141,7 +143,37 @@ export default function Pricing() {
             menos paga por venda realizada.
           </p>
 
-          {/* Tax Comparison */}
+          {/* Current Plan Status */}
+        {user && (
+          <div className="bg-blue-50 rounded-2xl p-6 max-w-4xl mx-auto mb-8 border border-blue-200">
+            <h2 className="text-2xl font-bold text-blue-900 mb-4">Seu Plano Atual</h2>
+            <div className="grid md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600 capitalize">{planId}</div>
+                <div className="text-sm text-blue-600">Plano Atual</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">{maxServices}</div>
+                <div className="text-sm text-blue-600">Serviços Permitidos</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">{maxLeadPages}</div>
+                <div className="text-sm text-blue-600">Páginas de Lead</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">{(commissionRate * 100).toFixed(0)}%</div>
+                <div className="text-sm text-blue-600">Taxa Atual</div>
+              </div>
+            </div>
+            {isFreePlan && (
+              <div className="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                <p className="text-yellow-800 text-sm">
+                  <strong>💡 Dica:</strong> Faça upgrade para reduzir sua taxa de transação e ter mais recursos!
+                </p>
+              </div>
+            )}
+          </div>
+        )}
           <div className="bg-white rounded-2xl shadow-lg p-6 max-w-4xl mx-auto mb-8">
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">Comparação de Taxas</h2>
             <div className="grid md:grid-cols-3 gap-6">
@@ -168,9 +200,9 @@ export default function Pricing() {
               <h3 className="text-lg font-semibold text-green-800 mb-2">💳 Pagamento por Cartão</h3>
               <p className="text-sm text-green-700">
                 <strong>Taxas totais incluindo processadores:</strong><br/>
-                Turplace Free: 9% (já inclui Stripe ~2,9% + R$0,30)<br/>
-                Turplace Pro: 7% (já inclui Stripe ~2,9% + R$0,30)<br/>
-                Turplace Premium: 6% (já inclui Stripe ~2,9% + R$0,30)<br/>
+                Turplace Free: 9% | Pix: 1,99%<br/>                
+                Turplace Pro: 7% | Pix: 1,99%<br/>
+                Turplace Premium: 6% | Pix: 1,99%<br/>
                 <em>Hotmart/Eduzz: ~11% a 14%</em>
               </p>
               <p className="text-xs text-green-600 mt-2">
@@ -181,7 +213,6 @@ export default function Pricing() {
               <h3 className="text-lg font-semibold text-blue-800 mb-2">💰 Pagamento por PIX</h3>
               <p className="text-sm text-blue-700">
                 <strong>Turplace: 1,99% TOTAL - A MENOR TAXA DO BRASIL! 🇧🇷</strong><br/>
-                (já inclui taxa do processador AbacatePay)<br/>
                 <em>Hotmart/Eduzz: ~4% a 6%</em><br/>
                 <em>Outros marketplaces: ~3% a 5%</em>
               </p>

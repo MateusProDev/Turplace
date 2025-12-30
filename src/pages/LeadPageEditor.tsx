@@ -794,7 +794,7 @@ const LeadPageEditor = () => {
                   </div>
                 </div>
 
-                {userData?.plan === 'premium' ? (
+                {userData?.planId === 'premium' ? (
                   <div className="space-y-4">
                     <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-100 rounded-xl p-4">
                       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
