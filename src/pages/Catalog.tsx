@@ -127,7 +127,7 @@ export default function Catalog() {
         billingType: 'one-time',
         type: 'course' as const,
         courseData: course,
-        views: course.totalStudents || 0,
+        views: course.views || 0,
         rating: course.rating || 0
       }))
     ];

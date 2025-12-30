@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, updateDoc, doc, increment } from 'firebase/firestore';
 import { db } from '../utils/firebase';
 import { generateSlug } from '../utils/slug';
 import ShareContentService from '../services/shareContentService';
@@ -44,6 +44,7 @@ interface Course {
   instructorId: string;
   totalStudents?: number;
   rating?: number;
+  views?: number;
 }
 
 export default function CourseDetail() {
@@ -78,6 +79,11 @@ export default function CourseDetail() {
         if (courseDoc) {
           const courseData = { id: courseDoc.id, ...courseDoc.data() } as Course;
           setCourse(courseData);
+          
+          // Increment views
+          await updateDoc(doc(db, 'courses', courseDoc.id), {
+            views: increment(1)
+          });
         } else {
           setError('Curso não encontrado');
         }
@@ -229,7 +235,7 @@ export default function CourseDetail() {
                 </div>
                 <div className="flex items-center gap-1 text-gray-600">
                   <Users size={16} />
-                  <span>{course.totalStudents || 0} alunos</span>
+                  <span>{course.views || 0} visualizações</span>
                 </div>
                 <div className="flex items-center gap-1 text-gray-600">
                   <Clock size={16} />
@@ -301,7 +307,7 @@ export default function CourseDetail() {
                   <div className="text-3xl font-bold text-red-700">
                     R$ {(() => {
                       const displayPrice = course.billingType === 'subscription' ? course.priceMonthly : course.price;
-                      return displayPrice ? parseFloat(displayPrice.replace(',', '.'))?.toFixed(2).replace('.', ',') : '0,00';
+                      return displayPrice ? parseFloat(String(displayPrice).replace(',', '.'))?.toFixed(2).replace('.', ',') : '0,00';
                     })()}
                   </div>
                   <p className="text-xs text-gray-500">

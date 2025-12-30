@@ -82,6 +82,7 @@ interface Course {
   instructorId: string;
   totalStudents?: number;
   rating?: number;
+  views?: number;
 }
 
 interface Tab {
@@ -1412,6 +1413,12 @@ export default function ProviderDashboard() {
                               {course.status === 'published' ? 'Publicado' : 'Rascunho'}
                             </span>
                           </div>
+                          <div className="text-sm text-gray-500 mb-4">
+                            <span>{course.views || 0} visualizações</span>
+                            {course.totalStudents && course.totalStudents > 0 && (
+                              <span> • {course.totalStudents} alunos</span>
+                            )}
+                          </div>
                           <div className="flex gap-2">
                             <button
                               onClick={() => {
@@ -2004,7 +2011,8 @@ export default function ProviderDashboard() {
                         createdAt: new Date(),
                         updatedAt: new Date(),
                         totalStudents: 0,
-                        rating: 0
+                        rating: 0,
+                        views: 0
                       });
                     }
                     
