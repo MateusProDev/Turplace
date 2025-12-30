@@ -49,6 +49,7 @@ interface Course {
   instructorId: string;
   totalStudents?: number;
   rating?: number;
+  views?: number;
 }
 
 interface CatalogItem extends Service {
