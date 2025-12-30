@@ -48,7 +48,6 @@ interface Course {
 
 export default function CourseDetail() {
   const { slug } = useParams<{ slug: string }>();
-  console.log('CourseDetail: Component rendered with slug:', slug);
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,16 +55,12 @@ export default function CourseDetail() {
   const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
-    console.log('CourseDetail: useEffect triggered with slug:', slug);
     const fetchCourse = async () => {
       if (!slug) {
-        console.log('CourseDetail: No slug provided');
         setError('Slug não fornecido');
         setLoading(false);
         return;
       }
-
-      console.log('CourseDetail: Fetching course with slug:', slug);
 
       try {
         // Buscar todos os cursos publicados
@@ -73,26 +68,21 @@ export default function CourseDetail() {
         const q = query(coursesRef, where('status', '==', 'published'));
         const snapshot = await getDocs(q);
 
-        console.log('CourseDetail: Found courses:', snapshot.docs.length);
-
         // Encontrar o curso pelo slug do título
         const courseDoc = snapshot.docs.find(doc => {
           const courseData = doc.data() as Course;
           const courseSlug = generateSlug(courseData.title);
-          console.log('CourseDetail: Comparing', courseSlug, 'with', slug);
           return courseSlug === slug;
         });
 
         if (courseDoc) {
           const courseData = { id: courseDoc.id, ...courseDoc.data() } as Course;
-          console.log('CourseDetail: Course found:', courseData);
           setCourse(courseData);
         } else {
-          console.log('CourseDetail: No course found with slug:', slug);
           setError('Curso não encontrado');
         }
       } catch (err) {
-        console.error('CourseDetail: Error fetching course:', err);
+        console.error('Erro ao carregar o curso:', err);
         setError('Erro ao carregar o curso');
       } finally {
         setLoading(false);
@@ -169,10 +159,7 @@ export default function CourseDetail() {
     }
   };
 
-  console.log('CourseDetail: Render state - loading:', loading, 'error:', error, 'course:', !!course);
-
   if (loading) {
-    console.log('CourseDetail: Showing loading spinner');
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -181,7 +168,6 @@ export default function CourseDetail() {
   }
 
   if (error || !course) {
-    console.log('CourseDetail: Showing error page - error:', error, 'course exists:', !!course);
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -197,8 +183,6 @@ export default function CourseDetail() {
       </div>
     );
   }
-
-  console.log('CourseDetail: Rendering course content for:', course.title);
 
   return (
     <div className="min-h-screen bg-gray-50">
