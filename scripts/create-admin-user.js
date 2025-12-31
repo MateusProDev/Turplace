@@ -55,9 +55,9 @@ async function createAdminUser(email, password, displayName = 'Admin') {
 }
 
 // Exemplo de uso - substitua pelos valores desejados
-const adminEmail = 'admin@turplace.com'; // Altere para o email desejado
+const adminEmail = 'admin@lucrazi.com'; // Altere para o email desejado
 const adminPassword = 'Admin123!'; // Altere para uma senha forte
-const adminDisplayName = 'Administrador Turplace';
+const adminDisplayName = 'Administrador Lucrazi';
 
 createAdminUser(adminEmail, adminPassword, adminDisplayName)
   .then(() => {

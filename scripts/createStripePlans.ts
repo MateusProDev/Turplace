@@ -66,7 +66,7 @@ async function createProductsAndPrices() {
 
     // Cria produto no Stripe (idempotente usando metadata.custom_id)
     const product = await stripe.products.create({
-      name: `Turplace - ${plan.name}`,
+      name: `Lucrazi - ${plan.name}`,
       metadata: { planId: plan.id },
     });
 

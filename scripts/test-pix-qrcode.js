@@ -22,7 +22,7 @@ async function testPixQRCode() {
 
     const pixData = {
       amount: 1000, // R$ 10,00 em centavos
-      description: "Teste QRCode PIX Direto - Turplace",
+      description: "Teste QRCode PIX Direto - Lucrazi",
       metadata: {
         test: true,
         orderId: "test-order-123"

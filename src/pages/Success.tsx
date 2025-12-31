@@ -189,7 +189,7 @@ export default function Success() {
             {/* Nota sobre suporte */}
             <div className="mt-8 text-center text-sm text-gray-500">
               <p>Precisa de ajuda? Entre em contato conosco</p>
-              <p className="mt-1">suporte@turplace.com | (11) 99999-9999</p>
+              <p className="mt-1">suporte@lucrazi.com | (11) 99999-9999</p>
             </div>
           </div>
         </div>

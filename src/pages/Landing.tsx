@@ -168,8 +168,8 @@ export default function Landing() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-3 py-0">
-              <img src={iconLogo} alt="Turplace" className={`h-12 w-auto object-contain transition-all`} />
-              <span className={`text-xl font-bold ${scrolled ? 'text-gray-700' : 'text-white/90'}`}>Turplace</span>
+              <img src={iconLogo} alt="Lucrazi" className={`h-12 w-auto object-contain transition-all`} />
+              <span className={`text-xl font-bold ${scrolled ? 'text-gray-700' : 'text-white/90'}`}>Lucrazi</span>
             </div>
 
             {/* Desktop menu */}
@@ -1005,8 +1005,8 @@ export default function Landing() {
             {/* Brand */}
             <div>
               <div className="flex items-center gap-3 mb-6">
-                <img src={iconLogo} alt="Turplace" className="h-16 w-auto" />
-                <span className="text-xl font-bold text-white">Turplace</span>
+                <img src={iconLogo} alt="Lucrazi" className="h-16 w-auto" />
+                <span className="text-xl font-bold text-white">Lucrazi</span>
               </div>
               <p className="text-gray-400 mb-8">
                 O marketplace premium para o turismo local. Conectando profissionais e experiências únicas.
@@ -1059,7 +1059,7 @@ export default function Landing() {
           
           <div className="pt-12 border-t border-gray-800 text-center">
             <p className="text-gray-500 text-sm mb-4">
-              © {new Date().getFullYear()} Turplace. Todos os direitos reservados.
+              © {new Date().getFullYear()} Lucrazi. Todos os direitos reservados.
             </p>
             <p className="text-gray-600 text-sm">
               MVP Beta — Plataforma profissional para turismo local.

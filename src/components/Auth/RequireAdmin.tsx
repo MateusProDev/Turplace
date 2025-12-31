@@ -8,7 +8,7 @@ import { auth } from "../../utils/firebase";
 export default function RequireAdmin({ children }: { children: ReactNode }) {
   const { user, userData } = useAuth();
   const location = useLocation();
-  const [email, setEmail] = useState("admin@turplace.com");
+  const [email, setEmail] = useState("admin@lucrazi.com");
   const [password, setPassword] = useState("Admin123!");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -94,7 +94,7 @@ export default function RequireAdmin({ children }: { children: ReactNode }) {
 
           <div className="mt-6 text-center">
             <p className="text-sm text-gray-500">
-              Credenciais padrão: admin@turplace.com / Admin123!
+              Credenciais padrão: admin@lucrazi.com / Admin123!
             </p>
           </div>
         </div>

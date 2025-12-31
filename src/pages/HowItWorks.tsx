@@ -29,8 +29,8 @@ export default function HowItWorks() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <Link to="/" className="flex items-center gap-3">
-              <img src="/vite.svg" alt="Turplace" className="h-8 w-auto" />
-              <span className="text-xl font-bold text-gray-900">Turplace</span>
+              <img src="/vite.svg" alt="Lucrazi" className="h-8 w-auto" />
+              <span className="text-xl font-bold text-gray-900">Lucrazi</span>
             </Link>
             <nav className="hidden md:flex items-center gap-8">
               <Link to="/" className="text-gray-600 hover:text-blue-600 transition-colors">Início</Link>
@@ -201,7 +201,7 @@ export default function HowItWorks() {
                 <span className="font-semibold">Benefícios da Plataforma</span>
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
-                Por que escolher o Turplace?
+                Por que escolher o Lucrazi?
               </h2>
             </div>
 
@@ -314,7 +314,7 @@ export default function HowItWorks() {
       <footer className="bg-gray-900 text-white py-12">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-gray-400 mb-4">
-            © 2025 Turplace. Todos os direitos reservados.
+            © 2025 Lucrazi. Todos os direitos reservados.
           </p>
           <p className="text-gray-500 text-sm">
             Plataforma profissional para o turismo local.

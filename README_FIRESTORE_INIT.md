@@ -14,14 +14,14 @@ Steps (Windows PowerShell):
 npm install firebase-admin
 ```
 
-2. Download a Service Account JSON from Firebase Console (IAM & Admin → Service accounts → Generate new private key). Save it somewhere local, e.g. `C:\keys\turplace-admin.json`.
+2. Download a Service Account JSON from Firebase Console (IAM & Admin → Service accounts → Generate new private key). Save it somewhere local, e.g. `C:\keys\lucrazi-admin.json`.
 
 3. Ensure `.gitignore` excludes the file (this repo already ignores `*.firebase-adminsdk-*.json`).
 
 4. Set env var pointing to the JSON (PowerShell):
 
 ```powershell
-$env:GOOGLE_APPLICATION_CREDENTIALS = 'C:\keys\turplace-admin.json'
+$env:GOOGLE_APPLICATION_CREDENTIALS = 'C:\keys\lucrazi-admin.json'
 ```
 
 5. Run the init script (optional args: adminUid adminEmail):

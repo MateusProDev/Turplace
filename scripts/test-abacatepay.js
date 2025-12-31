@@ -24,7 +24,7 @@ async function testPixPayment() {
 
     const pixQrCode = await abacate.pixQrCode.create({
       amount: valorEmCentavos,
-      description: "Teste QRCode PIX Direto - Turplace",
+      description: "Teste QRCode PIX Direto - Lucrazi",
       metadata: {
         test: true,
         orderId: 'test-order-123'

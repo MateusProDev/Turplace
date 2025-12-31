@@ -26,7 +26,7 @@ const FONT_OPTIONS = [
 ];
 
 const COLOR_PRESETS = [
-  { name: 'Azul Turplace', primary: '#3B82F6', secondary: '#1E40AF', background: '#EFF6FF' },
+  { name: 'Azul Lucrazi', primary: '#3B82F6', secondary: '#1E40AF', background: '#EFF6FF' },
   { name: 'Verde Natureza', primary: '#10B981', secondary: '#059669', background: '#ECFDF5' },
   { name: 'Roxo Elegante', primary: '#8B5CF6', secondary: '#7C3AED', background: '#F3E8FF' },
   { name: 'Rosa Moderno', primary: '#EC4899', secondary: '#DB2777', background: '#FDF2F8' },

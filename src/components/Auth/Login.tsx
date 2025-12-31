@@ -157,8 +157,8 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-emerald-100">
       <div className="bg-white/90 shadow-xl rounded-2xl p-8 w-full max-w-md flex flex-col items-center gap-6">
         <div className="flex flex-col items-center gap-2">
-          <img src={logoSemFundo} alt="Turplace" className="w-24 h-16 object-contain" />
-          <h1 className="text-3xl font-bold text-blue-700">Turplace</h1>
+          <img src={logoSemFundo} alt="Lucrazi" className="w-24 h-16 object-contain" />
+          <h1 className="text-3xl font-bold text-blue-700">Lucrazi</h1>
           <p className="text-gray-500 text-center">Acesse sua conta ou cadastre-se para explorar o marketplace de turismo local.</p>
         </div>
         <form onSubmit={handleSubmit} className="w-full flex flex-col gap-3">

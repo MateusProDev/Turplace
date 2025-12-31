@@ -138,7 +138,7 @@ export default function Pricing() {
             Escolha seu Plano
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-            Todos os planos incluem acesso completo à plataforma Turplace.
+            Todos os planos incluem acesso completo à plataforma Lucrazi.
             A diferença está na taxa cobrada por transação - quanto mais você investe mensalmente,
             menos paga por venda realizada.
           </p>
@@ -200,9 +200,9 @@ export default function Pricing() {
               <h3 className="text-lg font-semibold text-green-800 mb-2">💳 Pagamento por Cartão</h3>
               <p className="text-sm text-green-700">
                 <strong>Taxas totais incluindo processadores:</strong><br/>
-                Turplace Free: 9% | Pix: 1,99%<br/>                
-                Turplace Pro: 7% | Pix: 1,99%<br/>
-                Turplace Premium: 6% | Pix: 1,99%<br/>
+                Lucrazi Free: 9% | Pix: 1,99%<br/>                
+                Lucrazi Pro: 7% | Pix: 1,99%<br/>
+                Lucrazi Premium: 6% | Pix: 1,99%<br/>
                 <em>Hotmart/Eduzz: ~11% a 14%</em>
               </p>
               <p className="text-xs text-green-600 mt-2">
@@ -212,7 +212,7 @@ export default function Pricing() {
             <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
               <h3 className="text-lg font-semibold text-blue-800 mb-2">💰 Pagamento por PIX</h3>
               <p className="text-sm text-blue-700">
-                <strong>Turplace: 1,99% TOTAL - A MENOR TAXA DO BRASIL! 🇧🇷</strong><br/>
+                <strong>Lucrazi: 1,99% TOTAL - A MENOR TAXA DO BRASIL! 🇧🇷</strong><br/>
                 <em>Hotmart/Eduzz: ~4% a 6%</em><br/>
                 <em>Outros marketplaces: ~3% a 5%</em>
               </p>
@@ -352,7 +352,7 @@ export default function Pricing() {
                   Use seu próprio domínio nas lead pages (planos Pro e Premium)
                 </p>
                 <div className="text-xs text-gray-500">
-                  Ex: minhapagina.com ao invés de turplace.com/seu-servico
+                  Ex: minhapagina.com ao invés de lucrazi.com/seu-servico
                 </div>
               </div>
             </div>

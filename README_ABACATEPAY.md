@@ -1,6 +1,6 @@
 # Configuração do AbacatePay para PIX
 
-Este documento descreve como configurar o AbacatePay para processar pagamentos PIX no Turplace.
+Este documento descreve como configurar o AbacatePay para processar pagamentos PIX no Lucrazi.
 
 ## Visão Geral
 

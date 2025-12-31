@@ -148,7 +148,7 @@ export default async (req, res) => {
           transferDetails: {
             pixKey: userData.chavePix,
             amount: amount,
-            description: `Payout Turplace - Prestador ${userId}`,
+            description: `Payout Lucrazi - Prestador ${userId}`,
             simulated: true // Flag para indicar que é simulado
           }
         };

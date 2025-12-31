@@ -1,6 +1,6 @@
-# Configuração de Ambiente - Turplace
+# Configuração de Ambiente - Lucrazi
 
-Este documento descreve as variáveis de ambiente necessárias para o projeto Turplace.
+Este documento descreve as variáveis de ambiente necessárias para o projeto Lucrazi.
 
 ## Variáveis de Ambiente Necessárias
 
@@ -57,7 +57,7 @@ VITE_SHARECONTENT_TOKEN=your_sharecontent_api_token
 ## Como Configurar no Vercel
 
 1. Acesse o painel do Vercel
-2. Vá para seu projeto Turplace
+2. Vá para seu projeto Lucrazi
 3. Settings > Environment Variables
 4. Adicione cada variável listada acima com seus valores reais
 

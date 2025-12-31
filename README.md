@@ -104,7 +104,7 @@ Oferecemos planos pensados para prestadores que preferem pagar um valor fixo/ben
 Copy sugerida para o site:
 
 > Você só paga quando vende.
-> A Turplace cobra uma pequena comissão para manter a plataforma segura, promover seu serviço e conectar você com agências qualificadas.
+> A Lucrazi cobra uma pequena comissão para manter a plataforma segura, promover seu serviço e conectar você com agências qualificadas.
 >
 > Simples. Justo. Aceitável.
 

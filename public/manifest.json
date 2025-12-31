@@ -1,7 +1,7 @@
 {
- "name": "Turplace - Serviços Turísticos",
- "short_name": "Turplace",
- "description": "Plataforma de serviços turísticos. Conecte-se com os melhores prestadores de serviços da sua região.",
+ "name": "Lucrazi - Marketplace de Infoprodutos",
+ "short_name": "Lucrazi",
+ "description": "Marketplace de infoprodutos digitais. Cursos online, produtos digitais e programas de afiliados.",
  "start_url": "/",
  "display": "standalone",
  "background_color": "#ffffff",
