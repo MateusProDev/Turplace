@@ -234,7 +234,7 @@ export default async function handler(req, res) {
         installments: parseInt(installments) || 1,
         // payment_method_id será detectado automaticamente pelo token
         
-        // ✅ PAYER - Todos os campos obrigatórios
+        // ✅ PAYER - Todos os campos obrigatórios (NÍVEL RAIZ)
         payer: {
           email: payerData?.email || customerEmail,
           first_name: payerData?.first_name || customerName.split(' ')[0] || 'Cliente',
@@ -254,7 +254,19 @@ export default async function handler(req, res) {
           }
         },
         
-        // ✅ ITEMS - Obrigatório para melhor aprovação
+        // ✅ EXTERNAL REFERENCE - Obrigatório (NÍVEL RAIZ)
+        external_reference: orderRef.id,
+        
+        // ✅ STATEMENT DESCRIPTOR - Nome na fatura do cartão (NÍVEL RAIZ)
+        statement_descriptor: 'LUCRAZI',
+        
+        // ✅ NOTIFICATION URL - Obrigatório (NÍVEL RAIZ)
+        notification_url: process.env.MERCADO_PAGO_WEBHOOK_URL || '',
+        
+        // ✅ DEVICE ID - Obrigatório (NÍVEL RAIZ)
+        device_id: requestData.deviceId || undefined,
+        
+        // ✅ ITEMS - NÍVEL RAIZ (formato simplificado que o MP reconhece)
         additional_info: {
           items: [{
             id: packageData?.serviceId || orderRef.id,
@@ -273,18 +285,6 @@ export default async function handler(req, res) {
             } : undefined
           }
         },
-        
-        // ✅ EXTERNAL REFERENCE - Obrigatório
-        external_reference: orderRef.id,
-        
-        // ✅ STATEMENT DESCRIPTOR - Nome na fatura do cartão
-        statement_descriptor: 'LUCRAZI',
-        
-        // ✅ NOTIFICATION URL - Obrigatório
-        notification_url: process.env.MERCADO_PAGO_WEBHOOK_URL || '',
-        
-        // ✅ DEVICE ID - Obrigatório
-        device_id: requestData.deviceId || undefined,
         
         // Metadata para rastreamento interno
         metadata: {
