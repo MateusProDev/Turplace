@@ -115,8 +115,8 @@ const getCategoryImageUrl = (category: string) => {
   return 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&h=600&fit=crop';
 };
 
-// Site default gradient (azul do site)
-const siteGradient = 'from-blue-600 to-cyan-500';
+// Site default gradient (nova paleta)
+const siteGradient = 'from-[#0097b2] to-[#7ed957]';
 
 export default function Landing() {
   const [categories, setCategories] = useState<CategoryData[]>([]);
@@ -174,32 +174,32 @@ export default function Landing() {
             <nav className="hidden lg:flex items-center gap-8">
               <Link 
                 to="/catalog" 
-                className={`font-medium transition-colors ${scrolled ? 'text-gray-700 hover:text-blue-600' : 'text-white/90 hover:text-white'}`}
+                className={`font-medium transition-colors ${scrolled ? 'text-gray-700 hover:text-[#0097b2]' : 'text-white/90 hover:text-white'}`}
               >
                 Catálogo
               </Link>
               <Link 
                 to="/marketplace" 
-                className={`font-medium transition-colors ${scrolled ? 'text-gray-700 hover:text-blue-600' : 'text-white/90 hover:text-white'}`}
+                className={`font-medium transition-colors ${scrolled ? 'text-gray-700 hover:text-[#0097b2]' : 'text-white/90 hover:text-white'}`}
               >
                 Marketplace
               </Link>
               <Link 
                 to="/how-it-works" 
-                className={`font-medium transition-colors ${scrolled ? 'text-gray-700 hover:text-blue-600' : 'text-white/90 hover:text-white'}`}
+                className={`font-medium transition-colors ${scrolled ? 'text-gray-700 hover:text-[#0097b2]' : 'text-white/90 hover:text-white'}`}
               >
                 Como Funciona
               </Link>
               <div className="flex items-center gap-4">
                 <Link 
                   to="/login" 
-                  className={`px-5 py-2.5 font-medium rounded-xl transition-all ${scrolled ? 'text-blue-600 hover:text-blue-700' : 'text-white/90 hover:text-white'}`}
+                  className={`px-5 py-2.5 font-medium rounded-xl transition-all ${scrolled ? 'text-[#0097b2] hover:text-[#7ed957]' : 'text-white/90 hover:text-white'}`}
                 >
                   Entrar
                 </Link>
                 <Link 
                   to="/dashboard" 
-                  className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-cyan-600 transition-all shadow-lg hover:shadow-xl"
+                  className="px-5 py-2.5 bg-gradient-to-r from-[#0097b2] to-[#7ed957] text-white font-semibold rounded-xl hover:opacity-90 transition-all shadow-lg hover:shadow-xl"
                 >
                   Começar Agora
                 </Link>
@@ -225,21 +225,21 @@ export default function Landing() {
               <div className="space-y-4">
                 <Link 
                   to="/catalog" 
-                  className="block px-4 py-3 text-gray-700 font-medium hover:bg-blue-50 rounded-xl transition-colors"
+                  className="block px-4 py-3 text-gray-700 font-medium hover:bg-[#0097b2]/10 rounded-xl transition-colors"
                   onClick={() => setMenuOpen(false)}
                 >
                   Catálogo
                 </Link>
                 <Link 
                   to="/marketplace" 
-                  className="block px-4 py-3 text-gray-700 font-medium hover:bg-blue-50 rounded-xl transition-colors"
+                  className="block px-4 py-3 text-gray-700 font-medium hover:bg-[#0097b2]/10 rounded-xl transition-colors"
                   onClick={() => setMenuOpen(false)}
                 >
                   Marketplace
                 </Link>
                 <Link 
                   to="/how-it-works" 
-                  className="block px-4 py-3 text-gray-700 font-medium hover:bg-blue-50 rounded-xl transition-colors"
+                  className="block px-4 py-3 text-gray-700 font-medium hover:bg-[#0097b2]/10 rounded-xl transition-colors"
                   onClick={() => setMenuOpen(false)}
                 >
                   Como Funciona
@@ -247,14 +247,14 @@ export default function Landing() {
                 <div className="pt-4 border-t border-gray-100 space-y-3">
                   <Link 
                     to="/login" 
-                    className="block px-4 py-3 text-blue-600 font-medium hover:bg-blue-50 rounded-xl transition-colors"
+                    className="block px-4 py-3 text-[#0097b2] font-medium hover:bg-[#0097b2]/10 rounded-xl transition-colors"
                     onClick={() => setMenuOpen(false)}
                   >
                     Entrar
                   </Link>
                   <Link 
                     to="/dashboard" 
-                    className="block px-4 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold text-center rounded-xl hover:from-blue-700 hover:to-cyan-600 transition-all"
+                    className="block px-4 py-3 bg-gradient-to-r from-[#0097b2] to-[#7ed957] text-white font-semibold text-center rounded-xl hover:opacity-90 transition-all"
                     onClick={() => setMenuOpen(false)}
                   >
                     Começar Agora
@@ -270,9 +270,9 @@ export default function Landing() {
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 pt-20">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full blur-3xl"></div>
+          <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-[#7ed957] to-[#0097b2] rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full blur-3xl"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full blur-3xl"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-br from-[#7ed957] to-[#0097b2] rounded-full blur-3xl"></div>
         </div>
 
         <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8">
@@ -284,7 +284,7 @@ export default function Landing() {
               </div>
               
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-8 leading-tight">
-                O <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Marketplace</span> Profissional para Serviços Digitais
+                O <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#7ed957] to-[#0097b2]">Marketplace</span> Profissional para Serviços Digitais
               </h1>
               
               <p className="text-lg sm:text-xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
@@ -295,7 +295,7 @@ export default function Landing() {
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 justify-center mb-16">
                 <Link
                   to="/catalog"
-                  className="group relative px-8 sm:px-10 py-4 sm:py-5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-2xl font-bold text-base sm:text-lg hover:from-cyan-600 hover:to-blue-700 transition-all duration-300 flex items-center justify-center gap-3 shadow-2xl hover:shadow-cyan-500/30 hover:scale-105 overflow-hidden"
+                  className="group relative px-8 sm:px-10 py-4 sm:py-5 bg-gradient-to-r from-[#7ed957] to-[#0097b2] text-white rounded-2xl font-bold text-base sm:text-lg hover:opacity-90 transition-all duration-300 flex items-center justify-center gap-3 shadow-2xl hover:shadow-[#0097b2]/30 hover:scale-105 overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
                   <Search size={22} />
@@ -317,10 +317,10 @@ export default function Landing() {
             {/* Stats - Professional Design */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-5xl mx-auto mb-24">
               {[
-                { value: '25+', label: 'Prestadores Ativos', icon: <Users2 className="text-cyan-400" />, color: 'from-cyan-500 to-blue-600' },
+                { value: '25+', label: 'Prestadores Ativos', icon: <Users2 className="text-[#7ed957]" />, color: siteGradient },
                 { value: '45+', label: 'Experiências Únicas', icon: <Compass className="text-emerald-400" />, color: 'from-emerald-500 to-teal-600' },
                 { value: '12+', label: 'Empresas Parceiras', icon: <Building className="text-amber-400" />, color: 'from-amber-500 to-orange-600' },
-                { value: '8+', label: 'Cidades Ativas', icon: <MapPin className="text-blue-400" />, color: siteGradient }
+                { value: '8+', label: 'Cidades Ativas', icon: <MapPin className="text-[#0097b2]" />, color: siteGradient }
               ].map((stat, idx) => (
                 <div 
                   key={idx}
@@ -372,7 +372,7 @@ export default function Landing() {
               <div className="flex flex-wrap gap-3">
                 <button 
                   className={`px-5 py-2.5 rounded-xl font-medium transition-all ${activeFilter === 'todos' 
-                    ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg' 
+                    ? 'bg-gradient-to-r from-[#0097b2] to-[#7ed957] text-white shadow-lg' 
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                   onClick={() => setActiveFilter('todos')}
                 >
@@ -380,7 +380,7 @@ export default function Landing() {
                 </button>
                 <button 
                   className={`px-5 py-2.5 rounded-xl font-medium transition-all ${activeFilter === 'bem-avaliados' 
-                    ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg' 
+                    ? 'bg-gradient-to-r from-[#0097b2] to-[#7ed957] text-white shadow-lg' 
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                   onClick={() => setActiveFilter('bem-avaliados')}
                 >
@@ -388,7 +388,7 @@ export default function Landing() {
                 </button>
                 <button 
                   className={`px-5 py-2.5 rounded-xl font-medium transition-all ${activeFilter === 'novidades' 
-                    ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg' 
+                    ? 'bg-gradient-to-r from-[#0097b2] to-[#7ed957] text-white shadow-lg' 
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
                   onClick={() => setActiveFilter('novidades')}
                 >
@@ -400,7 +400,7 @@ export default function Landing() {
             {/* Contador de Produtos */}
             <div className="flex items-center justify-between pt-6 border-t border-gray-200">
               <p className="text-gray-600 font-medium">
-                Mostrando <span className="text-blue-600 font-bold">{topProducts.length}</span> produtos premium
+                Mostrando <span className="text-[#0097b2] font-bold">{topProducts.length}</span> produtos premium
               </p>
               <div className="flex items-center gap-2 text-gray-500">
                 <TrendingUpIcon className="w-5 h-5" />
@@ -431,7 +431,7 @@ export default function Landing() {
                         content.badge === 'Mais Procurado' ? 'bg-gradient-to-r from-amber-500 to-orange-500' :
                         content.badge === 'Em Alta' ? 'bg-gradient-to-r from-rose-500 to-pink-500' :
                         content.badge === 'Oferta Especial' ? 'bg-gradient-to-r from-emerald-500 to-teal-500' :
-                        'bg-gradient-to-r from-blue-500 to-cyan-500'
+                        'bg-gradient-to-r from-[#0097b2] to-[#7ed957]'
                       }`}>
                         {content.badge}
                       </span>
@@ -461,7 +461,7 @@ export default function Landing() {
                   {/* Informações do Conteúdo */}
                   <div className="p-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <span className="text-sm font-medium text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
+                      <span className="text-sm font-medium text-[#0097b2] bg-[#0097b2]/10 px-2.5 py-1 rounded-full">
                         {content.category}
                       </span>
                       <div className="flex items-center gap-1 text-amber-500">
@@ -471,7 +471,7 @@ export default function Landing() {
                       </div>
                     </div>
                     
-                    <h3 className="text-base font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
+                    <h3 className="text-base font-bold text-gray-900 mb-2 group-hover:text-[#0097b2] transition-colors line-clamp-2">
                       {content.title}
                     </h3>
                     
@@ -502,12 +502,12 @@ export default function Landing() {
       <section className="py-16 sm:py-24 bg-gradient-to-b from-white to-gray-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center mb-16">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-50 to-cyan-50 text-blue-700 px-6 py-3 rounded-full mb-6">
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#0097b2]/10 to-[#7ed957]/10 text-[#0097b2] px-6 py-3 rounded-full mb-6">
               <Award size={20} />
               <span className="font-semibold">Destaques do Marketplace</span>
             </div>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-              Categorias <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">Premium</span>
+              Categorias <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0097b2] to-[#7ed957]">Premium</span>
             </h2>
             <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
               Explore nossos serviços mais requisiados por categoria profissional
@@ -519,15 +519,15 @@ export default function Landing() {
               <div className="text-center">
                 <div className="relative">
                   <div className="w-20 h-20 border-4 border-gray-200 rounded-full"></div>
-                  <div className="w-20 h-20 border-4 border-blue-600 border-t-transparent rounded-full animate-spin absolute top-0"></div>
+                  <div className="w-20 h-20 border-4 border-[#0097b2] border-t-transparent rounded-full animate-spin absolute top-0"></div>
                 </div>
                 <p className="mt-6 text-gray-500 font-medium">Carregando categorias...</p>
               </div>
             </div>
           ) : categories.length === 0 ? (
             <div className="text-center py-24">
-              <div className="w-32 h-32 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Search className="text-blue-400" size={48} />
+              <div className="w-32 h-32 bg-gradient-to-br from-[#0097b2]/10 to-[#7ed957]/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Search className="text-[#0097b2]" size={48} />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-3">
                 Em construção
@@ -537,7 +537,7 @@ export default function Landing() {
               </p>
               <Link
                 to="/dashboard"
-                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-2xl font-bold hover:from-blue-700 hover:to-cyan-600 transition-all shadow-lg hover:shadow-xl"
+                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#0097b2] to-[#7ed957] text-white rounded-2xl font-bold hover:opacity-90 transition-all shadow-lg hover:shadow-xl"
               >
                 <Briefcase size={24} />
                 Cadastrar Primeiro Serviço
@@ -599,7 +599,7 @@ export default function Landing() {
                                 </div>
                               </div>
                             </div>
-                            <ArrowRight className="text-gray-400 group-hover:text-blue-500 transform group-hover:translate-x-2 transition-all flex-shrink-0" size={20} />
+                            <ArrowRight className="text-gray-400 group-hover:text-[#0097b2] transform group-hover:translate-x-2 transition-all flex-shrink-0" size={20} />
                           </div>
                           
                           {/* Product preview */}
@@ -685,7 +685,7 @@ export default function Landing() {
                         <h3 className="font-bold text-gray-900">{cat.category}</h3>
                         <p className="text-sm text-gray-600">{cat.products.length} serviços</p>
                       </div>
-                      <ArrowRight className="text-gray-400 group-hover:text-blue-500 transform group-hover:translate-x-1 transition-transform" size={16} />
+                      <ArrowRight className="text-gray-400 group-hover:text-[#0097b2] transform group-hover:translate-x-1 transition-transform" size={16} />
                     </Link>
                   );
                 })}
@@ -696,7 +696,7 @@ export default function Landing() {
                 <div className="text-center mt-16">
                   <Link
                     to="/catalog"
-                    className="inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-2xl font-bold hover:from-blue-700 hover:to-cyan-600 transition-all shadow-xl hover:shadow-2xl group"
+                    className="inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-[#0097b2] to-[#7ed957] text-white rounded-2xl font-bold hover:opacity-90 transition-all shadow-xl hover:shadow-2xl group"
                   >
                     <span>Ver Todas as Categorias</span>
                     <ArrowRight className="transform group-hover:translate-x-2 transition-transform" size={22} />
@@ -713,12 +713,12 @@ export default function Landing() {
         <section className="py-16 sm:py-24 bg-white">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-4xl mx-auto text-center mb-16">
-              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-50 to-pink-50 text-purple-700 px-6 py-3 rounded-full mb-6">
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#0097b2]/10 to-[#7ed957]/10 text-[#0097b2] px-6 py-3 rounded-full mb-6">
                 <BookOpen size={20} />
                 <span className="font-semibold">Aprenda e Evolua</span>
               </div>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-                Cursos <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500">Online</span>
+                Cursos <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0097b2] to-[#7ed957]">Online</span>
               </h2>
               <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
                 Desenvolva suas habilidades com nossos cursos especializados
@@ -732,7 +732,7 @@ export default function Landing() {
                   to={`/course/${generateSlug(course.title)}`}
                   className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden hover:scale-105"
                 >
-                  <div className="aspect-video bg-gradient-to-br from-purple-400 to-pink-600 flex items-center justify-center">
+                  <div className="aspect-video bg-gradient-to-br from-[#0097b2] to-[#7ed957] flex items-center justify-center">
                     {course.image ? (
                       <img src={course.image} alt={course.title} className="w-full h-full object-cover" />
                     ) : (
@@ -753,7 +753,7 @@ export default function Landing() {
                     </div>
                     {(course.price || course.priceMonthly) && (
                       <div className="mt-4 pt-4 border-t border-gray-100">
-                        <div className="text-lg font-bold text-purple-600">
+                        <div className="text-lg font-bold text-[#0097b2]">
                           R$ {(() => {
                             const displayPrice = course.billingType === 'subscription' ? course.priceMonthly : course.price;
                             return displayPrice ? parseFloat(String(displayPrice).replace(',', '.'))?.toFixed(2).replace('.', ',') : '0,00';
@@ -770,7 +770,7 @@ export default function Landing() {
               <div className="text-center mt-12">
                 <Link
                   to="/catalog?type=course"
-                  className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-500 text-white rounded-2xl font-bold hover:from-purple-700 hover:to-pink-600 transition-all shadow-xl hover:shadow-2xl group"
+                  className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#0097b2] to-[#7ed957] text-white rounded-2xl font-bold hover:opacity-90 transition-all shadow-xl hover:shadow-2xl group"
                 >
                   <span>Ver Todos os Cursos</span>
                   <ArrowRight className="transform group-hover:translate-x-2 transition-transform" size={20} />
@@ -800,11 +800,11 @@ export default function Landing() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
             {[
               {
-                icon: <Briefcase className="text-blue-600" size={32} />,
+                icon: <Briefcase className="text-[#0097b2]" size={32} />,
                 title: "Para Prestadores",
                 description: "Crie seu perfil profissional, cadastre serviços premium e receba solicitações qualificadas.",
                 features: ["Perfil Verificado", "Dashboard Analytics", "Pagamentos Seguros"],
-                gradient: "from-blue-50 to-cyan-50",
+                gradient: "from-[#0097b2]/10 to-[#7ed957]/10",
                 color: "blue"
               },
               {
@@ -816,11 +816,11 @@ export default function Landing() {
                 color: "emerald"
               },
                 {
-                icon: <Camera className="text-blue-600" size={32} />,
+                icon: <Camera className="text-[#0097b2]" size={32} />,
                 title: "Para Criadores",
                 description: "Monetize seu conhecimento local com conteúdo exclusivo e parcerias estratégicas.",
                 features: ["Conteúdo Premium", "Comunidade Ativa", "Monetização Flexível"],
-                gradient: "from-blue-50 to-cyan-50",
+                gradient: "from-[#0097b2]/10 to-[#7ed957]/10",
                 color: "blue"
               }
             ].map((item, index) => (
@@ -841,7 +841,7 @@ export default function Landing() {
                   <div className="space-y-3 mb-8">
                     {item.features.map((feature, idx) => (
                       <div key={idx} className="flex items-center gap-3">
-                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#0097b2]"></div>
                         <span className="text-gray-700">{feature}</span>
                       </div>
                     ))}
@@ -864,7 +864,7 @@ export default function Landing() {
       {/* Final CTA - Professional */}
       <section className="relative py-20 sm:py-32 overflow-hidden">
         {/* Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-cyan-500 to-blue-700">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0097b2] via-[#7ed957] to-[#0097b2]">
           <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent"></div>
         </div>
         
@@ -880,7 +880,7 @@ export default function Landing() {
               Transforme seu Negócio Digital
             </h2>
             
-            <p className="text-lg sm:text-xl text-blue-100 mb-12 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-lg sm:text-xl text-white/90 mb-12 max-w-2xl mx-auto leading-relaxed">
               Cadastro gratuito para prestadores. Alcance milhares de clientes, 
               aumente suas vendas e cresça no mercado digital.
             </p>
@@ -888,7 +888,7 @@ export default function Landing() {
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center mb-16">
               <Link
                 to="/login"
-                className="group px-8 sm:px-12 py-4 sm:py-6 bg-white text-blue-700 rounded-2xl font-bold text-base sm:text-lg hover:bg-gray-50 transition-all shadow-2xl hover:shadow-white/30 hover:scale-105 flex items-center justify-center gap-3"
+                className="group px-8 sm:px-12 py-4 sm:py-6 bg-white text-[#0097b2] rounded-2xl font-bold text-base sm:text-lg hover:bg-gray-50 transition-all shadow-2xl hover:shadow-white/30 hover:scale-105 flex items-center justify-center gap-3"
               >
                 <Briefcase size={24} />
                 <span>Cadastrar-se Gratuitamente</span>
@@ -906,7 +906,7 @@ export default function Landing() {
             
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-2xl mx-auto">
               {[
-                { icon: <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center"><div className="w-6 h-6 rounded-full bg-cyan-300"></div></div>, text: "Segurança e Confiança" },
+                { icon: <div className="w-10 h-10 rounded-full bg-[#7ed957]/20 flex items-center justify-center"><div className="w-6 h-6 rounded-full bg-[#7ed957]"></div></div>, text: "Segurança e Confiança" },
                 { icon: <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><TrendingUpIcon className="text-emerald-300" /></div>, text: "Aumento de Renda" },
                 { icon: <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center"><MapPin className="text-amber-300" /></div>, text: "Foco no Mercado Digital" }
               ].map((item, index) => (
@@ -935,7 +935,7 @@ export default function Landing() {
               </p>
               <div className="flex items-center gap-4">
                 <div className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors cursor-pointer">
-                  <div className="w-5 h-5 rounded-full bg-blue-500"></div>
+                  <div className="w-5 h-5 rounded-full bg-[#0097b2]"></div>
                 </div>
                 <div className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors cursor-pointer">
                   <Users2 size={20} />
@@ -994,7 +994,7 @@ export default function Landing() {
       {/* Floating Action Button */}
       <Link
         to="/dashboard"
-        className="fixed bottom-8 right-8 z-40 w-16 h-16 bg-gradient-to-br from-blue-600 to-cyan-500 text-white rounded-full flex items-center justify-center shadow-2xl hover:shadow-cyan-500/30 hover:scale-110 transition-all group"
+        className="fixed bottom-8 right-8 z-40 w-16 h-16 bg-gradient-to-br from-[#0097b2] to-[#7ed957] text-white rounded-full flex items-center justify-center shadow-2xl hover:shadow-[#0097b2]/30 hover:scale-110 transition-all group"
       >
         <Briefcase size={24} />
         <div className="absolute -top-12 right-0 bg-gray-900 text-white px-4 py-2 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
