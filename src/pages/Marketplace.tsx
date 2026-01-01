@@ -177,7 +177,7 @@ export default function Marketplace() {
           <div className="flex justify-between items-center">
             <Link to="/" className="flex items-center gap-3 py-0">
               <img src={iconLogo} alt="Lucrazi" className="h-11 w-auto object-contain transition-all" />
-              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">Lucrazi</span>
+              <span className="text-xl font-bold bg-gradient-to-r from-[#0097b2] to-[#7ed957] bg-clip-text text-transparent">Lucrazi</span>
             </Link>
 
             {/* Desktop menu */}
@@ -194,7 +194,7 @@ export default function Marketplace() {
                 </Link>
                 <Link
                   to="/client"
-                  className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-full hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
+                  className="px-6 py-2.5 bg-gradient-to-r from-[#0097b2] to-[#7ed957] text-white font-semibold rounded-full hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
                 >
                   Minha Conta
                 </Link>
@@ -249,7 +249,7 @@ export default function Marketplace() {
                   </Link>
                   <Link
                     to="/client"
-                    className="block px-4 py-3 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold text-center rounded-xl hover:from-blue-700 hover:to-cyan-600 transition-all"
+                    className="block px-4 py-3 bg-gradient-to-r from-[#0097b2] to-[#7ed957] text-white font-semibold text-center rounded-xl hover:opacity-90 transition-all"
                     onClick={() => setMenuOpen(false)}
                   >
                     Minha Conta
@@ -274,7 +274,7 @@ export default function Marketplace() {
             {/* Left Content - Texto à esquerda em mobile */}
             <div className="space-y-8 text-left lg:pr-8">
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium">
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-[#0097b2]/10 to-[#7ed957]/10 text-[#0097b2] px-4 py-2 rounded-full text-sm font-medium">
                 <Sparkles className="w-4 h-4" />
                 São mais de {topProducts.length + courses.length} cursos e produtos
               </div>
@@ -284,16 +284,16 @@ export default function Marketplace() {
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
                   O que você quer{' '}
                   <span className="relative inline-block">
-                    <span className="relative z-10 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    <span className="relative z-10 bg-gradient-to-r from-[#0097b2] via-[#0097b2] to-[#7ed957] bg-clip-text text-transparent">
                       aprender
                     </span>
                     <svg className="absolute -bottom-2 left-0 w-full" height="12" viewBox="0 0 200 12" fill="none">
                       <path d="M2 10C60 2 140 2 198 10" stroke="url(#gradient)" strokeWidth="3" strokeLinecap="round"/>
                       <defs>
                         <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                          <stop offset="0%" stopColor="#3B82F6" />
-                          <stop offset="50%" stopColor="#9333EA" />
-                          <stop offset="100%" stopColor="#EC4899" />
+                          <stop offset="0%" stopColor="#0097b2" />
+                          <stop offset="50%" stopColor="#0097b2" />
+                          <stop offset="100%" stopColor="#7ed957" />
                         </linearGradient>
                       </defs>
                     </svg>
@@ -311,7 +311,7 @@ export default function Marketplace() {
               {/* Search Bar - Destaque */}
               <div className="max-w-xl">
                 <div className="relative group">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-500"></div>
+                  <div className="absolute -inset-1 bg-gradient-to-r from-[#0097b2] via-[#0097b2] to-[#7ed957] rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-500"></div>
                   <div className="relative flex items-center">
                     <Search className="absolute left-5 text-gray-400 z-10" size={22} />
                     <input
@@ -321,7 +321,7 @@ export default function Marketplace() {
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-full pl-14 pr-32 py-5 bg-white border-2 border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300 shadow-xl"
                     />
-                    <button className="absolute right-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
+                    <button className="absolute right-2 px-6 py-3 bg-gradient-to-r from-[#0097b2] to-[#7ed957] text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
                       Buscar
                     </button>
                   </div>
@@ -335,7 +335,7 @@ export default function Marketplace() {
                   <span className="text-sm font-medium">Certificado Válido</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-700">
-                  <Shield className="w-5 h-5 text-blue-500" />
+                  <Shield className="w-5 h-5 text-[#0097b2]" />
                   <span className="text-sm font-medium">Garantia de 7 Dias</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-700">
@@ -445,7 +445,7 @@ export default function Marketplace() {
                 onClick={() => setSelectedCategory('todos')}
                 className={`px-4 py-2 rounded-xl font-medium transition-all ${
                   selectedCategory === 'todos'
-                    ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg'
+                    ? 'bg-gradient-to-r from-[#0097b2] to-[#7ed957] text-white shadow-lg'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -457,7 +457,7 @@ export default function Marketplace() {
                   onClick={() => setSelectedCategory(cat.category)}
                   className={`px-4 py-2 rounded-xl font-medium transition-all ${
                     selectedCategory === cat.category
-                      ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-lg'
+                      ? 'bg-gradient-to-r from-[#0097b2] to-[#7ed957] text-white shadow-lg'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
@@ -471,7 +471,7 @@ export default function Marketplace() {
               <button
                 onClick={() => setViewMode('grid')}
                 className={`p-2 rounded-lg transition-all ${
-                  viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:text-gray-600'
+                  viewMode === 'grid' ? 'bg-[#7ed957]/10 text-[#0097b2]' : 'text-gray-400 hover:text-gray-600'
                 }`}
               >
                 <Grid size={20} />
@@ -479,7 +479,7 @@ export default function Marketplace() {
               <button
                 onClick={() => setViewMode('list')}
                 className={`p-2 rounded-lg transition-all ${
-                  viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:text-gray-600'
+                  viewMode === 'list' ? 'bg-[#7ed957]/10 text-[#0097b2]' : 'text-gray-400 hover:text-gray-600'
                 }`}
               >
                 <List size={20} />
@@ -494,7 +494,7 @@ export default function Marketplace() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Produtos e Serviços <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">Digitais</span>
+              Produtos e Serviços <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0097b2] to-[#7ed957]">Digitais</span>
             </h2>
             <p className="text-gray-600 max-w-2xl">
               Explore nossa coleção completa de infoprodutos, serviços digitais e soluções para seu negócio.
@@ -546,7 +546,7 @@ export default function Marketplace() {
                           product.badge === 'Mais Procurado' ? 'bg-gradient-to-r from-amber-500 to-orange-500' :
                           product.badge === 'Em Alta' ? 'bg-gradient-to-r from-rose-500 to-pink-500' :
                           product.badge === 'Oferta Especial' ? 'bg-gradient-to-r from-emerald-500 to-teal-500' :
-                          'bg-gradient-to-r from-blue-500 to-cyan-500'
+                          'bg-gradient-to-r from-[#0097b2] to-[#7ed957]'
                         }`}>
                           {product.badge || 'Produto'}
                         </span>
@@ -556,7 +556,7 @@ export default function Marketplace() {
                     {/* Content */}
                     <div className="flex-1 p-6">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-sm font-medium text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
+                        <span className="text-sm font-medium text-[#0097b2] bg-[#7ed957]/10 px-2.5 py-1 rounded-full">
                           {product.category}
                         </span>
                         <div className="flex items-center gap-1 text-amber-500">
@@ -566,7 +566,7 @@ export default function Marketplace() {
                         </div>
                       </div>
 
-                      <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
+                      <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-[#0097b2] transition-colors line-clamp-2">
                         {product.title}
                       </h3>
 
@@ -585,7 +585,7 @@ export default function Marketplace() {
                           </p>
                         </div>
 
-                        <div className="flex items-center gap-2 text-blue-600 group-hover:text-blue-700 transition-colors">
+                        <div className="flex items-center gap-2 text-[#0097b2] group-hover:text-[#7ed957] transition-colors">
                           <ShoppingCart className="w-5 h-5" />
                           <span className="text-sm font-medium">Comprar</span>
                           <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
@@ -617,7 +617,7 @@ export default function Marketplace() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Cursos <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500">Online</span>
+              Cursos <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0097b2] to-[#7ed957]">Online</span>
             </h2>
             <p className="text-gray-600 max-w-2xl">
               Aprenda com os melhores profissionais e desenvolva suas habilidades com cursos completos e atualizados.
@@ -660,7 +660,7 @@ export default function Marketplace() {
                       }}
                     />
                     <div className="absolute top-3 left-3">
-                      <span className="px-2.5 py-1 text-xs font-bold text-white rounded-full bg-gradient-to-r from-purple-500 to-pink-500">
+                      <span className="px-2.5 py-1 text-xs font-bold text-white rounded-full bg-gradient-to-r from-[#0097b2] to-[#7ed957]">
                         Curso
                       </span>
                     </div>
@@ -675,7 +675,7 @@ export default function Marketplace() {
                   </div>
 
                   <div className="p-6">
-                    <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-purple-600 transition-colors line-clamp-2">
+                    <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-[#0097b2] transition-colors line-clamp-2">
                       {course.title}
                     </h3>
 
@@ -704,7 +704,7 @@ export default function Marketplace() {
                           </span>
                         </div>
                         <div className="flex items-center gap-1" title={`${Number(course.totalLessons ?? course.lessonsCount ?? 0)} aulas`}>
-                          <BookOpen className="w-4 h-4 text-purple-500" />
+                          <BookOpen className="w-4 h-4 text-[#7ed957]" />
                           <span className="text-xs font-medium">
                             {Number(course.totalLessons ?? course.lessonsCount ?? 0)}
                           </span>
@@ -737,7 +737,7 @@ export default function Marketplace() {
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-2 text-purple-600 group-hover:text-purple-700 transition-colors">
+                      <div className="flex items-center gap-2 text-[#0097b2] group-hover:text-[#7ed957] transition-colors">
                         <BookOpen className="w-5 h-5" />
                         <span className="text-sm font-medium">Ver Curso</span>
                         <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
@@ -756,7 +756,7 @@ export default function Marketplace() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Categorias em <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">Destaque</span>
+              Categorias em <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0097b2] to-[#7ed957]">Destaque</span>
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
               Explore produtos organizados por categoria para encontrar exatamente o que você precisa.
@@ -771,13 +771,13 @@ export default function Marketplace() {
                 className="group bg-white rounded-2xl border border-gray-200 hover:border-blue-300 p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
               >
                 <div className="flex items-center justify-between mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#0097b2] to-[#7ed957] flex items-center justify-center">
                     <Briefcase className="w-6 h-6 text-white" />
                   </div>
                   <ChevronRight className="text-gray-400 group-hover:text-blue-500 transition-colors" size={20} />
                 </div>
 
-                <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-[#0097b2] transition-colors">
                   {categoryData.category}
                 </h3>
 
@@ -796,25 +796,25 @@ export default function Marketplace() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-r from-blue-600 to-cyan-500">
+      <section className="py-16 bg-gradient-to-r from-[#0097b2] to-[#7ed957]">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="max-w-3xl mx-auto">
             <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
               Pronto para Começar sua Jornada?
             </h2>
-            <p className="text-lg text-blue-100 mb-8">
+            <p className="text-lg text-white/90 mb-8">
               Crie sua conta gratuita e tenha acesso a milhares de infoprodutos, cursos e serviços digitais.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/login"
-                className="px-8 py-4 bg-white text-blue-600 font-semibold rounded-xl hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl"
+                className="px-8 py-4 bg-white text-[#0097b2] font-semibold rounded-xl hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl"
               >
                 Criar Conta Gratuita
               </Link>
               <Link
                 to="/catalog"
-                className="px-8 py-4 bg-blue-500/20 text-white border border-white/30 font-semibold rounded-xl hover:bg-blue-500/30 transition-all"
+                className="px-8 py-4 bg-white/10 text-white border border-white/30 font-semibold rounded-xl hover:bg-white/20 transition-all"
               >
                 Explorar Catálogo
               </Link>
