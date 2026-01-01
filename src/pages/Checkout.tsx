@@ -140,40 +140,40 @@ export default function Checkout() {
             amount: String(parseFloat((service.billingType === 'subscription' ? service.priceMonthly : service.price) || '0').toFixed(2)),
             iframe: true,
             form: {
-              id: 'mp-card-form',
+              id: 'form-checkout',
               cardNumber: {
-                id: 'mp-card-number',
+                id: 'form-checkout__cardNumber',
                 placeholder: '1234 5678 9012 3456'
               },
               expirationDate: {
-                id: 'mp-expiry',
+                id: 'form-checkout__expirationDate',
                 placeholder: 'MM/AA'
               },
               securityCode: {
-                id: 'mp-cvv',
+                id: 'form-checkout__securityCode',
                 placeholder: '123'
               },
               cardholderName: {
-                id: 'mp-cardholder-name',
+                id: 'form-checkout__cardholderName',
                 placeholder: 'Nome como impresso no cartão'
               },
               issuer: {
-                id: 'mp-issuer',
+                id: 'form-checkout__issuer',
                 placeholder: 'Banco emissor'
               },
               installments: {
-                id: 'mp-installments',
+                id: 'form-checkout__installments',
                 placeholder: 'Parcelas'
               },
               identificationType: {
-                id: 'mp-identification-type'
+                id: 'form-checkout__identificationType'
               },
               identificationNumber: {
-                id: 'mp-identification-number',
+                id: 'form-checkout__identificationNumber',
                 placeholder: 'CPF'
               },
               cardholderEmail: {
-                id: 'mp-cardholder-email',
+                id: 'form-checkout__cardholderEmail',
                 placeholder: 'E-mail'
               }
             },
@@ -288,6 +288,12 @@ export default function Checkout() {
 
     if (!validateCustomerData()) {
       console.warn('[Checkout] Validação dos dados do cliente falhou');
+      return;
+    }
+
+    // Validação adicional para cartão com Card Form
+    if (metodoPagamento === 'cartao' && !cardFormRef.current) {
+      setError('Aguarde o formulário de cartão carregar completamente');
       return;
     }
 
@@ -671,81 +677,79 @@ export default function Checkout() {
 
               {/* Campos do Cartão - Secure Fields (PCI Compliance) */}
               {metodoPagamento === 'cartao' && service?.billingType !== 'subscription' && (
-                <div className="space-y-6 animate-fadeIn">
-                  <form id="mp-card-form">
-                    {/* Card Number - Secure Field */}
-                    <div className="mb-4">
+                <div className="space-y-4 animate-fadeIn">
+                  <form id="form-checkout" className="space-y-4">
+                    {/* Card Number */}
+                    <div>
                       <label className="block text-sm font-semibold text-gray-900 mb-2">
-                        Número do Cartão
+                        Número do Cartão *
                       </label>
-                      <div id="mp-card-number" className="mp-secure-field"></div>
+                      <div id="form-checkout__cardNumber"></div>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-4 mb-4">
-                      {/* Expiry - Secure Field */}
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Expiry */}
                       <div>
                         <label className="block text-sm font-semibold text-gray-900 mb-2">
-                          Validade
+                          Validade *
                         </label>
-                        <div id="mp-expiry" className="mp-secure-field"></div>
+                        <div id="form-checkout__expirationDate"></div>
                       </div>
                       
-                      {/* CVV - Secure Field */}
+                      {/* CVV */}
                       <div>
                         <label className="block text-sm font-semibold text-gray-900 mb-2">
-                          CVV
+                          CVV *
                         </label>
-                        <div id="mp-cvv" className="mp-secure-field"></div>
+                        <div id="form-checkout__securityCode"></div>
                       </div>
                     </div>
 
-                    {/* Cardholder Name - Secure Field */}
-                    <div className="mb-4">
+                    {/* Cardholder Name */}
+                    <div>
                       <label className="block text-sm font-semibold text-gray-900 mb-2">
-                        Nome no Cartão
+                        Nome no Cartão *
                       </label>
-                      <div id="mp-cardholder-name" className="mp-secure-field"></div>
+                      <div id="form-checkout__cardholderName"></div>
                     </div>
 
-                    {/* Email - Secure Field */}
-                    <div className="mb-4">
+                    {/* Email */}
+                    <div>
                       <label className="block text-sm font-semibold text-gray-900 mb-2">
-                        E-mail
+                        E-mail *
                       </label>
-                      <div id="mp-cardholder-email" className="mp-secure-field"></div>
+                      <div id="form-checkout__cardholderEmail"></div>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-4 mb-4">
-                      {/* Identification Type - Hidden */}
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Identification Type */}
                       <div>
                         <label className="block text-sm font-semibold text-gray-900 mb-2">
-                          Tipo de Documento
+                          Tipo de Documento *
                         </label>
-                        <select id="mp-identification-type" className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none">
+                        <select id="form-checkout__identificationType" className="w-full px-4 py-3.5 bg-white border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none">
                           <option value="CPF">CPF</option>
                         </select>
                       </div>
 
-                      {/* Identification Number - Secure Field */}
+                      {/* Identification Number */}
                       <div>
                         <label className="block text-sm font-semibold text-gray-900 mb-2">
-                          CPF
+                          CPF *
                         </label>
-                        <div id="mp-identification-number" className="mp-secure-field"></div>
+                        <div id="form-checkout__identificationNumber"></div>
                       </div>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-4">
-                      {/* Issuer - Hidden select populated by SDK */}
-                      <select id="mp-issuer" className="hidden"></select>
-                      
-                      {/* Installments */}
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-900 mb-2">
-                          Parcelas
-                        </label>
-                        <div id="mp-installments" className="mp-secure-field"></div>
-                      </div>
+                    {/* Issuer - Hidden */}
+                    <select id="form-checkout__issuer" className="hidden"></select>
+                    
+                    {/* Installments */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-900 mb-2">
+                        Parcelas *
+                      </label>
+                      <div id="form-checkout__installments"></div>
                     </div>
                   </form>
 

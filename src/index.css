@@ -100,30 +100,61 @@ button:focus-visible {
   transition: all 0.2s;
 }
 
-.mp-secure-field:focus-within {
-  outline: 2px solid #3B82F6;
-  outline-offset: 2px;
-  border-color: transparent;
+/* Mercado Pago Card Form - Secure Fields Styling */
+#form-checkout__cardNumber,
+#form-checkout__expirationDate,
+#form-checkout__securityCode,
+#form-checkout__cardholderName,
+#form-checkout__cardholderEmail,
+#form-checkout__identificationNumber,
+#form-checkout__installments {
+  border: 2px solid #E5E7EB;
+  border-radius: 0.5rem;
+  padding: 0;
+  min-height: 56px;
+  background-color: #ffffff;
+  transition: all 0.2s;
+  overflow: hidden;
 }
 
-.mp-secure-field iframe {
+#form-checkout__cardNumber:focus-within,
+#form-checkout__expirationDate:focus-within,
+#form-checkout__securityCode:focus-within,
+#form-checkout__cardholderName:focus-within,
+#form-checkout__cardholderEmail:focus-within,
+#form-checkout__identificationNumber:focus-within,
+#form-checkout__installments:focus-within {
+  border-color: #3B82F6;
+  ring: 2px;
+  ring-color: #DBEAFE;
+}
+
+#form-checkout__cardNumber iframe,
+#form-checkout__expirationDate iframe,
+#form-checkout__securityCode iframe,
+#form-checkout__cardholderName iframe,
+#form-checkout__cardholderEmail iframe,
+#form-checkout__identificationNumber iframe,
+#form-checkout__installments iframe {
   border: none;
   width: 100%;
-  height: 100%;
+  height: 56px;
+  display: block;
 }
 
-#mp-card-form select {
+#form-checkout select {
   width: 100%;
-  padding: 0.875rem 1rem;
-  background-color: #F9FAFB;
-  border: 1px solid #E5E7EB;
-  border-radius: 0.75rem;
+  padding: 1rem;
+  background-color: #ffffff;
+  border: 2px solid #E5E7EB;
+  border-radius: 0.5rem;
   transition: all 0.2s;
   outline: none;
+  font-size: 16px;
+  height: 56px;
 }
 
-#mp-card-form select:focus {
+#form-checkout select:focus {
+  border-color: #3B82F6;
   ring: 2px;
-  ring-color: #3B82F6;
-  border-color: transparent;
-}
+  ring-color: #DBEAFE;
