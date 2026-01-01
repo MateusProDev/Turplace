@@ -129,32 +129,55 @@ button:focus-visible {
   ring-color: #DBEAFE;
 }
 
-#form-checkout__cardNumber iframe,
-#form-checkout__expirationDate iframe,
-#form-checkout__securityCode iframe,
-#form-checkout__cardholderName iframe,
-#form-checkout__cardholderEmail iframe,
-#form-checkout__identificationNumber iframe,
-#form-checkout__installments iframe {
-  border: none;
-  width: 100%;
-  height: 56px;
+/* Mercado Pago Card Form - Estilo Unificado */
+.form-control {
   display: block;
-}
-
-#form-checkout select {
   width: 100%;
-  padding: 1rem;
-  background-color: #ffffff;
-  border: 2px solid #E5E7EB;
+  min-height: 56px; /* Altura mínima para todos os campos */
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #1F2937;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid #D1D5DB;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
   border-radius: 0.5rem;
-  transition: all 0.2s;
-  outline: none;
-  font-size: 16px;
-  height: 56px;
+  transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
 }
 
-#form-checkout select:focus {
+.form-control:focus-within,
+.form-control:focus {
+  color: #1F2937;
+  background-color: #fff;
   border-color: #3B82F6;
-  ring: 2px;
-  ring-color: #DBEAFE;
+  outline: 0;
+  box-shadow: 0 0 0 2px #DBEAFE;
+}
+
+/* Aplica a altura correta aos iframes dos Secure Fields */
+.form-control iframe {
+  height: 54px;
+  width: 100%;
+  display: block;
+  border: none;
+}
+
+/* Remove padding do container do iframe para o iframe preencher corretamente */
+#form-checkout__cardNumber,
+#form-checkout__expirationDate,
+#form-checkout__securityCode,
+#form-checkout__cardholderName,
+#form-checkout__cardholderEmail,
+#form-checkout__identificationNumber,
+#form-checkout__installments {
+  padding: 0;
+  overflow: hidden;
+}
+
+#form-checkout select.form-control {
+  padding: 0.75rem 1rem; /* Garante padding para selects normais */
+}
