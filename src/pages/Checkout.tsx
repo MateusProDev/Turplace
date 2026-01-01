@@ -338,10 +338,13 @@ export default function Checkout() {
         setPaymentId(response.payment_id || null);
         setAguardandoPix(true);
       } else {
-        console.log('[Checkout] Pagamento com cartão - redirecionamento necessário');
-        // Para cartão, pode ser necessário redirecionamento
+        console.log('[Checkout] Pagamento com cartão processado');
+        // Redireciona apenas se houver checkoutUrl (checkout externo)
         if (response.checkoutUrl) {
+          console.log('[Checkout] Redirecionando para checkout externo');
           window.location.href = response.checkoutUrl;
+        } else {
+          console.log('[Checkout] Pagamento transparente finalizado, sem redirecionamento');
         }
       }
 
