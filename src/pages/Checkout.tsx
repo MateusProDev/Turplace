@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../utils/firebase";
@@ -43,6 +43,7 @@ export default function Checkout() {
   const [service, setService] = useState<ServiceData | null>(null);
   // @ts-ignore
   const [loading, setLoading] = useState(true);
+  const cardFormRef = useRef<any>(null);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [metodoPagamento, setMetodoPagamento] = useState<'cartao' | 'pix'>('pix');
@@ -54,12 +55,8 @@ export default function Checkout() {
   const [pixAttempts, setPixAttempts] = useState(0);
   const [copied, setCopied] = useState(false);
 
-  // Dados do cartão
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiry, setExpiry] = useState('');
-  const [cvv, setCvv] = useState('');
-  const [cardholderName, setCardholderName] = useState('');
-  const [installments, setInstallments] = useState(1);
+  // Dados do cartão (Card Form gerencia os campos seguros)
+  const [installments] = useState(1);
 
   // Dados do cliente
   const [customerData, setCustomerData] = useState<CustomerData>({
@@ -129,6 +126,95 @@ export default function Checkout() {
       setMetodoPagamento('cartao');
     }
   }, [service?.billingType]);
+
+  // Inicializar Card Form (Secure Fields) - PCI Compliance
+  useEffect(() => {
+    if (metodoPagamento === 'cartao' && !cardFormRef.current && service) {
+      const loadCardForm = async () => {
+        try {
+          const mp = new window.MercadoPago(import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY, {
+            locale: 'pt-BR'
+          });
+
+          const cardForm = mp.cardForm({
+            amount: String(parseFloat((service.billingType === 'subscription' ? service.priceMonthly : service.price) || '0').toFixed(2)),
+            iframe: true,
+            form: {
+              id: 'mp-card-form',
+              cardNumber: {
+                id: 'mp-card-number',
+                placeholder: '1234 5678 9012 3456'
+              },
+              expirationDate: {
+                id: 'mp-expiry',
+                placeholder: 'MM/AA'
+              },
+              securityCode: {
+                id: 'mp-cvv',
+                placeholder: '123'
+              },
+              cardholderName: {
+                id: 'mp-cardholder-name',
+                placeholder: 'Nome como impresso no cartão'
+              },
+              issuer: {
+                id: 'mp-issuer',
+                placeholder: 'Banco emissor'
+              },
+              installments: {
+                id: 'mp-installments',
+                placeholder: 'Parcelas'
+              },
+              identificationType: {
+                id: 'mp-identification-type'
+              },
+              identificationNumber: {
+                id: 'mp-identification-number',
+                placeholder: 'CPF'
+              },
+              cardholderEmail: {
+                id: 'mp-cardholder-email',
+                placeholder: 'E-mail'
+              }
+            },
+            callbacks: {
+              onFormMounted: (error: any) => {
+                if (error) {
+                  console.error('[CardForm] Erro ao montar formulário:', error);
+                } else {
+                  console.log('[CardForm] Formulário montado com sucesso (Secure Fields)');
+                }
+              },
+              onSubmit: (event: Event) => {
+                event.preventDefault();
+                // O submit será tratado pelo handlePayment
+              },
+              onFetching: (resource: string) => {
+                console.log('[CardForm] Fetching:', resource);
+              }
+            }
+          });
+
+          cardFormRef.current = cardForm;
+          console.log('[CardForm] Card Form inicializado');
+        } catch (err) {
+          console.error('[CardForm] Erro ao inicializar Card Form:', err);
+        }
+      };
+
+      // Aguardar SDK carregar
+      if (window.MercadoPago) {
+        loadCardForm();
+      } else {
+        const checkSDK = setInterval(() => {
+          if (window.MercadoPago) {
+            clearInterval(checkSDK);
+            loadCardForm();
+          }
+        }, 100);
+      }
+    }
+  }, [metodoPagamento, service]);
 
   // Monitoramento do status do Pix
   useEffect(() => {
@@ -278,40 +364,35 @@ export default function Checkout() {
 
       let cardToken = undefined;
       let payerData = undefined;
-
       let deviceId = null;
 
       if (metodoPagamento === 'cartao') {
-        console.log('[Checkout] Processando dados do cartão');
-        // Criar token do cartão
-        const mp = new window.MercadoPago(import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY || 'APP_USR-aac914af-9caa-4fb1-ae68-47c87dfe4d2e');
+        console.log('[Checkout] Processando dados do cartão via Card Form (Secure Fields)');
         
-        // 🔒 DEVICE ID - Obrigatório para melhor aprovação
-        try {
-          deviceId = await mp.getIdentificationTypes();
-          console.log('[Checkout] Device ID capturado');
-        } catch (err) {
-          console.warn('[Checkout] Falha ao capturar Device ID:', err);
+        if (!cardFormRef.current) {
+          throw new Error('Card Form não inicializado. Aguarde o carregamento.');
         }
+
+        // 🔒 Obter token via Card Form (Secure Fields - PCI Compliance)
+        const cardFormData = await cardFormRef.current.getCardFormData();
         
-        const cardTokenResponse = await mp.createCardToken({
-          cardNumber: cardNumber.replace(/\s/g, ''),
-          cardholderName,
-          cardExpirationMonth: expiry.split('/')[0],
-          cardExpirationYear: '20' + expiry.split('/')[1],
-          securityCode: cvv,
-          identificationType: 'CPF',
-          identificationNumber: customerData.cpf.replace(/\D/g, '')
-        });
-        cardToken = cardTokenResponse.id;
+        if (!cardFormData || !cardFormData.token) {
+          throw new Error('Erro ao processar dados do cartão. Verifique os campos.');
+        }
+
+        cardToken = cardFormData.token;
+        deviceId = cardFormData.device_id || null;
+        
         payerData = {
-          email: customerData.email,
+          email: cardFormData.payer?.email || customerData.email,
           first_name: customerData.name.split(' ')[0],
           last_name: customerData.name.split(' ').slice(1).join(' '),
-          cpf: customerData.cpf.replace(/\D/g, ''),
+          cpf: cardFormData.payer?.identification?.number || customerData.cpf.replace(/\D/g, ''),
           phone: customerData.phone || ''
         };
-        console.log('[Checkout] Token do cartão criado:', cardToken);
+        
+        console.log('[Checkout] Token do cartão criado via Secure Fields:', cardToken);
+        console.log('[Checkout] Device ID capturado:', deviceId);
       }
 
       const response = await iniciarPagamentoCheckout({
@@ -588,77 +669,97 @@ export default function Checkout() {
                 </div>
               )}
 
-              {/* Campos do Cartão - apenas para pagamentos únicos */}
+              {/* Campos do Cartão - Secure Fields (PCI Compliance) */}
               {metodoPagamento === 'cartao' && service?.billingType !== 'subscription' && (
                 <div className="space-y-6 animate-fadeIn">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-900 mb-2">
-                      Número do Cartão
-                    </label>
-                    <input
-                      type="text"
-                      value={cardNumber}
-                      onChange={(e) => setCardNumber(e.target.value)}
-                      className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
-                      placeholder="1234 5678 9012 3456"
-                      maxLength={19}
-                    />
-                  </div>
+                  <form id="mp-card-form">
+                    {/* Card Number - Secure Field */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-semibold text-gray-900 mb-2">
+                        Número do Cartão
+                      </label>
+                      <div id="mp-card-number" className="mp-secure-field"></div>
+                    </div>
 
-                  <div className="grid md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-900 mb-2">
-                        Validade
-                      </label>
-                      <input
-                        type="text"
-                        value={expiry}
-                        onChange={(e) => setExpiry(e.target.value)}
-                        className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
-                        placeholder="MM/AA"
-                        maxLength={5}
-                      />
+                    <div className="grid md:grid-cols-2 gap-4 mb-4">
+                      {/* Expiry - Secure Field */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-900 mb-2">
+                          Validade
+                        </label>
+                        <div id="mp-expiry" className="mp-secure-field"></div>
+                      </div>
+                      
+                      {/* CVV - Secure Field */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-900 mb-2">
+                          CVV
+                        </label>
+                        <div id="mp-cvv" className="mp-secure-field"></div>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-900 mb-2">
-                        CVV
-                      </label>
-                      <input
-                        type="text"
-                        value={cvv}
-                        onChange={(e) => setCvv(e.target.value)}
-                        className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
-                        placeholder="123"
-                        maxLength={4}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-900 mb-2">
-                        Parcelas
-                      </label>
-                      <select
-                        value={installments}
-                        onChange={(e) => setInstallments(Number(e.target.value))}
-                        className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
-                      >
-                        {[1, 2, 3, 4, 5, 6].map(num => (
-                          <option key={num} value={num}>{num}x sem juros</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
 
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-900 mb-2">
-                      Nome no Cartão
-                    </label>
-                    <input
-                      type="text"
-                      value={cardholderName}
-                      onChange={(e) => setCardholderName(e.target.value)}
-                      className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
-                      placeholder="Nome como impresso no cartão"
-                    />
+                    {/* Cardholder Name - Secure Field */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-semibold text-gray-900 mb-2">
+                        Nome no Cartão
+                      </label>
+                      <div id="mp-cardholder-name" className="mp-secure-field"></div>
+                    </div>
+
+                    {/* Email - Secure Field */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-semibold text-gray-900 mb-2">
+                        E-mail
+                      </label>
+                      <div id="mp-cardholder-email" className="mp-secure-field"></div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4 mb-4">
+                      {/* Identification Type - Hidden */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-900 mb-2">
+                          Tipo de Documento
+                        </label>
+                        <select id="mp-identification-type" className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none">
+                          <option value="CPF">CPF</option>
+                        </select>
+                      </div>
+
+                      {/* Identification Number - Secure Field */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-900 mb-2">
+                          CPF
+                        </label>
+                        <div id="mp-identification-number" className="mp-secure-field"></div>
+                      </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {/* Issuer - Hidden select populated by SDK */}
+                      <select id="mp-issuer" className="hidden"></select>
+                      
+                      {/* Installments */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-900 mb-2">
+                          Parcelas
+                        </label>
+                        <div id="mp-installments" className="mp-secure-field"></div>
+                      </div>
+                    </div>
+                  </form>
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mt-4">
+                    <div className="flex items-start gap-3">
+                      <Lock className="w-5 h-5 text-blue-600 mt-0.5" />
+                      <div>
+                        <p className="font-semibold text-gray-900 text-sm mb-1">Pagamento Seguro</p>
+                        <p className="text-xs text-gray-600">
+                          Seus dados do cartão são criptografados e processados de forma segura pelo Mercado Pago.
+                          Nós não armazenamos informações do seu cartão.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
