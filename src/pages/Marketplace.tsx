@@ -43,7 +43,9 @@ export default function Marketplace() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('todos');
+  const [isSearching, setIsSearching] = useState(false);
   const heroRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -98,17 +100,46 @@ export default function Marketplace() {
     };
   }, []);
 
-  // Filtrar produtos baseado na busca e categoria
+  // Função helper para remover acentos e normalizar texto para busca
+  const normalizeText = (text: string | undefined): string => {
+    if (!text) return '';
+    return text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remove acentos
+      .trim();
+  };
+
+  // Filtrar produtos baseado na busca e categoria - busca aprimorada com normalização
   const filteredProducts = topProducts.filter(product => {
-    const matchesSearch = product.title?.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchNormalized = normalizeText(searchTerm);
+    
+    // Busca em múltiplos campos com normalização (sem acentos, case insensitive)
+    const matchesSearch = !searchNormalized || 
+      normalizeText(product.title).includes(searchNormalized) ||
+      normalizeText(product.name).includes(searchNormalized) ||
+      normalizeText(product.description).includes(searchNormalized) ||
+      normalizeText(product.category).includes(searchNormalized) ||
+      normalizeText(product.author).includes(searchNormalized) ||
+      product.tags?.some((tag: string) => normalizeText(tag).includes(searchNormalized));
+    
     const matchesCategory = selectedCategory === 'todos' || product.category?.toLowerCase() === selectedCategory.toLowerCase();
     return matchesSearch && matchesCategory;
   });
 
-  // Filtrar cursos baseado na busca
+  // Filtrar cursos baseado na busca - busca aprimorada com normalização
   const filteredCourses = courses.filter(course => {
-    return course.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           course.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchNormalized = normalizeText(searchTerm);
+    
+    // Busca em múltiplos campos com normalização (sem acentos, case insensitive)
+    return !searchNormalized ||
+      normalizeText(course.title).includes(searchNormalized) ||
+      normalizeText(course.name).includes(searchNormalized) ||
+      normalizeText(course.description).includes(searchNormalized) ||
+      normalizeText(course.category).includes(searchNormalized) ||
+      normalizeText(course.instructor).includes(searchNormalized) ||
+      normalizeText(course.author).includes(searchNormalized) ||
+      course.tags?.some((tag: string) => normalizeText(tag).includes(searchNormalized));
   });
 
   const trackUniqueView = async (opts: { kind: 'course' | 'service'; id: string }) => {
@@ -313,19 +344,57 @@ export default function Marketplace() {
                 <div className="relative group">
                   <div className="absolute -inset-1 bg-gradient-to-r from-[#0097b2] via-[#0097b2] to-[#7ed957] rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-500"></div>
                   <div className="relative flex items-center">
-                    <Search className="absolute left-5 text-gray-400 z-10" size={22} />
+                    <Search className="absolute left-5 text-gray-400 pointer-events-none" size={22} />
                     <input
+                      ref={searchInputRef}
                       type="text"
-                      placeholder="O que você quer aprender? Ex: Marketing Digital, Programação..."
+                      placeholder="O que você quer aprender? Ex: Marketing Digital, Programação, Tráfego..."
                       value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-14 pr-32 py-5 bg-white border-2 border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#0097b2] focus:ring-4 focus:ring-[#0097b2]/20 transition-all duration-300 shadow-xl"
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setIsSearching(e.target.value.length > 0);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          // Scroll para resultados
+                          const productsSection = document.getElementById('products-section');
+                          productsSection?.scrollIntoView({ behavior: 'smooth' });
+                        }
+                      }}
+                      className="w-full pl-14 pr-32 py-5 bg-white border-2 border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-[#0097b2] focus:ring-4 focus:ring-[#0097b2]/20 transition-all duration-300 shadow-xl relative z-10"
                     />
-                    <button className="absolute right-2 px-6 py-3 bg-gradient-to-r from-[#0097b2] to-[#7ed957] text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
+                    {searchTerm && (
+                      <button
+                        onClick={() => {
+                          setSearchTerm('');
+                          setIsSearching(false);
+                          searchInputRef.current?.focus();
+                        }}
+                        className="absolute right-28 text-gray-400 hover:text-gray-600 transition-colors z-20"
+                        title="Limpar busca"
+                      >
+                        <X size={20} />
+                      </button>
+                    )}
+                    <button 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        const productsSection = document.getElementById('products-section');
+                        productsSection?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      className="absolute right-2 px-6 py-3 bg-gradient-to-r from-[#0097b2] to-[#7ed957] text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 z-20"
+                    >
                       Buscar
                     </button>
                   </div>
                 </div>
+                {isSearching && (
+                  <div className="mt-3 text-sm text-gray-600 flex items-center gap-2">
+                    <span className="inline-block w-2 h-2 bg-[#0097b2] rounded-full animate-pulse"></span>
+                    Buscando em produtos, serviços e cursos...
+                  </div>
+                )}
               </div>
 
               {/* Trust Badges */}
@@ -490,15 +559,26 @@ export default function Marketplace() {
       </section>
 
       {/* Products Section */}
-      <section className="py-12 bg-gray-50">
+      <section id="products-section" className="py-12 bg-gray-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Produtos e Serviços <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0097b2] to-[#7ed957]">Digitais</span>
-            </h2>
-            <p className="text-gray-600 max-w-2xl">
-              Explore nossa coleção completa de infoprodutos, serviços digitais e soluções para seu negócio.
-            </p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                  Produtos e Serviços <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0097b2] to-[#7ed957]">Digitais</span>
+                </h2>
+                {searchTerm && (
+                  <p className="text-gray-600">
+                    Encontrados <span className="font-bold text-[#0097b2]">{filteredProducts.length}</span> produtos para "{searchTerm}"
+                  </p>
+                )}
+              </div>
+            </div>
+            {!searchTerm && (
+              <p className="text-gray-600 max-w-2xl">
+                Explore nossa coleção completa de infoprodutos, serviços digitais e soluções para seu negócio.
+              </p>
+            )}
           </div>
 
           {loading ? (
@@ -513,6 +593,24 @@ export default function Marketplace() {
                   </div>
                 </div>
               ))}
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="w-24 h-24 bg-gradient-to-br from-[#0097b2]/10 to-[#7ed957]/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Search className="w-12 h-12 text-[#0097b2]" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                Nenhum produto encontrado
+              </h3>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                Não encontramos produtos para "{searchTerm}". Tente buscar com outras palavras-chave.
+              </p>
+              <button
+                onClick={() => setSearchTerm('')}
+                className="px-6 py-3 bg-gradient-to-r from-[#0097b2] to-[#7ed957] text-white font-semibold rounded-xl hover:opacity-90 transition-all"
+              >
+                Limpar busca
+              </button>
             </div>
           ) : (
             <div className={`grid gap-6 ${
@@ -616,12 +714,23 @@ export default function Marketplace() {
       <section className="py-12 bg-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Cursos <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0097b2] to-[#7ed957]">Online</span>
-            </h2>
-            <p className="text-gray-600 max-w-2xl">
-              Aprenda com os melhores profissionais e desenvolva suas habilidades com cursos completos e atualizados.
-            </p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                  Cursos <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0097b2] to-[#7ed957]">Online</span>
+                </h2>
+                {searchTerm && (
+                  <p className="text-gray-600">
+                    Encontrados <span className="font-bold text-[#0097b2]">{filteredCourses.length}</span> cursos para "{searchTerm}"
+                  </p>
+                )}
+              </div>
+            </div>
+            {!searchTerm && (
+              <p className="text-gray-600 max-w-2xl">
+                Aprenda novas habilidades com nossos cursos especializados.
+              </p>
+            )}
           </div>
 
           {loading ? (
@@ -636,6 +745,24 @@ export default function Marketplace() {
                   </div>
                 </div>
               ))}
+            </div>
+          ) : filteredCourses.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="w-24 h-24 bg-gradient-to-br from-[#0097b2]/10 to-[#7ed957]/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <BookOpen className="w-12 h-12 text-[#0097b2]" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                Nenhum curso encontrado
+              </h3>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                Não encontramos cursos para "{searchTerm}". Tente buscar com outras palavras-chave.
+              </p>
+              <button
+                onClick={() => setSearchTerm('')}
+                className="px-6 py-3 bg-gradient-to-r from-[#0097b2] to-[#7ed957] text-white font-semibold rounded-xl hover:opacity-90 transition-all"
+              >
+                Limpar busca
+              </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

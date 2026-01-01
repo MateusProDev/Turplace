@@ -15,6 +15,8 @@ export interface Product {
   author?: string;
   badge?: string;
   billingType?: string;
+  description?: string;
+  tags?: string[];
 }
 
 export async function getTopRatedProducts(limit = 5): Promise<Product[]> {
@@ -46,7 +48,9 @@ export async function getTopRatedProducts(limit = 5): Promise<Product[]> {
         bookings: typeof data.bookings === 'number' ? data.bookings : 0,
         price: parsePrice(data.price),
         badge: data.badge || "Premium",
-        billingType: data.billingType || "one-time"
+        billingType: data.billingType || "one-time",
+        description: data.description || data.shortDescription || "",
+        tags: Array.isArray(data.tags) ? data.tags : []
       };
     });
 
