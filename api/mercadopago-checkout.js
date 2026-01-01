@@ -232,10 +232,7 @@ export default async function handler(req, res) {
         token: cardToken,
         description: `${packageData?.title || 'Produto'} - Lucrazi`,
         installments: parseInt(installments) || 1,
-        payment_method_id: 'visa', // Mercado Pago detectará automaticamente
-        
-        // ✅ ISSUER ID (recomendado)
-        issuer_id: requestData.issuerId || undefined,
+        // payment_method_id será detectado automaticamente pelo token
         
         // ✅ PAYER - Todos os campos obrigatórios
         payer: {
