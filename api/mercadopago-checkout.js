@@ -4,7 +4,6 @@
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import AbacatePay from 'abacatepay-nodejs-sdk';
 import initFirestore from './_lib/firebaseAdmin.js';
-import { paymentValidation } from '../src/middleware/paymentValidation.js';
 
 const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN || process.env.REACT_APP_MERCADO_PAGO_ACCESS_TOKEN;
 const abacateApiKey = process.env.ABACATEPAY_API_KEY;
@@ -59,54 +58,11 @@ export default async function handler(req, res) {
 
   try {
     const requestData = req.body;
-
-    // 🔒 VALIDAÇÃO DE SEGURANÇA - Rate limiting e detecção de ataques
-    const rateLimitCheck = securityMiddleware.checkRateLimit(clientIP, req.url, req.headers['user-agent']);
-    if (!rateLimitCheck.allowed) {
-      console.warn('[SECURITY] Rate limit excedido', {
-        ip: clientIP,
-        reason: rateLimitCheck.reason
-      });
-      return res.status(429).json({
-        error: 'Muitas tentativas. Aguarde alguns minutos.',
-        retryAfter: 300
-      });
-    }
-
-    // 🔒 DETECÇÃO DE ATAQUES
-    const attacks = securityMiddleware.detectAttacks(requestData, clientIP, req.headers['user-agent']);
-    if (attacks.length > 0) {
-      console.error('[SECURITY] Ataque detectado no checkout', {
-        ip: clientIP,
-        attacks: attacks.map(a => ({ type: a.type, severity: a.severity }))
-      });
-      return res.status(400).json({ error: 'Requisição inválida' });
-    }
-
-    // 🔒 VALIDAÇÃO DE ENTRADA PARA PIX
     const { valor, metodoPagamento, packageData, reservaData, cardToken, installments, payerData } = requestData;
 
-    if (metodoPagamento === 'pix') {
-      const validation = paymentValidation.validatePixCheckout(requestData, clientIP);
-      if (!validation.valid) {
-        console.warn('[VALIDATION] Dados de checkout PIX inválidos', {
-          ip: clientIP,
-          errors: validation.errors
-        });
-        return res.status(400).json({
-          error: 'Dados inválidos',
-          details: validation.errors
-        });
-      }
-
-      // Usar dados sanitizados
-      const sanitizedData = paymentValidation.sanitizePaymentData(validation.sanitized);
-      Object.assign(requestData, sanitizedData);
-    }
-
-    console.log('[MercadoPago Checkout] Dados validados e sanitizados', {
+    console.log('[MercadoPago Checkout] Dados recebidos', {
       metodoPagamento,
-      valor: metodoPagamento === 'pix' ? valor : '[REDACTED]',
+      valor,
       ip: clientIP
     });
     if (metodoPagamento === 'pix') {
@@ -214,26 +170,6 @@ export default async function handler(req, res) {
     }
     if (metodoPagamento === 'cartao' && cardToken) {
       console.log('[MercadoPago Checkout] Processando pagamento com cartão');
-
-      // 🔒 VALIDAÇÃO DE NEGÓCIO PARA CARTÃO
-      const businessValidation = paymentValidation.validateCardBusinessRules({
-        valor,
-        packageData,
-        reservaData,
-        cardToken,
-        installments
-      });
-
-      if (!businessValidation.valid) {
-        console.warn('[BUSINESS] Regras de negócio violadas para cartão', {
-          ip: clientIP,
-          errors: businessValidation.errors
-        });
-        return res.status(400).json({
-          error: 'Dados inválidos para pagamento com cartão',
-          details: businessValidation.errors
-        });
-      }
 
       // Criar pedido no Firestore antes de criar o pagamento
       const db = initFirestore();
