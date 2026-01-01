@@ -684,7 +684,7 @@ export default function Checkout() {
                       <label className="block text-sm font-semibold text-gray-900 mb-2">
                         Número do Cartão *
                       </label>
-                      <div id="form-checkout__cardNumber" className="form-control"></div>
+                      <div id="form-checkout__cardNumber" className="mp-secure-field-container"></div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -693,7 +693,7 @@ export default function Checkout() {
                         <label className="block text-sm font-semibold text-gray-900 mb-2">
                           Validade *
                         </label>
-                        <div id="form-checkout__expirationDate" className="form-control"></div>
+                        <div id="form-checkout__expirationDate" className="mp-secure-field-container"></div>
                       </div>
                       
                       {/* CVV */}
@@ -701,7 +701,7 @@ export default function Checkout() {
                         <label className="block text-sm font-semibold text-gray-900 mb-2">
                           CVV *
                         </label>
-                        <div id="form-checkout__securityCode" className="form-control"></div>
+                        <div id="form-checkout__securityCode" className="mp-secure-field-container"></div>
                       </div>
                     </div>
 
@@ -710,7 +710,7 @@ export default function Checkout() {
                       <label className="block text-sm font-semibold text-gray-900 mb-2">
                         Nome no Cartão *
                       </label>
-                      <div id="form-checkout__cardholderName" className="form-control"></div>
+                      <div id="form-checkout__cardholderName" className="mp-secure-field-container"></div>
                     </div>
 
                     {/* Email */}
@@ -718,7 +718,7 @@ export default function Checkout() {
                       <label className="block text-sm font-semibold text-gray-900 mb-2">
                         E-mail *
                       </label>
-                      <div id="form-checkout__cardholderEmail" className="form-control"></div>
+                      <div id="form-checkout__cardholderEmail" className="mp-secure-field-container"></div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -727,7 +727,7 @@ export default function Checkout() {
                         <label className="block text-sm font-semibold text-gray-900 mb-2">
                           Tipo de Documento *
                         </label>
-                        <select id="form-checkout__identificationType" className="form-control">
+                        <select id="form-checkout__identificationType">
                           <option value="CPF">CPF</option>
                         </select>
                       </div>
@@ -737,7 +737,7 @@ export default function Checkout() {
                         <label className="block text-sm font-semibold text-gray-900 mb-2">
                           CPF *
                         </label>
-                        <div id="form-checkout__identificationNumber" className="form-control"></div>
+                        <div id="form-checkout__identificationNumber" className="mp-secure-field-container"></div>
                       </div>
                     </div>
 
@@ -749,7 +749,7 @@ export default function Checkout() {
                       <label className="block text-sm font-semibold text-gray-900 mb-2">
                         Parcelas *
                       </label>
-                      <div id="form-checkout__installments" className="form-control"></div>
+                      <div id="form-checkout__installments" className="mp-secure-field-container"></div>
                     </div>
                   </form>
 
