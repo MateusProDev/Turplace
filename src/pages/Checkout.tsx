@@ -54,6 +54,7 @@ export default function Checkout() {
   const [paymentId, setPaymentId] = useState<string | null>(null);
   const [pixAttempts, setPixAttempts] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [isCardFormReady, setIsCardFormReady] = useState(false);
 
   // Dados do cartão (Card Form gerencia os campos seguros)
   const [installments] = useState(1);
@@ -129,92 +130,74 @@ export default function Checkout() {
 
   // Inicializar Card Form (Secure Fields) - PCI Compliance
   useEffect(() => {
-    if (metodoPagamento === 'cartao' && !cardFormRef.current && service) {
-      const loadCardForm = async () => {
-        try {
-          const mp = new window.MercadoPago(import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY, {
-            locale: 'pt-BR'
-          });
+    // Só executa se for cartão e o serviço estiver carregado
+    if (metodoPagamento !== 'cartao' || !service) {
+      return;
+    }
 
-          const cardForm = mp.cardForm({
-            amount: String(parseFloat((service.billingType === 'subscription' ? service.priceMonthly : service.price) || '0').toFixed(2)),
-            iframe: true,
-            form: {
-              id: 'form-checkout',
-              cardNumber: {
-                id: 'form-checkout__cardNumber',
-                placeholder: '1234 5678 9012 3456'
-              },
-              expirationDate: {
-                id: 'form-checkout__expirationDate',
-                placeholder: 'MM/AA'
-              },
-              securityCode: {
-                id: 'form-checkout__securityCode',
-                placeholder: '123'
-              },
-              cardholderName: {
-                id: 'form-checkout__cardholderName',
-                placeholder: 'Nome como impresso no cartão'
-              },
-              issuer: {
-                id: 'form-checkout__issuer',
-                placeholder: 'Banco emissor'
-              },
-              installments: {
-                id: 'form-checkout__installments',
-                placeholder: 'Parcelas'
-              },
-              identificationType: {
-                id: 'form-checkout__identificationType'
-              },
-              identificationNumber: {
-                id: 'form-checkout__identificationNumber',
-                placeholder: 'CPF'
-              },
-              cardholderEmail: {
-                id: 'form-checkout__cardholderEmail',
-                placeholder: 'E-mail'
+    let cardFormInstance: any;
+
+    const initCardForm = async () => {
+      try {
+        const mp = new window.MercadoPago(import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY, {
+          locale: 'pt-BR'
+        });
+
+        cardFormInstance = mp.cardForm({
+          amount: String(parseFloat((service.billingType === 'subscription' ? service.priceMonthly : service.price) || '0').toFixed(2)),
+          iframe: true,
+          form: {
+            id: 'form-checkout',
+            cardNumber: { id: 'form-checkout__cardNumber' },
+            expirationDate: { id: 'form-checkout__expirationDate' },
+            securityCode: { id: 'form-checkout__securityCode' },
+            cardholderName: { id: 'form-checkout__cardholderName' },
+            issuer: { id: 'form-checkout__issuer' },
+            installments: { id: 'form-checkout__installments' },
+            identificationType: { id: 'form-checkout__identificationType' },
+            identificationNumber: { id: 'form-checkout__identificationNumber' },
+            cardholderEmail: { id: 'form-checkout__cardholderEmail' }
+          },
+          callbacks: {
+            onFormMounted: (error: any) => {
+              if (error) {
+                console.error('[CardForm] Erro ao montar formulário:', error);
+                setIsCardFormReady(false);
+              } else {
+                console.log('[CardForm] Formulário montado com sucesso (Secure Fields)');
+                cardFormRef.current = cardFormInstance;
+                setIsCardFormReady(true);
               }
             },
-            callbacks: {
-              onFormMounted: (error: any) => {
-                if (error) {
-                  console.error('[CardForm] Erro ao montar formulário:', error);
-                } else {
-                  console.log('[CardForm] Formulário montado com sucesso (Secure Fields)');
-                }
-              },
-              onSubmit: (event: Event) => {
-                event.preventDefault();
-                // O submit será tratado pelo handlePayment
-              },
-              onFetching: (resource: string) => {
-                console.log('[CardForm] Fetching:', resource);
-              }
+            onFormUnmounted: () => {
+              console.log('[CardForm] Formulário desmontado.');
+              cardFormRef.current = null;
+              setIsCardFormReady(false);
+            },
+            onSubmit: (event: Event) => {
+              event.preventDefault();
+            },
+            onFetching: (resource: string) => {
+              console.log('[CardForm] Fetching:', resource);
             }
-          });
-
-          cardFormRef.current = cardForm;
-          console.log('[CardForm] Card Form inicializado');
-        } catch (err) {
-          console.error('[CardForm] Erro ao inicializar Card Form:', err);
-        }
-      };
-
-      // Aguardar SDK carregar
-      if (window.MercadoPago) {
-        loadCardForm();
-      } else {
-        const checkSDK = setInterval(() => {
-          if (window.MercadoPago) {
-            clearInterval(checkSDK);
-            loadCardForm();
           }
-        }, 100);
+        });
+      } catch (err) {
+        console.error('[CardForm] Falha catastrófica ao inicializar:', err);
+        setIsCardFormReady(false);
       }
-    }
-  }, [metodoPagamento, service]);
+    };
+
+    initCardForm();
+
+    // ✅ FUNÇÃO DE LIMPEZA ESSENCIAL
+    return () => {
+      if (cardFormInstance) {
+        console.log('[CardForm] Desmontando instância do formulário...');
+        cardFormInstance.unmount();
+      }
+    };
+  }, [metodoPagamento, service]); // Dependências corretas
 
   // Monitoramento do status do Pix
   useEffect(() => {
@@ -675,10 +658,15 @@ export default function Checkout() {
                 </div>
               )}
 
-              {/* Campos do Cartão - Secure Fields (PCI Compliance) */}
-              {metodoPagamento === 'cartao' && service?.billingType !== 'subscription' && (
+              {/* Campos do Cartão - Renderização Condicional */}
+              {metodoPagamento === 'cartao' && (
                 <div className="space-y-4 animate-fadeIn">
-                  <form id="form-checkout" className="space-y-4">
+                  {!isCardFormReady && (
+                    <div className="flex items-center justify-center h-48 bg-gray-50 rounded-lg">
+                      <p className="text-gray-500">Carregando formulário de pagamento...</p>
+                    </div>
+                  )}
+                  <form id="form-checkout" className={`space-y-4 ${isCardFormReady ? 'block' : 'hidden'}`}>
                     {/* Card Number */}
                     <div>
                       <label className="block text-sm font-semibold text-gray-900 mb-2">
@@ -752,19 +740,6 @@ export default function Checkout() {
                       <div id="form-checkout__installments" className="mp-secure-field-container"></div>
                     </div>
                   </form>
-
-                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mt-4">
-                    <div className="flex items-start gap-3">
-                      <Lock className="w-5 h-5 text-blue-600 mt-0.5" />
-                      <div>
-                        <p className="font-semibold text-gray-900 text-sm mb-1">Pagamento Seguro</p>
-                        <p className="text-xs text-gray-600">
-                          Seus dados do cartão são criptografados e processados de forma segura pelo Mercado Pago.
-                          Nós não armazenamos informações do seu cartão.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               )}
 
