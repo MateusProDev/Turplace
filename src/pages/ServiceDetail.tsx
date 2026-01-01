@@ -185,6 +185,40 @@ export default function ServiceDetail() {
           setService(data);
           setViews(data.views || 0);
           
+          console.log('[ServiceDetail] Serviço carregado:', docSnap.id, 'views atuais:', data.views);
+          
+          // Incrementar views apenas 1x por sessão (sessionStorage)
+          // Essa lógica garante contagem mesmo quando o usuário acessa diretamente
+          const sessionKey = 'viewedServicesSession';
+          let viewedServices: string[] = [];
+          try {
+            viewedServices = JSON.parse(sessionStorage.getItem(sessionKey) || '[]');
+            if (!Array.isArray(viewedServices)) viewedServices = [];
+          } catch {
+            viewedServices = [];
+          }
+
+          if (!viewedServices.includes(docSnap.id)) {
+            try {
+              // Se views não existe, inicializa com 0 antes de incrementar
+              if (typeof data.views !== 'number') {
+                console.log('[ServiceDetail] Inicializando campo views para serviço:', docSnap.id);
+                await updateDoc(docSnap.ref, { views: 1 });
+              } else {
+                console.log('[ServiceDetail] Incrementando views para serviço:', docSnap.id);
+                await updateDoc(docSnap.ref, { views: increment(1) });
+              }
+              viewedServices.push(docSnap.id);
+              sessionStorage.setItem(sessionKey, JSON.stringify(viewedServices));
+              setService((prev) => (prev ? { ...prev, views: (prev.views || 0) + 1 } : prev));
+              console.log('[ServiceDetail] ✓ Views incrementado com sucesso');
+            } catch (e) {
+              console.error('[ServiceDetail] ✗ Falha ao incrementar views:', e);
+            }
+          } else {
+            console.log('[ServiceDetail] Serviço já visualizado nesta sessão:', docSnap.id);
+          }
+          
           // Buscar mini perfil do provider
           if (data.ownerId) {
             console.log("ServiceDetail: Loading provider profile for ownerId:", data.ownerId);
@@ -211,22 +245,6 @@ export default function ServiceDetail() {
                 totalServices: 1
               });
             }
-          }
-          
-          // Incrementar visualizações (opcional - só se autenticado)
-          if (auth.currentUser) {
-            try {
-              console.log("ServiceDetail: Incrementing views");
-              await updateDoc(docSnap.ref, {
-                views: increment(1),
-                lastViewed: serverTimestamp()
-              });
-            } catch (viewError) {
-              console.warn("ServiceDetail: Could not increment views (user not authenticated):", viewError);
-              // Não é erro crítico, continua normalmente
-            }
-          } else {
-            console.log("ServiceDetail: Skipping view increment (user not authenticated)");
           }
           
           // Buscar avaliações

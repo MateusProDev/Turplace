@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { Menu, X, Grid, List } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Menu, X, Grid, List, ChevronDown, Sparkles, Zap, Users, Shield, CheckCircle } from "lucide-react";
 import iconLogo from '../assets/iconlogo.png';
 import { getCategoriesWithProducts } from "../utils/getCategoriesWithProducts";
 import { getTopRatedProducts, type Product } from "../utils/getTopRatedProducts";
 import { generateSlug } from "../utils/slug";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, getDocs, query, where, updateDoc, doc, increment } from "firebase/firestore";
 import { db } from "../utils/firebase";
 import {
   Star,
@@ -16,8 +16,7 @@ import {
   Eye,
   Heart,
   BookOpen,
-  ShoppingCart,
-  PlayCircle
+  ShoppingCart
 } from "lucide-react";
 
 interface CategoryData {
@@ -44,6 +43,7 @@ export default function Marketplace() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('todos');
+  const heroRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -71,10 +71,31 @@ export default function Marketplace() {
 
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
+      
+      // Animação parallax no hero
+      if (heroRef.current) {
+        const scrollY = window.scrollY;
+        const heroHeight = heroRef.current.offsetHeight;
+        const opacity = Math.max(0.3, 1 - (scrollY / heroHeight) * 0.7);
+        heroRef.current.style.opacity = opacity.toString();
+      }
+    };
+
+    // Recarregar dados quando o usuário volta para a página (navegação com botão voltar)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('[Marketplace] Página ficou visível, recarregando dados...');
+        loadData();
+      }
     };
 
     window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   // Filtrar produtos baseado na busca e categoria
@@ -90,47 +111,90 @@ export default function Marketplace() {
            course.description?.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
+  const trackUniqueView = async (opts: { kind: 'course' | 'service'; id: string }) => {
+    const { kind, id } = opts;
+    const sessionKey = kind === 'course' ? 'viewedCoursesSession' : 'viewedServicesSession';
+    const collectionName = kind === 'course' ? 'courses' : 'services';
+
+    console.log(`[Marketplace] trackUniqueView called for ${kind}:`, id);
+
+    let seen: string[] = [];
+    try {
+      seen = JSON.parse(sessionStorage.getItem(sessionKey) || '[]');
+      if (!Array.isArray(seen)) seen = [];
+    } catch {
+      seen = [];
+    }
+
+    // Se já foi visto nesta sessão, não incrementa
+    if (seen.includes(id)) {
+      console.log(`[Marketplace] ${kind} ${id} já foi visto nesta sessão, pulando`);
+      return;
+    }
+
+    // Marca como visto antes de incrementar para evitar duplicação
+    seen.push(id);
+    sessionStorage.setItem(sessionKey, JSON.stringify(seen));
+    console.log(`[Marketplace] Marcado como visto no sessionStorage:`, sessionKey, seen);
+
+    // Atualiza o estado local IMEDIATAMENTE para refletir no UI
+    if (kind === 'course') {
+      setCourses(prev => prev.map(course => 
+        course.id === id ? { ...course, views: (course.views || 0) + 1 } : course
+      ));
+    } else {
+      setTopProducts(prev => prev.map(product => 
+        product.id === id ? { ...product, views: (product.views || 0) + 1 } : product
+      ));
+    }
+
+    // Incrementa no Firestore em background sem bloquear a navegação
+    try {
+      const docRef = doc(db, collectionName, id);
+      console.log(`[Marketplace] Tentando incrementar views em ${collectionName}/${id}`);
+      await updateDoc(docRef, { views: increment(1) });
+      console.log(`[Marketplace] ✓ Views incrementado com sucesso para ${kind} ${id}`);
+    } catch (e) {
+      console.error(`[Marketplace] ✗ Falha ao incrementar views para ${kind} ${id}:`, e);
+      // Reverte a alteração local em caso de erro
+      if (kind === 'course') {
+        setCourses(prev => prev.map(course => 
+          course.id === id ? { ...course, views: (course.views || 1) - 1 } : course
+        ));
+      } else {
+        setTopProducts(prev => prev.map(product => 
+          product.id === id ? { ...product, views: (product.views || 1) - 1 } : product
+        ));
+      }
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 via-white to-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Navigation - Marketplace Header */}
-      <header className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-lg shadow-lg py-3' : 'bg-transparent py-5'}`}>
+      <header className={`fixed top-0 w-full z-50 transition-all duration-500 ${scrolled ? 'bg-white/98 backdrop-blur-xl shadow-soft py-3' : 'bg-white/80 backdrop-blur-md py-4 border-b border-white/20'}`}>
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center">
             <Link to="/" className="flex items-center gap-3 py-0">
-              <img src={iconLogo} alt="Lucrazi" className={`h-12 w-auto object-contain transition-all`} />
-              <span className={`text-xl font-bold ${scrolled ? 'text-gray-700' : 'text-white/90'}`}>Lucrazi</span>
+              <img src={iconLogo} alt="Lucrazi" className="h-11 w-auto object-contain transition-all" />
+              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">Lucrazi</span>
             </Link>
 
             {/* Desktop menu */}
-            <nav className="hidden lg:flex items-center gap-8">
-              <Link
-                to="/"
-                className={`font-medium transition-colors ${scrolled ? 'text-gray-700 hover:text-blue-600' : 'text-white/90 hover:text-white'}`}
-              >
-                Início
-              </Link>
-              <Link
-                to="/marketplace"
-                className={`font-medium transition-colors ${scrolled ? 'text-blue-600' : 'text-white'}`}
-              >
-                Marketplace
-              </Link>
-              <Link
-                to="/catalog"
-                className={`font-medium transition-colors ${scrolled ? 'text-gray-700 hover:text-blue-600' : 'text-white/90 hover:text-white'}`}
-              >
-                Catálogo
-              </Link>
-              <div className="flex items-center gap-4">
+            <nav className="hidden lg:flex items-center gap-6">
+              <Link to="/" className="text-gray-700 font-medium hover:text-blue-600 transition-colors">Início</Link>
+              <Link to="/marketplace" className="text-blue-600 font-semibold">Marketplace</Link>
+              <Link to="/catalog" className="text-gray-700 font-medium hover:text-blue-600 transition-colors">Catálogo</Link>
+              <div className="flex items-center gap-3 ml-4">
                 <Link
                   to="/client-login"
-                  className={`px-5 py-2.5 font-medium rounded-xl transition-all ${scrolled ? 'text-blue-600 hover:text-blue-700' : 'text-white/90 hover:text-white'}`}
+                  className="px-5 py-2.5 text-gray-700 font-medium hover:text-blue-600 transition-colors"
                 >
                   Entrar
                 </Link>
                 <Link
                   to="/client"
-                  className="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-semibold rounded-xl hover:from-blue-700 hover:to-cyan-600 transition-all shadow-lg hover:shadow-xl"
+                  className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-full hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
                 >
                   Minha Conta
                 </Link>
@@ -197,61 +261,179 @@ export default function Marketplace() {
         </div>
       </header>
 
-      {/* Hero Section - Marketplace */}
-      <section className="relative pt-24 pb-12 bg-gradient-to-br from-blue-600 via-cyan-500 to-blue-700 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent"></div>
+      {/* Hero Section - Estilo Hotmart */}
+      <div ref={heroRef} className="relative min-h-[90vh] bg-gradient-to-br from-blue-50 via-white to-purple-50 overflow-hidden pt-20">
+        {/* Decorative Background */}
+        <div className="absolute inset-0 overflow-hidden opacity-40">
+          <div className="absolute top-20 right-0 w-96 h-96 bg-gradient-to-br from-blue-200/30 to-purple-200/30 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-20 left-0 w-96 h-96 bg-gradient-to-tr from-cyan-200/30 to-blue-200/30 rounded-full blur-3xl"></div>
+        </div>
 
-        <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-lg text-white px-4 py-2 rounded-full mb-6">
-              <ShoppingCart size={18} />
-              <span className="font-medium">Marketplace Lucrazi</span>
-            </div>
+        <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Left Content - Texto à esquerda em mobile */}
+            <div className="space-y-8 text-left lg:pr-8">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-100 to-purple-100 text-blue-700 px-4 py-2 rounded-full text-sm font-medium">
+                <Sparkles className="w-4 h-4" />
+                São mais de {topProducts.length + courses.length} cursos e produtos
+              </div>
 
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6">
-              Descubra e Compre <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-300">Infoprodutos</span>
-            </h1>
+              {/* Main Heading */}
+              <div className="space-y-4">
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+                  O que você quer{' '}
+                  <span className="relative inline-block">
+                    <span className="relative z-10 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                      aprender
+                    </span>
+                    <svg className="absolute -bottom-2 left-0 w-full" height="12" viewBox="0 0 200 12" fill="none">
+                      <path d="M2 10C60 2 140 2 198 10" stroke="url(#gradient)" strokeWidth="3" strokeLinecap="round"/>
+                      <defs>
+                        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#3B82F6" />
+                          <stop offset="50%" stopColor="#9333EA" />
+                          <stop offset="100%" stopColor="#EC4899" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </span>
+                  {' '}hoje?
+                </h1>
+                
+                <p className="text-xl text-gray-600 max-w-xl">
+                  Pesquise um tema e escolha cursos perfeitos para você.
+                  <br />
+                  <span className="text-gray-500">Tente "marketing" ou "culinária"</span>
+                </p>
+              </div>
 
-            <p className="text-lg sm:text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-              Cursos online, produtos digitais, serviços especializados e muito mais. Tudo que você precisa para aprender, crescer e empreender.
-            </p>
+              {/* Search Bar - Destaque */}
+              <div className="max-w-xl">
+                <div className="relative group">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-500"></div>
+                  <div className="relative flex items-center">
+                    <Search className="absolute left-5 text-gray-400 z-10" size={22} />
+                    <input
+                      type="text"
+                      placeholder="O que você quer aprender? Ex: Marketing Digital, Programação..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-14 pr-32 py-5 bg-white border-2 border-gray-200 rounded-2xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300 shadow-xl"
+                    />
+                    <button className="absolute right-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
+                      Buscar
+                    </button>
+                  </div>
+                </div>
+              </div>
 
-            {/* Search Bar */}
-            <div className="max-w-2xl mx-auto mb-8">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                <input
-                  type="text"
-                  placeholder="Buscar cursos, produtos, serviços..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-white/95 backdrop-blur-lg border border-white/30 rounded-2xl text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50"
-                />
+              {/* Trust Badges */}
+              <div className="flex flex-wrap gap-6 pt-4">
+                <div className="flex items-center gap-2 text-gray-700">
+                  <CheckCircle className="w-5 h-5 text-green-500" />
+                  <span className="text-sm font-medium">Certificado Válido</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-700">
+                  <Shield className="w-5 h-5 text-blue-500" />
+                  <span className="text-sm font-medium">Garantia de 7 Dias</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-700">
+                  <Users className="w-5 h-5 text-purple-500" />
+                  <span className="text-sm font-medium">Milhares de Alunos</span>
+                </div>
               </div>
             </div>
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
-              <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4">
-                <div className="text-2xl font-bold text-white">{topProducts.length}+</div>
-                <div className="text-sm text-blue-100">Produtos</div>
+            {/* Right Content - Imagens em camadas (pétalas/paleta) */}
+            <div className="relative hidden lg:block h-[600px]">
+              {/* Imagem 1 - Fundo (maior, mais para direita) */}
+              <div className="absolute top-0 right-0 w-72 h-80 transform rotate-6 transition-all duration-700 hover:rotate-3 hover:scale-105">
+                <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl border-4 border-white">
+                  <img
+                    src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&h=800&fit=crop"
+                    alt="Curso de Programação"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-blue-900/80 via-transparent to-transparent"></div>
+                  <div className="absolute bottom-4 left-4 text-white">
+                    <div className="text-sm font-bold mb-1">Programação</div>
+                    <div className="flex items-center gap-1 text-xs">
+                      <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                      <span className="font-semibold">4.9</span>
+                      <span className="opacity-80">(2.4k)</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4">
-                <div className="text-2xl font-bold text-white">{courses.length}+</div>
-                <div className="text-sm text-blue-100">Cursos</div>
+
+              {/* Imagem 2 - Meio (sobreposta à esquerda) */}
+              <div className="absolute top-24 left-8 w-64 h-72 transform -rotate-6 transition-all duration-700 hover:rotate-0 hover:scale-105 z-10">
+                <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl border-4 border-white">
+                  <img
+                    src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=600&h=700&fit=crop"
+                    alt="Marketing Digital"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-purple-900/80 via-transparent to-transparent"></div>
+                  <div className="absolute bottom-4 left-4 text-white">
+                    <div className="text-sm font-bold mb-1">Marketing</div>
+                    <div className="flex items-center gap-1 text-xs">
+                      <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                      <span className="font-semibold">4.8</span>
+                      <span className="opacity-80">(1.8k)</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4">
-                <div className="text-2xl font-bold text-white">50+</div>
-                <div className="text-sm text-blue-100">Criadores</div>
+
+              {/* Imagem 3 - Frente (mais baixo, central-direita) */}
+              <div className="absolute bottom-12 right-20 w-60 h-64 transform rotate-3 transition-all duration-700 hover:-rotate-3 hover:scale-105 z-20">
+                <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl border-4 border-white">
+                  <img
+                    src="https://images.unsplash.com/photo-1542744094-3a31f272c490?w=600&h=700&fit=crop"
+                    alt="Design Gráfico"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-pink-900/80 via-transparent to-transparent"></div>
+                  <div className="absolute bottom-4 left-4 text-white">
+                    <div className="text-sm font-bold mb-1">Design</div>
+                    <div className="flex items-center gap-1 text-xs">
+                      <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                      <span className="font-semibold">5.0</span>
+                      <span className="opacity-80">(1.2k)</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="bg-white/10 backdrop-blur-lg rounded-xl p-4">
-                <div className="text-2xl font-bold text-white">24/7</div>
-                <div className="text-sm text-blue-100">Acesso</div>
+
+              {/* Badge flutuante */}
+              <div className="absolute top-12 left-0 bg-gradient-to-r from-orange-500 to-pink-500 text-white px-4 py-2.5 rounded-full shadow-xl animate-bounce z-30">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4" />
+                  <span className="text-sm font-bold">Tendência</span>
+                </div>
               </div>
+            </div>
+
+            {/* Mobile: Banner simples em vez das imagens sobrepostas */}
+            <div className="lg:hidden w-full h-64 rounded-2xl overflow-hidden shadow-xl">
+              <img
+                src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&h=600&fit=crop"
+                alt="Cursos Online"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-blue-900/60 via-transparent to-transparent"></div>
             </div>
           </div>
+
+          {/* Scroll Indicator */}
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 hidden lg:flex flex-col items-center gap-2 text-gray-400 animate-bounce">
+            <span className="text-sm font-medium">Explorar cursos</span>
+            <ChevronDown className="w-5 h-5" />
+          </div>
         </div>
-      </section>
+      </div>
 
       {/* Filters and Controls */}
       <section className="py-6 bg-white border-b border-gray-200">
@@ -342,6 +524,10 @@ export default function Marketplace() {
                 <Link
                   key={product.id}
                   to={`/service/${generateSlug(product.title || '')}`}
+                  onClick={() => {
+                    // 1 view por sessão por serviço
+                    void trackUniqueView({ kind: 'service', id: product.id });
+                  }}
                   className={`group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 overflow-hidden border border-gray-100 ${
                     viewMode === 'list' ? 'flex' : ''
                   }`}
@@ -457,19 +643,34 @@ export default function Marketplace() {
                 <Link
                   key={course.id}
                   to={`/course/${generateSlug(course.title || '')}`}
+                  onClick={() => {
+                    // 1 view por sessão por curso (evita duplicar com CourseDetail)
+                    void trackUniqueView({ kind: 'course', id: course.id });
+                  }}
                   className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 overflow-hidden border border-gray-100"
                 >
                   <div className="relative h-48 overflow-hidden">
                     <img
-                      src={course.imageUrl || 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&h=600&fit=crop'}
+                      src={course.thumbnail || course.coverImage || course.imageUrl || course.image || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=600&fit=crop'}
                       alt={course.title}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=600&fit=crop';
+                      }}
                     />
                     <div className="absolute top-3 left-3">
                       <span className="px-2.5 py-1 text-xs font-bold text-white rounded-full bg-gradient-to-r from-purple-500 to-pink-500">
                         Curso
                       </span>
                     </div>
+                    {course.category && (
+                      <div className="absolute top-3 right-3">
+                        <span className="px-2.5 py-1 text-xs font-medium text-white bg-black/50 backdrop-blur-sm rounded-full">
+                          {course.category}
+                        </span>
+                      </div>
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                   </div>
 
@@ -479,17 +680,41 @@ export default function Marketplace() {
                     </h3>
 
                     <p className="text-gray-600 mb-4 line-clamp-2 text-sm">
-                      {course.description}
+                      {course.description || course.shortDescription || 'Curso completo e atualizado'}
                     </p>
 
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <PlayCircle className="w-4 h-4 text-purple-500" />
-                        <span className="text-sm text-gray-500">{course.duration || 'Duração variável'}</span>
+                    {course.instructor && (
+                      <p className="text-sm text-gray-500 mb-3">
+                        Por <span className="font-medium text-gray-700">{course.instructor || course.author || course.providerName}</span>
+                      </p>
+                    )}
+
+                    <div className="flex items-start justify-between mb-4 gap-3">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-gray-500">
+                        <div className="flex items-center gap-1" title={`${Number(course.rating ?? course.averageRating ?? 0).toFixed(1)} de 5 estrelas`}>
+                          <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                          <span className="text-xs font-medium text-gray-700">
+                            {Number(course.rating ?? course.averageRating ?? 0).toFixed(1)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1" title={`${Number(course.views ?? course.viewCount ?? 0).toLocaleString()} visualizações`}>
+                          <Eye className="w-4 h-4 text-gray-400" />
+                          <span className="text-xs font-medium">
+                            {Number(course.views ?? course.viewCount ?? 0).toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1" title={`${Number(course.totalLessons ?? course.lessonsCount ?? 0)} aulas`}>
+                          <BookOpen className="w-4 h-4 text-purple-500" />
+                          <span className="text-xs font-medium">
+                            {Number(course.totalLessons ?? course.lessonsCount ?? 0)}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1 text-amber-500">
-                        <Star className="w-3.5 h-3.5 fill-current" />
-                        <span className="text-sm font-bold">{course.rating || '4.8'}</span>
+
+                      <div className="flex items-center gap-2 text-gray-700 shrink-0">
+                        <span className="text-sm font-medium">
+                          {course.instructor || course.author || 'Instrutor'}
+                        </span>
                       </div>
                     </div>
 
@@ -507,7 +732,9 @@ export default function Marketplace() {
                             return '0,00';
                           })()}
                         </div>
-                        <p className="text-xs text-gray-500">Acesso vitalício</p>
+                        <p className="text-xs text-gray-500">
+                          {course.billingType === 'subscription' ? 'Assinatura mensal' : 'Acesso vitalício'}
+                        </p>
                       </div>
 
                       <div className="flex items-center gap-2 text-purple-600 group-hover:text-purple-700 transition-colors">

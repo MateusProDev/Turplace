@@ -54,7 +54,6 @@ export default function CourseDetail() {
   const [error, setError] = useState<string | null>(null);
   const [contacting, setContacting] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
-  const [viewsIncremented, setViewsIncremented] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -81,12 +80,39 @@ export default function CourseDetail() {
           const courseData = { id: courseDoc.id, ...courseDoc.data() } as Course;
           setCourse(courseData);
           
-          // Increment views only once per course visit
-          if (viewsIncremented !== courseDoc.id) {
-            await updateDoc(doc(db, 'courses', courseDoc.id), {
-              views: increment(1)
-            });
-            setViewsIncremented(courseDoc.id);
+          console.log('[CourseDetail] Curso carregado:', courseDoc.id, 'views atuais:', courseData.views);
+          
+          // Incrementar views apenas 1x por sessão (sessionStorage)
+          // Essa lógica garante contagem mesmo quando o usuário acessa diretamente
+          const sessionKey = 'viewedCoursesSession';
+          let viewedCourses: string[] = [];
+          try {
+            viewedCourses = JSON.parse(sessionStorage.getItem(sessionKey) || '[]');
+            if (!Array.isArray(viewedCourses)) viewedCourses = [];
+          } catch {
+            viewedCourses = [];
+          }
+
+          if (!viewedCourses.includes(courseDoc.id)) {
+            try {
+              const courseRef = doc(db, 'courses', courseDoc.id);
+              // Se views não existe, inicializa com 0 antes de incrementar
+              if (typeof courseData.views !== 'number') {
+                console.log('[CourseDetail] Inicializando campo views para curso:', courseDoc.id);
+                await updateDoc(courseRef, { views: 1 });
+              } else {
+                console.log('[CourseDetail] Incrementando views para curso:', courseDoc.id);
+                await updateDoc(courseRef, { views: increment(1) });
+              }
+              viewedCourses.push(courseDoc.id);
+              sessionStorage.setItem(sessionKey, JSON.stringify(viewedCourses));
+              setCourse((prev) => (prev ? { ...prev, views: (prev.views || 0) + 1 } : prev));
+              console.log('[CourseDetail] ✓ Views incrementado com sucesso');
+            } catch (e) {
+              console.error('[CourseDetail] ✗ Falha ao incrementar views:', e);
+            }
+          } else {
+            console.log('[CourseDetail] Curso já visualizado nesta sessão:', courseDoc.id);
           }
         } else {
           setError('Curso não encontrado');
@@ -100,11 +126,6 @@ export default function CourseDetail() {
     };
 
     fetchCourse();
-  }, [slug]);
-
-  // Reset views incremented when slug changes
-  useEffect(() => {
-    setViewsIncremented(null);
   }, [slug]);
 
   const handleContact = async () => {

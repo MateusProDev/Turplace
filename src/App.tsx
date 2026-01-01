@@ -1,5 +1,4 @@
 import ProfileSettings from './pages/ProfileSettings';
-import LeadPage from './pages/LeadPage';
 import LeadPageEditor from './pages/LeadPageEditor';
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import Landing from './pages/Landing';
@@ -73,7 +72,6 @@ function App() {
         <Route path="/partnerships" element={<Partnerships />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/wallet" element={<RequireAuth><Wallet /></RequireAuth>} />
-        <Route path="/:userSlug" element={<LeadPage />} />
       </Routes>
     </BrowserRouter>
   );
