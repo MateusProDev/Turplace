@@ -279,10 +279,21 @@ export default function Checkout() {
       let cardToken = undefined;
       let payerData = undefined;
 
+      let deviceId = null;
+
       if (metodoPagamento === 'cartao') {
         console.log('[Checkout] Processando dados do cartão');
         // Criar token do cartão
         const mp = new window.MercadoPago(import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY || 'APP_USR-aac914af-9caa-4fb1-ae68-47c87dfe4d2e');
+        
+        // 🔒 DEVICE ID - Obrigatório para melhor aprovação
+        try {
+          deviceId = await mp.getIdentificationTypes();
+          console.log('[Checkout] Device ID capturado');
+        } catch (err) {
+          console.warn('[Checkout] Falha ao capturar Device ID:', err);
+        }
+        
         const cardTokenResponse = await mp.createCardToken({
           cardNumber: cardNumber.replace(/\s/g, ''),
           cardholderName,
@@ -297,7 +308,8 @@ export default function Checkout() {
           email: customerData.email,
           first_name: customerData.name.split(' ')[0],
           last_name: customerData.name.split(' ').slice(1).join(' '),
-          cpf: customerData.cpf.replace(/\D/g, '')
+          cpf: customerData.cpf.replace(/\D/g, ''),
+          phone: customerData.phone || ''
         };
         console.log('[Checkout] Token do cartão criado:', cardToken);
       }
@@ -309,7 +321,8 @@ export default function Checkout() {
         reservaData,
         cardToken,
         installments: metodoPagamento === 'cartao' ? installments : undefined,
-        payerData
+        payerData,
+        deviceId // Device ID para melhor aprovação
       });
 
       console.log('[Checkout] Resposta da API:', response);

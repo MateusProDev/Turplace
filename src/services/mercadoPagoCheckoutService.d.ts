@@ -20,6 +20,7 @@ export interface PayerData {
   first_name?: string;
   last_name?: string;
   cpf?: string;
+  phone?: string; // ✅ Adicionado para melhorar aprovação
 }
 
 export interface CheckoutParams {
@@ -30,6 +31,7 @@ export interface CheckoutParams {
   cardToken?: string;
   installments?: number;
   payerData?: PayerData;
+  deviceId?: any; // ✅ Device ID para melhor aprovação
 }
 
 export interface CheckoutResponse {
