@@ -65,14 +65,26 @@ export default function Success() {
     if (!orderDetails) return;
 
     try {
-      // Aqui será integrada a API do Brevo para envio de email
-      // Por enquanto, apenas simulamos o envio
-      setEmailSent(true);
+      // Enviar email através da API
+      const response = await fetch('/api/send-access-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId: orderDetails.orderId,
+          customerEmail: orderDetails.customerEmail,
+          serviceTitle: orderDetails.serviceTitle,
+          providerName: orderDetails.providerName,
+          amount: orderDetails.amount
+        })
+      });
 
-      // TODO: Implementar integração com Brevo
-      console.log("Enviando email para:", orderDetails.customerEmail);
-      console.log("Conteúdo: Acesso ao produto/serviço");
-
+      if (response.ok) {
+        setEmailSent(true);
+      } else {
+        console.error('Erro ao enviar email');
+      }
     } catch (err) {
       console.error("Erro ao enviar email:", err);
     }

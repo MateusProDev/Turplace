@@ -1,0 +1,111 @@
+const admin = require('firebase-admin');
+const { getAuth } = require('firebase-admin/auth');
+
+module.exports = async (req, res) => {
+  // Verificar método
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Método não permitido' });
+  }
+
+  try {
+    // Verificar autenticação
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ error: 'Token de autenticação necessário' });
+    }
+
+    const token = authHeader.split('Bearer ')[1];
+    let decodedToken;
+
+    try {
+      decodedToken = await getAuth().verifyIdToken(token);
+    } catch (error) {
+      console.error('[user-orders] Erro ao verificar token:', error);
+      return res.status(401).json({ error: 'Token inválido' });
+    }
+
+    const userId = decodedToken.uid;
+    console.log('[user-orders] Buscando pedidos para usuário:', userId);
+
+    // Buscar pedidos do usuário
+    const ordersRef = admin.firestore().collection('orders');
+    const ordersQuery = ordersRef
+      .where('userId', '==', userId)
+      .orderBy('createdAt', 'desc');
+
+    const ordersSnap = await ordersQuery.get();
+
+    const orders = [];
+
+    for (const orderDoc of ordersSnap.docs) {
+      const orderData = orderDoc.data();
+
+      // Buscar dados do serviço
+      let serviceData = null;
+      if (orderData.serviceId) {
+        try {
+          const serviceRef = admin.firestore().collection('services').doc(orderData.serviceId);
+          const serviceSnap = await serviceRef.get();
+          if (serviceSnap.exists) {
+            serviceData = serviceSnap.data();
+          }
+        } catch (error) {
+          console.error('[user-orders] Erro ao buscar serviço:', error);
+        }
+      }
+
+      // Buscar dados do prestador
+      let providerData = null;
+      if (orderData.providerId) {
+        try {
+          const providerRef = admin.firestore().collection('users').doc(orderData.providerId);
+          const providerSnap = await providerRef.get();
+          if (providerSnap.exists) {
+            providerData = providerSnap.data();
+          }
+        } catch (error) {
+          console.error('[user-orders] Erro ao buscar prestador:', error);
+        }
+      }
+
+      // Buscar conteúdo do curso se for um curso
+      let sections = null;
+      if (serviceData && serviceData.type === 'course' && serviceData.sections) {
+        sections = serviceData.sections;
+      }
+
+      const order = {
+        id: orderDoc.id,
+        serviceId: orderData.serviceId || '',
+        serviceTitle: serviceData?.title || serviceData?.name || 'Serviço',
+        serviceDescription: serviceData?.description || '',
+        serviceImageUrl: serviceData?.imageUrl || serviceData?.image || null,
+        providerName: providerData?.name || providerData?.displayName || 'Prestador',
+        amount: orderData.amount || orderData.amountTotal || 0,
+        status: orderData.status || 'pending',
+        createdAt: orderData.createdAt || orderData.created_at || new Date().toISOString(),
+        billingType: orderData.billingType || orderData.billing_type || 'one-time',
+        customerEmail: orderData.customerEmail || orderData.customer_email || '',
+        accessLink: orderData.accessLink || null,
+        contentType: serviceData?.type || 'service',
+        sections: sections
+      };
+
+      orders.push(order);
+    }
+
+    console.log(`[user-orders] Encontrados ${orders.length} pedidos para usuário ${userId}`);
+
+    res.status(200).json({
+      success: true,
+      orders: orders
+    });
+
+  } catch (error) {
+    console.error('[user-orders] Erro geral:', error);
+    res.status(500).json({
+      error: 'Erro interno do servidor',
+      details: error.message
+    });
+  }
+};

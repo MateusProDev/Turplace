@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useEffect } from "react";
 import { useAuth } from "../../hooks/useAuth";
@@ -14,13 +13,11 @@ import {
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 
 const googleProvider = new GoogleAuthProvider();
-// Configure Google provider
 googleProvider.setCustomParameters({
   prompt: 'select_account'
 });
 
-
-export default function Login() {
+export default function ProviderLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -31,41 +28,32 @@ export default function Login() {
   const location = useLocation();
   const { user, userData } = useAuth();
 
-  // Determinar se é login de cliente baseado na rota
-  const isClientLogin = location.pathname === '/client-login';
-  // Log para depuração
-  // console.log("Login.tsx: user:", user);
   // Redireciona se já estiver autenticado
   useEffect(() => {
     if (user) {
-      console.log("Login.tsx: Usuário logado, verificando dados...", { user: user.email, userData });
+      console.log("ProviderLogin.tsx: Usuário logado, verificando dados...", { user: user.email, userData });
 
       // Aguardar os dados carregarem
       const checkAndRedirect = () => {
-        console.log("Login.tsx: Verificando userData", { userData, isAdmin: userData?.isAdmin });
+        console.log("ProviderLogin.tsx: Verificando userData", { userData, isAdmin: userData?.isAdmin });
 
         if (userData !== null) {
           // Verifica se há um destino salvo no state
           const from = location.state?.from?.pathname;
-          console.log("Login.tsx: Redirecionando usuário", { isAdmin: userData?.isAdmin, from });
+          console.log("ProviderLogin.tsx: Redirecionando prestador", { isAdmin: userData?.isAdmin, from });
 
           if (userData?.isAdmin) {
-            // Admin vai para /admin ou para o destino salvo
-            console.log("Login.tsx: Redirecionando admin para:", from || "/admin");
+            // Admin vai para /admin
+            console.log("ProviderLogin.tsx: Redirecionando admin para:", from || "/admin");
             navigate(from || "/admin", { replace: true });
-          } else if (userData?.role === 'prestador' || userData?.stripeAccountId) {
+          } else {
             // Prestador vai para /provider ou para o destino salvo (se não for /admin)
             const destination = from && from !== "/admin" ? from : "/provider";
-            console.log("Login.tsx: Redirecionando prestador para:", destination);
-            navigate(destination, { replace: true });
-          } else {
-            // Cliente vai para /client ou para o destino salvo (se não for /admin)
-            const destination = from && from !== "/admin" ? from : "/client";
-            console.log("Login.tsx: Redirecionando cliente para:", destination);
+            console.log("ProviderLogin.tsx: Redirecionando prestador para:", destination);
             navigate(destination, { replace: true });
           }
         } else {
-          console.log("Login.tsx: userData ainda null, tentando novamente em 500ms");
+          console.log("ProviderLogin.tsx: userData ainda null, tentando novamente em 500ms");
           // Tentar novamente se userData ainda não carregou
           setTimeout(checkAndRedirect, 500);
         }
@@ -79,7 +67,7 @@ export default function Login() {
   }, [user, userData, navigate, location]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    console.log("Login.tsx: handleSubmit chamado", { isLogin, email });
+    console.log("ProviderLogin.tsx: handleSubmit chamado", { isLogin, email });
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -92,12 +80,12 @@ export default function Login() {
           id: cred.user.uid,
           name,
           email,
-          role: isClientLogin ? "cliente" : "prestador",
+          role: "prestador",
           planId: "free",
           createdAt: serverTimestamp(),
         });
       }
-      navigate(isClientLogin ? "/client" : "/provider");
+      navigate("/provider");
     } catch (err: unknown) {
       const error = err as { code?: string; message?: string };
       if (error.code === "auth/email-already-in-use") {
@@ -111,33 +99,33 @@ export default function Login() {
   };
 
   const handleGoogleLogin = async () => {
-    console.log("Login.tsx: handleGoogleLogin chamado");
+    console.log("ProviderLogin.tsx: handleGoogleLogin chamado");
     setError("");
     setLoading(true);
     try {
-      console.log("Login.tsx: Iniciando signInWithPopup");
+      console.log("ProviderLogin.tsx: Iniciando signInWithPopup");
       const result = await signInWithPopup(auth, googleProvider);
-      console.log("Login.tsx: signInWithPopup sucesso", result.user.email);
+      console.log("ProviderLogin.tsx: signInWithPopup sucesso", result.user.email);
 
       if (result.user) {
-        console.log("Login.tsx: Salvando dados do usuário no Firestore");
+        console.log("ProviderLogin.tsx: Salvando dados do usuário no Firestore");
         await setDoc(
           doc(db, "users", result.user.uid),
           {
             id: result.user.uid,
             name: result.user.displayName,
             email: result.user.email,
-            role: isClientLogin ? "cliente" : "prestador",
+            role: "prestador",
             planId: "free",
             createdAt: serverTimestamp(),
           },
           { merge: true }
         );
-        console.log("Login.tsx: Dados salvos com sucesso");
+        console.log("ProviderLogin.tsx: Dados salvos com sucesso");
       }
-      navigate(isClientLogin ? "/client" : "/provider");
+      navigate("/provider");
     } catch (err: unknown) {
-      console.error("Login.tsx: Erro no Google login", err);
+      console.error("ProviderLogin.tsx: Erro no Google login", err);
 
       // Tratamento específico de erros do Firebase Auth
       let errorMessage = "Falha ao entrar com Google";
@@ -166,11 +154,11 @@ export default function Login() {
       <div className="bg-white/90 shadow-xl rounded-2xl p-8 w-full max-w-md flex flex-col items-center gap-6">
         <div className="flex flex-col items-center gap-2">
           <img src={logoSemFundo} alt="Lucrazi" className="w-40 h-24 object-contain" />
-          <p className="text-gray-500 text-center">{isClientLogin ? "Acesse sua conta de cliente para explorar e comprar no marketplace." : "Acesse sua conta de prestador para gerenciar seus serviços."}</p>
+          <p className="text-gray-500 text-center">Acesse sua conta de prestador para gerenciar seus serviços e produtos.</p>
         </div>
         <form onSubmit={handleSubmit} className="w-full flex flex-col gap-3">
           {!isLogin && (
-            <input value={name} onChange={e => setName(e.target.value)} placeholder={isClientLogin ? "Seu nome completo" : "Nome do seu negócio"} className="w-full px-4 py-2 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-200" required />
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="Nome do seu negócio" className="w-full px-4 py-2 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-200" required />
           )}
           <input value={email} onChange={e => setEmail(e.target.value)} placeholder="E-mail" className="w-full px-4 py-2 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-200" required autoComplete="email" />
           <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Senha" className="w-full px-4 py-2 border rounded-lg bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-200" required autoComplete="current-password" />

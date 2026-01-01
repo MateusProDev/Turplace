@@ -62,7 +62,7 @@ export function useAuth() {
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
               photoURL: u.photoURL || null,
-              role: 'user',
+              role: 'cliente',
               // Limitações do plano free
               planFeatures: planLimits.features
             });

@@ -55,6 +55,41 @@ export default async (req, res) => {
       await orderRef.update({ status: 'paid', paidAt: new Date().toISOString(), stripePaymentIntentId: session.payment_intent });
       console.log('[webhook] Ordem atualizada para paga', { orderId });
 
+      // Enviar email de acesso ao cliente
+      try {
+        const serviceRef = db.collection('services').doc(order.serviceId);
+        const serviceSnap = await serviceRef.get();
+        const serviceData = serviceSnap.exists ? serviceSnap.data() : null;
+
+        const providerRef = db.collection('users').doc(order.providerId);
+        const providerSnap = await providerRef.get();
+        const providerData = providerSnap.exists ? providerSnap.data() : null;
+
+        // Chamar função de envio de email
+        const emailResponse = await fetch(`${process.env.VERCEL_URL || 'http://localhost:3000'}/api/send-access-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            orderId: orderId,
+            customerEmail: order.customerEmail,
+            serviceTitle: serviceData?.title || serviceData?.name || 'Serviço Digital',
+            providerName: providerData?.name || 'Prestador',
+            amount: `R$ ${(order.amountTotal / 100).toFixed(2).replace('.', ',')}`
+          })
+        });
+
+        if (emailResponse.ok) {
+          console.log('[webhook] Email de acesso enviado com sucesso', { orderId });
+        } else {
+          console.warn('[webhook] Falha ao enviar email de acesso', { orderId });
+        }
+      } catch (emailErr) {
+        console.error('[webhook] Erro ao enviar email de acesso', emailErr);
+        // Não falhar o webhook por erro de email
+      }
+
       // Processar transferência para provedor se for um serviço pago
       if (order.serviceId && order.providerId && order.providerAmount > 0) {
         try {

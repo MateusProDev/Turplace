@@ -50,6 +50,11 @@ export async function getTopRatedProducts(limit = 5): Promise<Product[]> {
       };
     });
 
+    // Se limit for 0 ou negativo, retornar todos sem ordenar
+    if (limit <= 0) {
+      return services;
+    }
+
     // Ordenar: primeiro por rating desc (se existir e > 0), senão por views desc
     services.sort((a, b) => {
       const aRating = a.rating && a.rating > 0 ? a.rating : 0;

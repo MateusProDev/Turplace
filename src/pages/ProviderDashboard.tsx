@@ -1404,7 +1404,7 @@ export default function ProviderDashboard() {
                           <h3 className="font-semibold text-gray-900 mb-2">{course.title}</h3>
                           <p className="text-gray-600 text-sm mb-4 line-clamp-2">{course.description}</p>
                           <div className="flex items-center justify-between mb-4">
-                            <span className="text-lg font-bold text-green-600">R$ {course.price.toFixed(2)}</span>
+                            <span className="text-lg font-bold text-green-600">R$ {Number(course.price).toFixed(2)}</span>
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                               course.status === 'published' 
                                 ? 'bg-green-100 text-green-800' 

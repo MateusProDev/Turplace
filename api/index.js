@@ -14,6 +14,8 @@ import testEnv from './_handlers/test-env.js';
 import wallet from './_handlers/wallet.js';
 import webhook from './_handlers/webhook.js';
 import sharecontent from './_handlers/sharecontent.js';
+import userOrders from './_handlers/user-orders.js';
+import sendAccessEmail from './_handlers/send-access-email.js';
 import mercadopagoCheckout from './mercadopago-checkout.js';
 import abacatepayPixCheckout from './abacatepay-pix-checkout.js';
 import abacatepayWebhook from './abacatepay-webhook.js';
@@ -32,6 +34,8 @@ const handlers = {
   'wallet': wallet,
   'webhook': webhook,
   'sharecontent': sharecontent,
+  'user-orders': userOrders,
+  'send-access-email': sendAccessEmail,
   'mercadopago-checkout': mercadopagoCheckout,
   'abacatepay-pix-checkout': abacatepayPixCheckout,
   'abacatepay-webhook': abacatepayWebhook

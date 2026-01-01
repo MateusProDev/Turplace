@@ -62,7 +62,6 @@ const getCategoryIcon = (category: string) => {
     'aventura': <Zap className="w-6 h-6" />,
     'cultura': <Sparkles className="w-6 h-6" />,
     'artesanato': <Target className="w-6 h-6" />,
-    'turismo': <MapPin className="w-6 h-6" />,
     'experiencias': <Briefcase className="w-6 h-6" />,
     'consultoria': <BarChart3 className="w-6 h-6" />,
     'designer': <Award className="w-6 h-6" />,
@@ -97,7 +96,6 @@ const getCategoryImageUrl = (category: string) => {
     'aventura': 'https://images.unsplash.com/photo-1464207687429-7505649dae38?w=800&h=600&fit=crop',
     'cultura': 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=800&h=600&fit=crop',
     'artesanato': 'https://images.unsplash.com/photo-1452860606245-08befc0ff44b?w=800&h=600&fit=crop',
-    'turismo': 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&h=600&fit=crop',
     'experiencias': 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&h=600&fit=crop',
     'consultoria': 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=600&fit=crop',
     'designer': 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&h=600&fit=crop',
@@ -181,6 +179,12 @@ export default function Landing() {
                 Catálogo
               </Link>
               <Link 
+                to="/marketplace" 
+                className={`font-medium transition-colors ${scrolled ? 'text-gray-700 hover:text-blue-600' : 'text-white/90 hover:text-white'}`}
+              >
+                Marketplace
+              </Link>
+              <Link 
                 to="/how-it-works" 
                 className={`font-medium transition-colors ${scrolled ? 'text-gray-700 hover:text-blue-600' : 'text-white/90 hover:text-white'}`}
               >
@@ -227,6 +231,13 @@ export default function Landing() {
                   Catálogo
                 </Link>
                 <Link 
+                  to="/marketplace" 
+                  className="block px-4 py-3 text-gray-700 font-medium hover:bg-blue-50 rounded-xl transition-colors"
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Marketplace
+                </Link>
+                <Link 
                   to="/how-it-works" 
                   className="block px-4 py-3 text-gray-700 font-medium hover:bg-blue-50 rounded-xl transition-colors"
                   onClick={() => setMenuOpen(false)}
@@ -269,16 +280,15 @@ export default function Landing() {
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-lg border border-white/20 text-white px-3 py-2 rounded-full mb-8 mt-8 animate-pulse">
                 <Sparkles size={18} />
-                <span className="font-medium">Conectando você as Agências</span>
+                <span className="font-medium">Conectando Profissionais e Clientes</span>
               </div>
               
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-8 leading-tight">
-                O <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Marketplace</span> Profissional Para o Turismo Local
+                O <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Marketplace</span> Profissional para Serviços Digitais
               </h1>
               
               <p className="text-lg sm:text-xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed">
-                Conectamos prestadores de serviços turísticos e
-                <span className="text-cyan-300 font-semibold">  agências de viagens em uma plataforma premium.</span>
+                Conectamos prestadores de serviços digitais e clientes em uma plataforma premium.
               </p>
               
               {/* CTA Buttons */}
@@ -309,7 +319,7 @@ export default function Landing() {
               {[
                 { value: '25+', label: 'Prestadores Ativos', icon: <Users2 className="text-cyan-400" />, color: 'from-cyan-500 to-blue-600' },
                 { value: '45+', label: 'Experiências Únicas', icon: <Compass className="text-emerald-400" />, color: 'from-emerald-500 to-teal-600' },
-                { value: '12+', label: 'Agências Parceiras', icon: <Building className="text-amber-400" />, color: 'from-amber-500 to-orange-600' },
+                { value: '12+', label: 'Empresas Parceiras', icon: <Building className="text-amber-400" />, color: 'from-amber-500 to-orange-600' },
                 { value: '8+', label: 'Cidades Ativas', icon: <MapPin className="text-blue-400" />, color: siteGradient }
               ].map((stat, idx) => (
                 <div 
@@ -354,7 +364,7 @@ export default function Landing() {
                   Conteúdos mais <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-500">acessados</span>
                 </h2>
                 <p className="text-gray-600 mt-3 max-w-2xl">
-                  Os serviços premium mais visualizados e contratados por agências parceiras
+                  Os serviços premium mais visualizados e contratados por clientes
                 </p>
               </div>
               
@@ -434,7 +444,7 @@ export default function Landing() {
                   <div className="flex items-center justify-between p-4 border-b border-gray-100">
                     <div>
                       <div className="text-xl font-bold text-gray-900">
-                        R$ {content.price ? content.price.toFixed(2).replace('.', ',') : '0,00'}
+                        R$ {content.price ? Number(content.price).toFixed(2).replace('.', ',') : '0,00'}
                       </div>
                       <p className="text-xs text-gray-500">
                         {content.billingType === 'subscription' ? 'por mês' : 'valor único'}
@@ -799,8 +809,8 @@ export default function Landing() {
               },
               {
                 icon: <Users2 className="text-emerald-600" size={32} />,
-                title: "Para Agências",
-                description: "Encontre os melhores profissionais e experiências únicas para seus clientes.",
+                title: "Para Empresas",
+                description: "Encontre os melhores profissionais e soluções para seus projetos.",
                 features: ["Busca Avançada", "Avaliações Reais", "Suporte Dedicado"],
                 gradient: "from-emerald-50 to-teal-50",
                 color: "emerald"
@@ -851,94 +861,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Services Showcase - Professional */}
-      <section className="py-16 sm:py-24 bg-white">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto text-center mb-16">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-50 to-orange-50 text-amber-700 px-6 py-3 rounded-full mb-6">
-              <Compass size={20} />
-              <span className="font-semibold">Soluções Completas</span>
-            </div>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6">
-              Tudo para o <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-orange-500">Turismo</span>
-            </h2>
-            <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto">
-              Serviços especializados para todos os aspectos do turismo profissional
-            </p>
-          </div>
-          
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {[
-              {
-                icon: <Compass className="text-blue-600" size={28} />,
-                title: "Guias e Tours",
-                description: "Guias locais certificados, roteiros personalizados e tours temáticos exclusivos.",
-                stats: "150+ profissionais",
-                gradient: "from-blue-500 to-cyan-500"
-              },
-              {
-                icon: <Car className="text-emerald-600" size={28} />,
-                title: "Transportes",
-                description: "Transfer executivo, frota premium, motoristas qualificados e logística completa.",
-                stats: "80+ veículos",
-                gradient: "from-emerald-500 to-teal-500"
-              },
-              {
-                icon: <Coffee className="text-amber-600" size={28} />,
-                title: "Experiências",
-                description: "Gastronomia autêntica, aventura, cultura local e workshops especializados.",
-                stats: "200+ experiências",
-                gradient: "from-amber-500 to-orange-500"
-              },
-              {
-                icon: <Building className="text-blue-600" size={28} />,
-                title: "Hospedagem",
-                description: "Hotéis boutique, pousadas charmosas e acomodações premium.",
-                stats: "50+ parcerias",
-                gradient: "from-blue-600 to-cyan-500"
-              },
-              {
-                icon: <Camera className="text-indigo-600" size={28} />,
-                title: "Fotografia",
-                description: "Fotógrafos profissionais, tours fotográficos e cobertura de eventos.",
-                stats: "30+ especialistas",
-                gradient: "from-blue-600 to-cyan-500"
-              },
-              {
-                icon: <Users2 className="text-indigo-600" size={28} />,
-                title: "Eventos",
-                description: "Organização de eventos corporativos, casamentos e experiências VIP.",
-                stats: "Planejamento completo",
-                gradient: "from-indigo-500 to-blue-500"
-              }
-            ].map((service, index) => (
-              <div 
-                key={index}
-                className="group bg-white rounded-2xl border border-gray-200 hover:border-gray-300 p-8 hover:shadow-xl transition-all duration-500 hover:-translate-y-2"
-              >
-                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${service.gradient} bg-opacity-10 flex items-center justify-center mb-6`}>
-                  {service.icon}
-                </div>
-                
-                <h3 className="text-xl font-bold text-gray-900 mb-4">{service.title}</h3>
-                <p className="text-gray-600 mb-6">{service.description}</p>
-                
-                <div className="flex items-center justify-between pt-6 border-t border-gray-100">
-                  <span className="text-sm font-medium text-gray-500">{service.stats}</span>
-                  <Link
-                    to={`/catalog?category=${encodeURIComponent(service.title)}`}
-                    className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-2"
-                  >
-                    Explorar
-                    <ArrowRight size={16} />
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Final CTA - Professional */}
       <section className="relative py-20 sm:py-32 overflow-hidden">
         {/* Background */}
@@ -955,12 +877,12 @@ export default function Landing() {
             </div>
             
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-8">
-              Transforme seu Negócio no Turismo
+              Transforme seu Negócio Digital
             </h2>
             
             <p className="text-lg sm:text-xl text-blue-100 mb-12 max-w-2xl mx-auto leading-relaxed">
-              Cadastro gratuito para prestadores. Alcance milhares de agências e viajantes, 
-              aumente suas vendas e cresça no mercado de turismo local.
+              Cadastro gratuito para prestadores. Alcance milhares de clientes, 
+              aumente suas vendas e cresça no mercado digital.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center mb-16">
@@ -986,7 +908,7 @@ export default function Landing() {
               {[
                 { icon: <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center"><div className="w-6 h-6 rounded-full bg-cyan-300"></div></div>, text: "Segurança e Confiança" },
                 { icon: <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center"><TrendingUpIcon className="text-emerald-300" /></div>, text: "Aumento de Renda" },
-                { icon: <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center"><MapPin className="text-amber-300" /></div>, text: "Foco no Turismo Local" }
+                { icon: <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center"><MapPin className="text-amber-300" /></div>, text: "Foco no Mercado Digital" }
               ].map((item, index) => (
                 <div key={index} className="flex flex-col items-center gap-3">
                   {item.icon}
@@ -1009,7 +931,7 @@ export default function Landing() {
                 <span className="text-xl font-bold text-white">Lucrazi</span>
               </div>
               <p className="text-gray-400 mb-8">
-                O marketplace premium para o turismo local. Conectando profissionais e experiências únicas.
+                O marketplace premium para serviços digitais. Conectando profissionais e clientes.
               </p>
               <div className="flex items-center gap-4">
                 <div className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors cursor-pointer">
@@ -1028,15 +950,16 @@ export default function Landing() {
             <div>
               <h3 className="text-lg font-bold mb-6">Para Prestadores</h3>
               <ul className="space-y-4">
+                <li><Link to="/provider-login" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2">Área do Prestador <ArrowRight size={14} /></Link></li>
                 <li><Link to="/dashboard" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2">Cadastrar serviços <ArrowRight size={14} /></Link></li>
                 <li><Link to="/how-it-works" className="text-gray-400 hover:text-white transition-colors">Como funciona</Link></li>
                 <li><Link to="/success" className="text-gray-400 hover:text-white transition-colors">Casos de Sucesso</Link></li>
               </ul>
             </div>
             
-            {/* Para Agências */}
+            {/* Para Empresas */}
             <div>
-              <h3 className="text-lg font-bold mb-6">Para Agências</h3>
+              <h3 className="text-lg font-bold mb-6">Para Empresas</h3>
               <ul className="space-y-4">
                 <li><Link to="/catalog" className="text-gray-400 hover:text-white transition-colors">Encontrar serviços</Link></li>
                 <li><Link to="/partnerships" className="text-gray-400 hover:text-white transition-colors">Parcerias</Link></li>
@@ -1062,7 +985,7 @@ export default function Landing() {
               © {new Date().getFullYear()} Lucrazi. Todos os direitos reservados.
             </p>
             <p className="text-gray-600 text-sm">
-              MVP Beta — Plataforma profissional para turismo local.
+              MVP Beta — Plataforma profissional para serviços digitais.
             </p>
           </div>
         </div>

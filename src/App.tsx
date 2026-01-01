@@ -4,7 +4,10 @@ import LeadPageEditor from './pages/LeadPageEditor';
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import Landing from './pages/Landing';
 import Catalog from './pages/Catalog';
+import Marketplace from './pages/Marketplace';
 import Login from './components/Auth/Login';
+import ClientLogin from './components/Auth/ClientLogin';
+import ProviderLogin from './components/Auth/ProviderLogin';
 import { useAuth } from './hooks/useAuth';
 import ServiceForm from './components/Provider/ServiceForm';
 import AdminDashboard from './pages/AdminDashboard';
@@ -12,6 +15,7 @@ import ServiceDetail from './pages/ServiceDetail';
 import CourseDetail from './pages/CourseDetail';
 import RequireAuth from './components/Auth/RequireAuth';
 import ProviderDashboard from './pages/ProviderDashboard';
+import ClientDashboard from './pages/ClientDashboard';
 import HowItWorks from './pages/HowItWorks';
 import Partnerships from './pages/Partnerships';
 import Contact from './pages/Contact';
@@ -22,19 +26,42 @@ import Success from './pages/Success';
 import RequireAdmin from './components/Auth/RequireAdmin';
 
 function App() {
-  const { user } = useAuth();
+  const { user, userData } = useAuth();
+
+  // Componente para decidir qual dashboard mostrar baseado no role
+  const DashboardRouter = () => {
+    if (!user) return <Login />;
+
+    // Se for admin, vai para admin dashboard
+    if (userData?.isAdmin) {
+      return <AdminDashboard />;
+    }
+
+    // Se for prestador (tem serviços ou role específico), vai para provider dashboard
+    if (userData?.role === 'prestador' || userData?.stripeAccountId) {
+      return <ProviderDashboard />;
+    }
+
+    // Caso contrário, vai para client dashboard
+    return <ClientDashboard />;
+  };
+
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/marketplace" element={<Marketplace />} />
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/profile" element={<Navigate to="/profile/settings" replace />} />
         <Route path="/profile/settings" element={<ProfileSettings />} />
         <Route path="/profile/leadpage" element={<RequireAuth><LeadPageEditor /></RequireAuth>} />
-        <Route path="/login" element={user ? <RequireAuth><ProviderDashboard /></RequireAuth> : <Login />} />
+        <Route path="/login" element={<DashboardRouter />} />
+        <Route path="/provider-login" element={<ProviderLogin />} />
+        <Route path="/client-login" element={<ClientLogin />} />
         <Route path="/dashboard" element={<RequireAuth><ServiceForm /></RequireAuth>} />
         <Route path="/dashboard/service/new" element={<RequireAuth><ServiceForm /></RequireAuth>} />
         <Route path="/provider" element={<RequireAuth><ProviderDashboard /></RequireAuth>} />
+        <Route path="/client" element={<RequireAuth><ClientDashboard /></RequireAuth>} />
         <Route path="/service/:slug" element={<ServiceDetail />} />
         <Route path="/course/:slug" element={<CourseDetail />} />
         <Route path="/checkout" element={<Checkout />} />
