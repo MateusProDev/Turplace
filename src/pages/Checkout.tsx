@@ -666,7 +666,7 @@ export default function Checkout() {
                       <p className="text-gray-500">Carregando formulário de pagamento...</p>
                     </div>
                   )}
-                  <form id="form-checkout" className={`space-y-4 ${isCardFormReady ? 'block' : 'hidden'}`}>
+                  <form id="form-checkout" autoComplete="off" className={`space-y-4 ${isCardFormReady ? 'block' : 'hidden'}`}>
                     {/* Card Number */}
                     <div>
                       <label className="block text-sm font-semibold text-gray-900 mb-2">
@@ -698,7 +698,14 @@ export default function Checkout() {
                       <label className="block text-sm font-semibold text-gray-900 mb-2">
                         Nome no Cartão *
                       </label>
-                      <input type="text" id="form-checkout__cardholderName" className="mp-input-field" placeholder="Nome como impresso no cartão" />
+                      <input 
+                        type="text" 
+                        id="form-checkout__cardholderName" 
+                        className="mp-input-field" 
+                        placeholder="Nome como impresso no cartão"
+                        autoComplete="cc-name"
+                        data-checkout="cardholderName"
+                      />
                     </div>
 
                     {/* Email */}
@@ -706,7 +713,14 @@ export default function Checkout() {
                       <label className="block text-sm font-semibold text-gray-900 mb-2">
                         E-mail *
                       </label>
-                      <input type="email" id="form-checkout__cardholderEmail" className="mp-input-field" placeholder="seu@email.com" />
+                      <input 
+                        type="email" 
+                        id="form-checkout__cardholderEmail" 
+                        className="mp-input-field" 
+                        placeholder="seu@email.com"
+                        autoComplete="email"
+                        data-checkout="cardholderEmail"
+                      />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -725,7 +739,14 @@ export default function Checkout() {
                         <label className="block text-sm font-semibold text-gray-900 mb-2">
                           CPF *
                         </label>
-                        <input type="text" id="form-checkout__identificationNumber" className="mp-input-field" placeholder="000.000.000-00" />
+                        <input 
+                          type="text" 
+                          id="form-checkout__identificationNumber" 
+                          className="mp-input-field" 
+                          placeholder="000.000.000-00"
+                          autoComplete="off"
+                          data-checkout="identificationNumber"
+                        />
                       </div>
                     </div>
 
