@@ -698,7 +698,7 @@ export default function Checkout() {
                       <label className="block text-sm font-semibold text-gray-900 mb-2">
                         Nome no Cartão *
                       </label>
-                      <div id="form-checkout__cardholderName" className="mp-secure-field-container"></div>
+                      <input type="text" id="form-checkout__cardholderName" className="mp-input-field" placeholder="Nome como impresso no cartão" />
                     </div>
 
                     {/* Email */}
@@ -706,7 +706,7 @@ export default function Checkout() {
                       <label className="block text-sm font-semibold text-gray-900 mb-2">
                         E-mail *
                       </label>
-                      <div id="form-checkout__cardholderEmail" className="mp-secure-field-container"></div>
+                      <input type="email" id="form-checkout__cardholderEmail" className="mp-input-field" placeholder="seu@email.com" />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -715,7 +715,7 @@ export default function Checkout() {
                         <label className="block text-sm font-semibold text-gray-900 mb-2">
                           Tipo de Documento *
                         </label>
-                        <select id="form-checkout__identificationType">
+                        <select id="form-checkout__identificationType" className="mp-input-field">
                           <option value="CPF">CPF</option>
                         </select>
                       </div>
@@ -725,7 +725,7 @@ export default function Checkout() {
                         <label className="block text-sm font-semibold text-gray-900 mb-2">
                           CPF *
                         </label>
-                        <div id="form-checkout__identificationNumber" className="mp-secure-field-container"></div>
+                        <input type="text" id="form-checkout__identificationNumber" className="mp-input-field" placeholder="000.000.000-00" />
                       </div>
                     </div>
 
@@ -737,7 +737,7 @@ export default function Checkout() {
                       <label className="block text-sm font-semibold text-gray-900 mb-2">
                         Parcelas *
                       </label>
-                      <div id="form-checkout__installments" className="mp-secure-field-container"></div>
+                      <select id="form-checkout__installments" className="mp-input-field"></select>
                     </div>
                   </form>
                 </div>
