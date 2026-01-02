@@ -135,15 +135,22 @@ export default function Checkout() {
       return;
     }
 
-    let cardFormInstance: any;
+    // Usar uma ref local para capturar a instância corretamente
+    let cardFormInstanceLocal: any = null;
+    let isMounted = true;
 
     const initCardForm = async () => {
       try {
+        // Aguardar um pequeno delay para garantir que os elementos DOM estejam prontos
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        if (!isMounted) return;
+
         const mp = new window.MercadoPago(import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY, {
           locale: 'pt-BR'
         });
 
-        cardFormInstance = mp.cardForm({
+        const instance = mp.cardForm({
           amount: String(parseFloat((service.billingType === 'subscription' ? service.priceMonthly : service.price) || '0').toFixed(2)),
           iframe: true,
           form: {
@@ -160,12 +167,16 @@ export default function Checkout() {
           },
           callbacks: {
             onFormMounted: (error: any) => {
+              if (!isMounted) return;
+              
               if (error) {
                 console.error('[CardForm] Erro ao montar formulário:', error);
                 setIsCardFormReady(false);
               } else {
                 console.log('[CardForm] Formulário montado com sucesso (Secure Fields)');
-                cardFormRef.current = cardFormInstance;
+                // Usar a instância capturada na variável local
+                cardFormRef.current = cardFormInstanceLocal;
+                console.log('[CardForm] cardFormRef.current definido:', !!cardFormRef.current);
                 setIsCardFormReady(true);
               }
             },
@@ -182,9 +193,20 @@ export default function Checkout() {
             }
           }
         });
+
+        // Armazenar a instância APÓS a criação
+        cardFormInstanceLocal = instance;
+        
+        // Também atualizar a ref imediatamente após a criação
+        if (isMounted) {
+          cardFormRef.current = instance;
+          console.log('[CardForm] Instância criada e atribuída à ref:', !!instance);
+        }
       } catch (err) {
         console.error('[CardForm] Falha catastrófica ao inicializar:', err);
-        setIsCardFormReady(false);
+        if (isMounted) {
+          setIsCardFormReady(false);
+        }
       }
     };
 
@@ -192,10 +214,16 @@ export default function Checkout() {
 
     // ✅ FUNÇÃO DE LIMPEZA ESSENCIAL
     return () => {
-      if (cardFormInstance) {
+      isMounted = false;
+      if (cardFormInstanceLocal) {
         console.log('[CardForm] Desmontando instância do formulário...');
-        cardFormInstance.unmount();
+        try {
+          cardFormInstanceLocal.unmount();
+        } catch (e) {
+          console.warn('[CardForm] Erro ao desmontar:', e);
+        }
       }
+      cardFormRef.current = null;
     };
   }, [metodoPagamento, service]); // Dependências corretas
 
@@ -275,9 +303,14 @@ export default function Checkout() {
     }
 
     // Validação adicional para cartão com Card Form
-    if (metodoPagamento === 'cartao' && !cardFormRef.current) {
-      setError('Aguarde o formulário de cartão carregar completamente');
-      return;
+    if (metodoPagamento === 'cartao') {
+      console.log('[Checkout] Verificando Card Form - isCardFormReady:', isCardFormReady, 'cardFormRef.current:', !!cardFormRef.current);
+      
+      if (!isCardFormReady || !cardFormRef.current) {
+        setError('Aguarde o formulário de cartão carregar completamente');
+        console.error('[Checkout] Card Form não está pronto - isCardFormReady:', isCardFormReady, 'cardFormRef:', !!cardFormRef.current);
+        return;
+      }
     }
 
     setProcessing(true);
@@ -449,7 +482,9 @@ export default function Checkout() {
     );
   }
 
-  if (error || !service) {
+  // Apenas mostra tela de erro fatal quando o serviço não foi encontrado
+  // Erros de validação são mostrados inline no formulário
+  if (!service) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex items-center justify-center px-4">
         <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
@@ -457,7 +492,7 @@ export default function Checkout() {
             <AlertCircle className="w-10 h-10 text-red-600" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-3">Ops, algo deu errado</h2>
-          <p className="text-gray-600 mb-8">{error || (service?.type === 'course' ? "Curso não encontrado" : "Serviço não encontrado")}</p>
+          <p className="text-gray-600 mb-8">{courseId ? "Curso não encontrado" : "Serviço não encontrado"}</p>
           <div className="space-y-4">
             <button
               onClick={() => navigate('/')}
