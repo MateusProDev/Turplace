@@ -40,7 +40,7 @@ export default async function handler(req, res) {
 
   // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Origin', 'https://turplace.turvia.com.br');
+    res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.setHeader('Access-Control-Max-Age', '86400'); // 24 horas
@@ -323,7 +323,14 @@ export default async function handler(req, res) {
       if (!paymentData.payment_method_id) delete paymentData.payment_method_id;
       if (!paymentData.issuer_id) delete paymentData.issuer_id;
 
-      console.log('[MercadoPago Checkout] Criando pagamento com cartão no Mercado Pago:', paymentData);
+      // ⚠️ GARANTIR que external_reference e statement_descriptor estão presentes
+      console.log('[MercadoPago Checkout] Campos obrigatórios:', {
+        external_reference: paymentData.external_reference,
+        statement_descriptor: paymentData.statement_descriptor,
+        notification_url: paymentData.notification_url
+      });
+
+      console.log('[MercadoPago Checkout] Criando pagamento com cartão no Mercado Pago:', JSON.stringify(paymentData, null, 2));
       const result = await payment.create({ body: paymentData });
       console.log('[MercadoPago Checkout] Pagamento com cartão criado:', result);
 
