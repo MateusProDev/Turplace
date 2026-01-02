@@ -58,12 +58,14 @@ export default async function handler(req, res) {
 
   try {
     const requestData = req.body;
-    const { valor, metodoPagamento, packageData, reservaData, cardToken, installments, payerData } = requestData;
+    const { valor, metodoPagamento, packageData, reservaData, cardToken, installments, payerData, deviceId, issuerId, paymentMethodId } = requestData;
 
     console.log('[MercadoPago Checkout] Dados recebidos', {
       metodoPagamento,
       valor,
-      ip: clientIP
+      ip: clientIP,
+      issuerId,
+      paymentMethodId
     });
     if (metodoPagamento === 'pix') {
       console.log('[MercadoPago Checkout] Processando pagamento Pix com AbacatePay (QRCode direto)');
@@ -232,7 +234,9 @@ export default async function handler(req, res) {
         token: cardToken,
         description: `${packageData?.title || 'Produto'} - Lucrazi`,
         installments: parseInt(installments) || 1,
-        // payment_method_id será detectado automaticamente pelo token
+        // payment_method_id e issuer_id do CardForm
+        payment_method_id: paymentMethodId || undefined,
+        issuer_id: issuerId ? parseInt(issuerId) : undefined,
         
         // ✅ PAYER - Todos os campos obrigatórios (NÍVEL RAIZ)
         payer: {
@@ -264,7 +268,7 @@ export default async function handler(req, res) {
         notification_url: process.env.MERCADO_PAGO_WEBHOOK_URL || '',
         
         // ✅ DEVICE ID - Obrigatório (NÍVEL RAIZ)
-        device_id: requestData.deviceId || undefined,
+        device_id: deviceId || requestData.deviceId || undefined,
         
         // ✅ ITEMS - NÍVEL RAIZ (formato simplificado que o MP reconhece)
         additional_info: {

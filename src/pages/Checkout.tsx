@@ -55,6 +55,7 @@ export default function Checkout() {
   const [pixAttempts, setPixAttempts] = useState(0);
   const [copied, setCopied] = useState(false);
   const [isCardFormReady, setIsCardFormReady] = useState(false);
+  const [cardFormErrors, setCardFormErrors] = useState<Record<string, string>>({});
 
   // Dados do cartão (Card Form gerencia os campos seguros)
   const [installments] = useState(1);
@@ -190,6 +191,31 @@ export default function Checkout() {
             },
             onFetching: (resource: string) => {
               console.log('[CardForm] Fetching:', resource);
+            },
+            onValidityChange: (error: any, field: string) => {
+              console.log('[CardForm] Validity change:', field, error);
+              if (!isMounted) return;
+              
+              setCardFormErrors(prev => {
+                const newErrors = { ...prev };
+                if (error) {
+                  newErrors[field] = error.message || 'Campo inválido';
+                } else {
+                  delete newErrors[field];
+                }
+                return newErrors;
+              });
+            },
+            onError: (error: any) => {
+              console.error('[CardForm] Erro:', error);
+              if (!isMounted) return;
+              
+              if (error && error.message) {
+                setError(`Erro no cartão: ${error.message}`);
+              }
+            },
+            onReady: () => {
+              console.log('[CardForm] Secure Fields prontos');
             }
           }
         });
@@ -305,10 +331,20 @@ export default function Checkout() {
     // Validação adicional para cartão com Card Form
     if (metodoPagamento === 'cartao') {
       console.log('[Checkout] Verificando Card Form - isCardFormReady:', isCardFormReady, 'cardFormRef.current:', !!cardFormRef.current);
+      console.log('[Checkout] Erros do Card Form:', cardFormErrors);
       
       if (!isCardFormReady || !cardFormRef.current) {
         setError('Aguarde o formulário de cartão carregar completamente');
         console.error('[Checkout] Card Form não está pronto - isCardFormReady:', isCardFormReady, 'cardFormRef:', !!cardFormRef.current);
+        return;
+      }
+      
+      // Verificar se há erros de validação nos campos
+      const errorFields = Object.keys(cardFormErrors);
+      if (errorFields.length > 0) {
+        const errorMessages = Object.values(cardFormErrors).join(', ');
+        setError(`Corrija os erros nos campos do cartão: ${errorMessages}`);
+        console.error('[Checkout] Erros de validação do Card Form:', cardFormErrors);
         return;
       }
     }
@@ -387,6 +423,7 @@ export default function Checkout() {
       let cardToken = undefined;
       let payerData = undefined;
       let deviceId = null;
+      let cardFormData: any = null;
 
       if (metodoPagamento === 'cartao') {
         console.log('[Checkout] Processando dados do cartão via Card Form (Secure Fields)');
@@ -395,27 +432,72 @@ export default function Checkout() {
           throw new Error('Card Form não inicializado. Aguarde o carregamento.');
         }
 
-        // 🔒 Obter token via Card Form (Secure Fields - PCI Compliance)
-        const cardFormData = await cardFormRef.current.getCardFormData();
+        // 🔒 Primeiro criar o token, depois obter os dados completos
+        try {
+          // Criar o token do cartão primeiro
+          console.log('[Checkout] Criando token do cartão...');
+          await cardFormRef.current.createCardToken();
+          
+          // Agora obter os dados completos incluindo o token
+          cardFormData = cardFormRef.current.getCardFormData();
+          console.log('[Checkout] cardFormData retornado:', JSON.stringify(cardFormData, null, 2));
+        } catch (tokenError: any) {
+          console.error('[Checkout] Erro ao obter dados do Card Form:', tokenError);
+          
+          // Verificar tipos de erros comuns
+          const errorMessage = tokenError?.message || tokenError?.cause || '';
+          if (errorMessage.includes('incomplete_fields') || errorMessage.includes('empty')) {
+            throw new Error('Preencha todos os campos do cartão corretamente.');
+          }
+          if (errorMessage.includes('invalid')) {
+            throw new Error('Dados do cartão inválidos. Verifique o número, validade e CVV.');
+          }
+          throw new Error(`Erro ao processar cartão: ${errorMessage || 'Verifique se todos os campos foram preenchidos corretamente.'}`);
+        }
         
-        if (!cardFormData || !cardFormData.token) {
-          throw new Error('Erro ao processar dados do cartão. Verifique os campos.');
+        if (!cardFormData) {
+          console.error('[Checkout] cardFormData é null ou undefined');
+          throw new Error('Preencha todos os campos do cartão corretamente.');
+        }
+        
+        if (!cardFormData.token) {
+          console.error('[Checkout] Token não gerado. Dados recebidos:', cardFormData);
+          // Verificar se há erros específicos
+          if (cardFormData.errors && cardFormData.errors.length > 0) {
+            const errorMessages = cardFormData.errors.map((e: any) => e.message || e).join(', ');
+            throw new Error(`Erro no cartão: ${errorMessages}`);
+          }
+          throw new Error('Verifique os dados do cartão. Todos os campos são obrigatórios.');
         }
 
         cardToken = cardFormData.token;
         deviceId = cardFormData.device_id || null;
         
+        // Os dados vêm do CardForm - usar campos corretos
+        // CardForm retorna: token, installments, paymentMethodId, issuerId, identificationType, identificationNumber
         payerData = {
-          email: cardFormData.payer?.email || customerData.email,
+          email: customerData.email,
           first_name: customerData.name.split(' ')[0],
           last_name: customerData.name.split(' ').slice(1).join(' '),
-          cpf: cardFormData.payer?.identification?.number || customerData.cpf.replace(/\D/g, ''),
+          cpf: cardFormData.identificationNumber || customerData.cpf.replace(/\D/g, ''),
           phone: customerData.phone || ''
         };
         
         console.log('[Checkout] Token do cartão criado via Secure Fields:', cardToken);
+        console.log('[Checkout] Payment Method ID:', cardFormData.paymentMethodId);
+        console.log('[Checkout] Issuer ID:', cardFormData.issuerId);
+        console.log('[Checkout] Installments:', cardFormData.installments);
         console.log('[Checkout] Device ID capturado:', deviceId);
       }
+
+      // Preparar installments do CardForm se disponível
+      const finalInstallments = metodoPagamento === 'cartao' && cardFormData 
+        ? parseInt(cardFormData.installments) || installments 
+        : undefined;
+      
+      // Preparar dados adicionais do CardForm
+      const issuerId = metodoPagamento === 'cartao' && cardFormData ? cardFormData.issuerId : undefined;
+      const paymentMethodId = metodoPagamento === 'cartao' && cardFormData ? cardFormData.paymentMethodId : undefined;
 
       const response = await iniciarPagamentoCheckout({
         valor: valorNumerico,
@@ -423,9 +505,11 @@ export default function Checkout() {
         packageData,
         reservaData,
         cardToken,
-        installments: metodoPagamento === 'cartao' ? installments : undefined,
+        installments: finalInstallments,
         payerData,
-        deviceId // Device ID para melhor aprovação
+        deviceId, // Device ID para melhor aprovação
+        issuerId, // ID do emissor do cartão
+        paymentMethodId // ID do método de pagamento
       });
 
       console.log('[Checkout] Resposta da API:', response);

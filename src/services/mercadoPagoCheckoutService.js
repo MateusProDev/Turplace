@@ -3,19 +3,32 @@
 
 const API_URL = import.meta.env.VITE_API_URL || '';
 
-export async function iniciarPagamentoCheckout({ valor, metodoPagamento, packageData, reservaData, cardToken, installments, payerData }) {
+export async function iniciarPagamentoCheckout({ valor, metodoPagamento, packageData, reservaData, cardToken, installments, payerData, deviceId, issuerId, paymentMethodId }) {
   console.log('[MercadoPago Service] Iniciando chamada para API', {
     API_URL,
     valor,
     metodoPagamento,
     packageData,
-    reservaData
+    reservaData,
+    issuerId,
+    paymentMethodId
   });
 
   const response = await fetch(`${API_URL}/api/mercadopago-checkout`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ valor, metodoPagamento, packageData, reservaData, cardToken, installments, payerData })
+    body: JSON.stringify({ 
+      valor, 
+      metodoPagamento, 
+      packageData, 
+      reservaData, 
+      cardToken, 
+      installments, 
+      payerData,
+      deviceId,
+      issuerId,
+      paymentMethodId
+    })
   });
 
   const result = await response.json();

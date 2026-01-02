@@ -32,6 +32,8 @@ export interface CheckoutParams {
   installments?: number;
   payerData?: PayerData;
   deviceId?: any; // ✅ Device ID para melhor aprovação
+  issuerId?: string; // ✅ ID do emissor do cartão
+  paymentMethodId?: string; // ✅ ID do método de pagamento
 }
 
 export interface CheckoutResponse {
