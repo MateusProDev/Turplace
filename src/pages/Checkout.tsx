@@ -44,6 +44,7 @@ export default function Checkout() {
   // @ts-ignore
   const [loading, setLoading] = useState(true);
   const cardFormRef = useRef<any>(null);
+  const mpInstanceRef = useRef<any>(null); // Referência para o SDK do MercadoPago
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [metodoPagamento, setMetodoPagamento] = useState<'cartao' | 'pix'>('pix');
@@ -150,6 +151,9 @@ export default function Checkout() {
         const mp = new window.MercadoPago(import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY, {
           locale: 'pt-BR'
         });
+        
+        // Guardar referência do SDK para usar getDeviceId() depois
+        mpInstanceRef.current = mp;
 
         const instance = mp.cardForm({
           amount: String(parseFloat((service.billingType === 'subscription' ? service.priceMonthly : service.price) || '0').toFixed(2)),
@@ -471,7 +475,54 @@ export default function Checkout() {
         }
 
         cardToken = cardFormData.token;
-        deviceId = cardFormData.device_id || null;
+        
+        // Capturar Device ID do SDK do MercadoPago
+        // O device_id é crucial para aprovação e análise de fraude
+        // O SDK injeta automaticamente em um campo oculto ou pode ser obtido via método
+        try {
+          // Método 1: Tentar getDeviceId da instância do MP
+          if (mpInstanceRef.current && typeof mpInstanceRef.current.getDeviceId === 'function') {
+            deviceId = await mpInstanceRef.current.getDeviceId();
+            console.log('[Checkout] Device ID via mpInstance.getDeviceId():', deviceId);
+          }
+          
+          // Método 2: Campo oculto MPDeviceSessionID (criado pelo SDK)
+          if (!deviceId) {
+            const mpDeviceSessionInput = document.querySelector('input[name="MPDeviceSessionID"]') as HTMLInputElement;
+            if (mpDeviceSessionInput?.value) {
+              deviceId = mpDeviceSessionInput.value;
+              console.log('[Checkout] Device ID via MPDeviceSessionID:', deviceId);
+            }
+          }
+          
+          // Método 3: Campo oculto deviceId
+          if (!deviceId) {
+            const deviceIdInput = document.getElementById('deviceId') as HTMLInputElement;
+            if (deviceIdInput?.value) {
+              deviceId = deviceIdInput.value;
+              console.log('[Checkout] Device ID via #deviceId:', deviceId);
+            }
+          }
+          
+          // Método 4: cardFormData.device_id (fallback)
+          if (!deviceId && cardFormData.device_id) {
+            deviceId = cardFormData.device_id;
+            console.log('[Checkout] Device ID via cardFormData:', deviceId);
+          }
+          
+          // Método 5: Gerar um device fingerprint básico como último recurso
+          if (!deviceId) {
+            // Usar um hash básico do navigator como fallback
+            const navigatorInfo = `${navigator.userAgent}|${navigator.language}|${screen.width}x${screen.height}|${new Date().getTimezoneOffset()}`;
+            deviceId = btoa(navigatorInfo).substring(0, 50);
+            console.log('[Checkout] Device ID gerado (fallback):', deviceId);
+          }
+        } catch (deviceIdError) {
+          console.warn('[Checkout] Não foi possível capturar deviceId:', deviceIdError);
+          // Fallback: gerar um device fingerprint básico
+          const navigatorInfo = `${navigator.userAgent}|${navigator.language}|${screen.width}x${screen.height}`;
+          deviceId = btoa(navigatorInfo).substring(0, 50);
+        }
         
         // Os dados vêm do CardForm - usar campos corretos
         // CardForm retorna: token, installments, paymentMethodId, issuerId, identificationType, identificationNumber
