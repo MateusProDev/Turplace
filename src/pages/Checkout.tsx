@@ -737,7 +737,14 @@ export default function Checkout() {
                       <label className="block text-sm font-semibold text-gray-900 mb-2">
                         Parcelas *
                       </label>
-                      <select id="form-checkout__installments" className="mp-input-field"></select>
+                      <select id="form-checkout__installments" className="mp-input-field">
+                        <option value="1">1x sem juros</option>
+                        <option value="2">2x sem juros</option>
+                        <option value="3">3x sem juros</option>
+                        <option value="4">4x sem juros</option>
+                        <option value="5">5x sem juros</option>
+                        <option value="6">6x sem juros</option>
+                      </select>
                     </div>
                   </form>
                 </div>
