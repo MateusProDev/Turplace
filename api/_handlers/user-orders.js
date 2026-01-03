@@ -1,7 +1,7 @@
-const admin = require('firebase-admin');
-const { getAuth } = require('firebase-admin/auth');
+import admin from 'firebase-admin';
+import { getAuth } from 'firebase-admin/auth';
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   // Verificar método
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Método não permitido' });
@@ -108,4 +108,4 @@ module.exports = async (req, res) => {
       details: error.message
     });
   }
-};
+}
