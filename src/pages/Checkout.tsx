@@ -275,6 +275,14 @@ export default function Checkout() {
             if (data.status === 'approved' || data.status === 'rejected' || data.status === 'cancelled') {
               console.log('[Checkout] Status final alcançado, parando monitoramento');
               clearInterval(interval);
+              
+              // Se aprovado, redirecionar para página de sucesso após 2 segundos
+              if (data.status === 'approved') {
+                console.log('[Checkout] Pix aprovado! Redirecionando para sucesso...');
+                setTimeout(() => {
+                  window.location.href = `/success?orderId=${paymentId}&method=pix`;
+                }, 2000);
+              }
             }
           }
         } catch (err) {
@@ -1156,13 +1164,31 @@ export default function Checkout() {
                   {pixStatus && (
                     <div className="mt-6 pt-6 border-t border-green-200">
                       <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg ${pixStatus === 'approved' ? 'bg-green-100 text-green-800' : pixStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
-                        <div className={`w-2 h-2 rounded-full ${pixStatus === 'approved' ? 'bg-green-500' : pixStatus === 'pending' ? 'bg-yellow-500' : 'bg-red-500'}`}></div>
+                        <div className={`w-2 h-2 rounded-full ${pixStatus === 'approved' ? 'bg-green-500' : pixStatus === 'pending' ? 'bg-yellow-500 animate-pulse' : 'bg-red-500'}`}></div>
                         <span className="font-medium">
-                          {pixStatus === 'approved' ? 'Pagamento aprovado!' :
+                          {pixStatus === 'approved' ? '✓ Pagamento aprovado!' :
                            pixStatus === 'pending' ? 'Aguardando pagamento...' : 
                            'Pagamento não identificado'}
                         </span>
                       </div>
+                      
+                      {/* Mensagem de sucesso com info sobre email */}
+                      {pixStatus === 'approved' && (
+                        <div className="mt-4 bg-green-50 border border-green-200 rounded-xl p-4">
+                          <div className="flex items-start gap-3">
+                            <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <h4 className="font-bold text-green-800 mb-1">Pagamento Confirmado!</h4>
+                              <p className="text-green-700 text-sm mb-2">
+                                Você receberá um email em <strong>{customerData.email}</strong> com o link para acessar seu conteúdo.
+                              </p>
+                              <p className="text-green-600 text-xs">
+                                Redirecionando para página de confirmação...
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

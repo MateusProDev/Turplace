@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import { CheckCircle, Download, Mail, Clock } from "lucide-react";
+import { CheckCircle, Download, Mail, Clock, QrCode } from "lucide-react";
 
 export default function Success() {
   const [searchParams] = useSearchParams();
@@ -9,7 +9,8 @@ export default function Success() {
   const [emailSent, setEmailSent] = useState(false);
 
   const sessionId = useMemo(() => searchParams.get('session_id'), [searchParams]);
-  const orderId = useMemo(() => searchParams.get('order_id'), [searchParams]);
+  const orderId = useMemo(() => searchParams.get('order_id') || searchParams.get('orderId'), [searchParams]);
+  const paymentMethod = useMemo(() => searchParams.get('method'), [searchParams]);
 
   const fetchOrderDetails = useCallback(async () => { 
     try {
@@ -17,22 +18,30 @@ export default function Success() {
       if (sessionId) params.append('session_id', sessionId); 
       if (orderId) params.append('order_id', orderId);
 
+      console.log('[Success] Buscando detalhes do pedido:', { sessionId, orderId, paymentMethod });
+      
       const response = await fetch(`/api/get-order-details?${params.toString()}`);
       if (!response.ok) {
         throw new Error('Erro ao buscar detalhes da ordem');
       }
 
       const data = await response.json();
+      console.log('[Success] Dados recebidos:', data);
 
       setOrderDetails({
-        serviceTitle: data.service?.title || "Serviço Digital",
-        amount: data.payment ? `R$ ${(data.payment.amountTotal / 100).toFixed(2).replace('.', ',')}` : "R$ 0,00",
-        customerEmail: data.payment?.customerEmail || "",
-        providerName: data.provider?.name || "Prestador",
+        serviceTitle: data.service?.title || data.order?.serviceTitle || "Serviço Digital",
+        amount: data.payment?.amountTotal 
+          ? `R$ ${(data.payment.amountTotal / 100).toFixed(2).replace('.', ',')}` 
+          : data.order?.totalAmount 
+            ? `R$ ${Number(data.order.totalAmount).toFixed(2).replace('.', ',')}`
+            : "R$ 0,00",
+        customerEmail: data.payment?.customerEmail || data.order?.customerEmail || "",
+        providerName: data.provider?.name || data.order?.providerName || "Prestador",
         orderId: data.order?.id || orderId || "N/A",
-        status: data.order?.status || "unknown",
+        status: data.order?.status || "completed",
         serviceDescription: data.service?.description || "",
-        isGuestCheckout: data.order?.isGuestCheckout || false
+        isGuestCheckout: data.order?.isGuestCheckout || false,
+        paymentMethod: paymentMethod || 'card'
       });
     } catch (err) {
       console.error("Erro ao buscar detalhes da ordem:", err);
@@ -45,21 +54,33 @@ export default function Success() {
         orderId: orderId || "N/A",
         status: "completed",
         serviceDescription: "",
-        isGuestCheckout: true
+        isGuestCheckout: true,
+        paymentMethod: paymentMethod || 'card'
       });
     } finally {
       setLoading(false);
     }
-  }, [sessionId, orderId]);
+  }, [sessionId, orderId, paymentMethod]);
 
   useEffect(() => {
-    if (sessionId) {
-      // Buscar detalhes da sessão do Stripe
+    if (sessionId || orderId) {
+      // Buscar detalhes da sessão do Stripe ou do pedido Pix
       fetchOrderDetails();
     } else {
+      // Mesmo sem IDs, mostrar página de sucesso genérica
+      setOrderDetails({
+        serviceTitle: "Serviço Digital",
+        amount: "Processando...",
+        customerEmail: "",
+        providerName: "Lucrazi",
+        orderId: "Processando...",
+        status: "completed",
+        serviceDescription: "",
+        isGuestCheckout: true
+      });
       setLoading(false);
     }
-  }, [sessionId, fetchOrderDetails]);
+  }, [sessionId, orderId, fetchOrderDetails]);
 
   const handleSendEmail = async () => {
     if (!orderDetails) return;
@@ -107,9 +128,19 @@ export default function Success() {
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           {/* Header de Sucesso */}
           <div className="bg-gradient-to-r from-green-600 to-emerald-600 px-8 py-8 text-white text-center">
-            <CheckCircle className="w-16 h-16 mx-auto mb-4" />
-            <h1 className="text-3xl font-bold mb-2">Pagamento Aprovado!</h1>
-            <p className="text-green-100">Seu pedido foi processado com sucesso</p>
+            {paymentMethod === 'pix' ? (
+              <QrCode className="w-16 h-16 mx-auto mb-4" />
+            ) : (
+              <CheckCircle className="w-16 h-16 mx-auto mb-4" />
+            )}
+            <h1 className="text-3xl font-bold mb-2">
+              {paymentMethod === 'pix' ? 'Pagamento via Pix Confirmado!' : 'Pagamento Aprovado!'}
+            </h1>
+            <p className="text-green-100">
+              {paymentMethod === 'pix' 
+                ? 'Seu pagamento via Pix foi processado com sucesso' 
+                : 'Seu pedido foi processado com sucesso'}
+            </p>
           </div>
 
           {/* Detalhes do Pedido */}
