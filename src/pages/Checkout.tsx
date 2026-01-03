@@ -299,9 +299,14 @@ export default function Checkout() {
       const emailField = document.getElementById('form-checkout__cardholderEmail') as HTMLInputElement;
       if (emailField) emailField.value = customerData.email;
       
-      // Atualizar CPF/CNPJ
+      // Atualizar CPF/CNPJ - garantir que tenha o tamanho correto
+      const cpfDigits = customerData.cpf.replace(/\D/g, '');
       const cpfField = document.getElementById('form-checkout__identificationNumber') as HTMLInputElement;
-      if (cpfField) cpfField.value = customerData.cpf.replace(/\D/g, '');
+      if (cpfField) {
+        // CPF: máximo 11 dígitos, CNPJ: máximo 14 dígitos
+        const maxLength = documentType === 'CPF' ? 11 : 14;
+        cpfField.value = cpfDigits.slice(0, maxLength);
+      }
       
       // Atualizar tipo de documento
       const docTypeField = document.getElementById('form-checkout__identificationType') as HTMLSelectElement;
@@ -309,14 +314,41 @@ export default function Checkout() {
     }
   }, [customerData.email, customerData.cpf, documentType, metodoPagamento, isCardFormReady]);
 
+  // Função para formatar CPF (000.000.000-00)
+  const formatCPF = (value: string): string => {
+    const digits = value.replace(/\D/g, '').slice(0, 11); // Limita a 11 dígitos
+    if (digits.length <= 3) return digits;
+    if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+    if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+    return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9, 11)}`;
+  };
+
+  // Função para formatar CNPJ (00.000.000/0000-00)
+  const formatCNPJ = (value: string): string => {
+    const digits = value.replace(/\D/g, '').slice(0, 14); // Limita a 14 dígitos
+    if (digits.length <= 2) return digits;
+    if (digits.length <= 5) return `${digits.slice(0, 2)}.${digits.slice(2)}`;
+    if (digits.length <= 8) return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5)}`;
+    if (digits.length <= 12) return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8)}`;
+    return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8, 12)}-${digits.slice(12, 14)}`;
+  };
+
   const handleCustomerDataChange = (field: keyof CustomerData, value: string) => {
-    console.log(`[Checkout] Atualizando campo ${field}:`, value);
-    setCustomerData(prev => ({ ...prev, [field]: value }));
+    let formattedValue = value;
+    
+    // Aplicar formatação específica para CPF/CNPJ
+    if (field === 'cpf') {
+      formattedValue = documentType === 'CPF' ? formatCPF(value) : formatCNPJ(value);
+    }
+    
+    console.log(`[Checkout] Atualizando campo ${field}:`, formattedValue);
+    setCustomerData(prev => ({ ...prev, [field]: formattedValue }));
   };
 
   const validateCustomerData = (): boolean => {
     console.log('[Checkout] Validando dados do cliente:', customerData);
     const { name, email, cpf, phone } = customerData;
+    const cpfDigits = cpf.replace(/\D/g, '');
 
     if (!name.trim()) {
       setError("Nome é obrigatório");
@@ -326,8 +358,14 @@ export default function Checkout() {
       setError("Email válido é obrigatório");
       return false;
     }
-    if (!cpf.trim() || cpf.length < 11) {
-      setError("CPF válido é obrigatório");
+    
+    // Validar CPF (11 dígitos) ou CNPJ (14 dígitos)
+    if (documentType === 'CPF' && cpfDigits.length !== 11) {
+      setError("CPF deve ter 11 dígitos");
+      return false;
+    }
+    if (documentType === 'CNPJ' && cpfDigits.length !== 14) {
+      setError("CNPJ deve ter 14 dígitos");
       return false;
     }
     if (!phone.trim()) {
@@ -1014,7 +1052,7 @@ export default function Checkout() {
                   <input 
                     type="hidden" 
                     id="form-checkout__identificationNumber" 
-                    value={customerData.cpf.replace(/\D/g, '')}
+                    value={customerData.cpf.replace(/\D/g, '').slice(0, documentType === 'CPF' ? 11 : 14)}
                     data-checkout="identificationNumber"
                   />
                   <select id="form-checkout__issuer" style={{ display: 'none', visibility: 'hidden', position: 'absolute', left: '-9999px' }}></select>

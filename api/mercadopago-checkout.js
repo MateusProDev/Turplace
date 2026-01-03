@@ -231,6 +231,19 @@ export default async function handler(req, res) {
       // 🔗 URL do webhook - OBRIGATÓRIO para 100% na qualidade
       const webhookUrl = process.env.MERCADO_PAGO_WEBHOOK_URL || 'https://lucrazi.com.br/api/mercadopago-webhook';
       
+      // ✅ Validar e limitar CPF a 11 dígitos ANTES de montar o payload
+      // CPF pode vir com dígitos extras por erro do usuário
+      const cpfRaw = (payerData?.cpf || customerCPF).replace(/\D/g, '');
+      const cpfValidated = cpfRaw.slice(0, 11); // Garantir máximo 11 dígitos
+      
+      if (cpfValidated.length !== 11) {
+        console.error('[MercadoPago Checkout] CPF inválido:', cpfValidated, 'length:', cpfValidated.length);
+        return res.status(400).json({
+          success: false,
+          error: 'CPF inválido. Deve conter exatamente 11 dígitos.'
+        });
+      }
+      
       // 🎯 PAYLOAD COMPLETO PARA 100/100 NO MERCADO PAGO
       const paymentData = {
         transaction_amount: valor,
@@ -258,7 +271,7 @@ export default async function handler(req, res) {
           last_name: payerData?.last_name || customerName.split(' ').slice(1).join(' ') || 'Lucrazi',
           identification: {
             type: 'CPF',
-            number: (payerData?.cpf || customerCPF).replace(/\D/g, '')
+            number: cpfValidated
           },
           phone: customerPhone ? {
             area_code: customerPhone.replace(/\D/g, '').substring(0, 2),
