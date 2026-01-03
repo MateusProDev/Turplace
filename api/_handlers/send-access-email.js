@@ -1,6 +1,6 @@
-const admin = require('firebase-admin');
+// Handler para envio de email de acesso após compra
 
-module.exports = async (req, res) => {
+async function sendAccessEmail(req, res) {
   // Verificar método
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método não permitido' });
@@ -101,4 +101,6 @@ module.exports = async (req, res) => {
       details: error.message
     });
   }
-};
+}
+
+export default sendAccessEmail;
