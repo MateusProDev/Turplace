@@ -651,7 +651,7 @@ export default function Checkout() {
             'cc_rejected_other_reason': 'Pagamento recusado pelo banco. Tente outro cartão.',
           };
           
-          const errorMessage = statusMessages[response.status_detail] || 
+          const errorMessage = (response.status_detail && statusMessages[response.status_detail]) || 
             `Pagamento recusado: ${response.status_detail || 'erro desconhecido'}`;
           
           throw new Error(errorMessage);
