@@ -133,11 +133,27 @@ export default async function handler(req, res) {
       console.log('[MercadoPago Checkout] Criando pedido no Firestore:', order);
       await orderRef.set(order);
 
-      // Criar QRCode PIX direto usando a API específica
+      // Criar cobrança PIX usando billing (que envia webhook quando pago)
       const valorEmCentavos = Math.round(valor * 100);
-      const pixData = {
-        amount: valorEmCentavos,
-        description: `Pagamento PIX - ${packageData?.title || 'Produto'}`,
+      const billingData = {
+        frequency: "ONE_TIME",
+        methods: ["PIX"],
+        products: [
+          {
+            externalId: packageData?.serviceId || orderRef.id,
+            name: packageData?.title || 'Pagamento PIX',
+            quantity: 1,
+            price: valorEmCentavos
+          }
+        ],
+        returnUrl: process.env.ABACATEPAY_RETURN_URL || 'https://lucrazi.com.br/success',
+        completionUrl: process.env.ABACATEPAY_COMPLETION_URL || 'https://lucrazi.com.br/success',
+        customer: {
+          email: customerEmail,
+          name: customerName,
+          taxId: customerCPF.replace(/\D/g, ''),
+          cellphone: customerPhone.replace(/\D/g, '')
+        },
         metadata: {
           orderId: orderRef.id,
           customerData: JSON.stringify(reservaData),
@@ -145,29 +161,37 @@ export default async function handler(req, res) {
         }
       };
 
-      console.log('[MercadoPago Checkout] Criando QRCode PIX direto:', pixData);
-      const pixResponse = await abacate.pixQrCode.create(pixData);
-      console.log('[MercadoPago Checkout] QRCode PIX criado:', pixResponse);
+      console.log('[MercadoPago Checkout] Criando cobrança PIX com billing:', billingData);
+      const billingResponse = await abacate.billing.create(billingData);
+      console.log('[MercadoPago Checkout] Cobrança PIX criada:', JSON.stringify(billingResponse, null, 2));
 
-      if (!pixResponse || !pixResponse.data) {
-        throw new Error('Erro ao criar QRCode PIX no AbacatePay');
+      if (!billingResponse || !billingResponse.data) {
+        throw new Error('Erro ao criar cobrança PIX no AbacatePay');
       }
 
-      // Atualizar pedido com o pixId
+      const billing = billingResponse.data;
+
+      // Atualizar pedido com o billingId
       await orderRef.update({
-        abacatepayPixId: pixResponse.data.id
+        abacatepayBillingId: billing.id,
+        serviceTitle: packageData?.title || 'Produto',
+        providerName: packageData?.ownerName || 'Lucrazi'
       });
+
+      // Extrair QRCode da resposta - pode estar em diferentes lugares
+      const qrCode = billing.pix?.qrcode || billing.pixQrCode?.brCode || billing.brCode || '';
+      const qrCodeBase64 = billing.pix?.qrcodeBase64 || billing.pixQrCode?.brCodeBase64 || billing.brCodeBase64 || '';
 
       return res.status(200).json({
         success: true,
-        pix_id: pixResponse.data.id,
+        pix_id: billing.id,
         orderId: orderRef.id,
-        status: pixResponse.data.status,
-        qrCode: pixResponse.data.brCode || '',
-        qrCodeBase64: pixResponse.data.brCodeBase64 || '',
-        expiration_date: pixResponse.data.expiresAt,
-        amount: pixResponse.data.amount,
-        description: pixResponse.data.description
+        status: billing.status,
+        qrCode: qrCode,
+        qrCodeBase64: qrCodeBase64,
+        expiration_date: billing.pix?.expiresAt || billing.pixQrCode?.expiresAt || billing.expiresAt,
+        amount: billing.amount || valorEmCentavos,
+        description: billing.description || packageData?.title || 'Pagamento PIX'
       });
     }
     if (metodoPagamento === 'cartao' && cardToken) {

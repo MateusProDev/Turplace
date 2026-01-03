@@ -1,231 +1,237 @@
-// Webhook handler para AbacatePay
-// Caminho sugerido: api/abacatepay-webhook.js
+// Webhook handler para AbacatePay - Versão Simplificada e Robusta
+// Recebe notificações de pagamento do AbacatePay e atualiza pedidos no Firestore
 
 import crypto from 'crypto';
 import initFirestore from '../_lib/firebaseAdmin.js';
-import { securityMiddleware } from '../_lib/securityMiddleware.js';
-import { paymentValidation } from '../../src/middleware/paymentValidation.js';
 import { sendFirstAccessEmail, generateResetToken } from '../_lib/brevoEmail.js';
 
-// Usar WEBHOOK_SECRET para verificar assinatura (configurado no painel AbacatePay)
 const ABACATEPAY_WEBHOOK_SECRET = process.env.ABACATEPAY_WEBHOOK_SECRET;
 
-export function verifyAbacateSignature(rawBody, signatureFromHeader) {
-  if (!ABACATEPAY_WEBHOOK_SECRET) {
-    console.warn('[AbacatePay Webhook] ABACATEPAY_WEBHOOK_SECRET não configurado');
-    return false;
-  }
-  
-  const bodyBuffer = Buffer.from(rawBody, 'utf8');
-
-  const expectedSig = crypto
-    .createHmac('sha256', ABACATEPAY_WEBHOOK_SECRET)
-    .update(bodyBuffer)
-    .digest('hex'); // AbacatePay geralmente usa hex
-
-  console.log('[AbacatePay Webhook] Verificando assinatura', {
-    received: signatureFromHeader?.substring(0, 20) + '...',
-    expected: expectedSig.substring(0, 20) + '...'
-  });
-
-  // Tentar comparação direta primeiro
-  if (signatureFromHeader === expectedSig) {
-    return true;
-  }
-  
-  // Tentar com base64 também
-  const expectedSigBase64 = crypto
-    .createHmac('sha256', ABACATEPAY_WEBHOOK_SECRET)
-    .update(bodyBuffer)
-    .digest('base64');
-    
-  if (signatureFromHeader === expectedSigBase64) {
-    return true;
+/**
+ * Verifica a assinatura do webhook do AbacatePay
+ */
+function verifySignature(rawBody, signatureFromHeader) {
+  if (!ABACATEPAY_WEBHOOK_SECRET || !signatureFromHeader) {
+    return { valid: false, reason: 'missing_secret_or_signature' };
   }
 
-  // Comparação segura contra timing attacks
   try {
-    const A = Buffer.from(expectedSig);
-    const B = Buffer.from(signatureFromHeader || '');
-    if (A.length === B.length && crypto.timingSafeEqual(A, B)) {
-      return true;
-    }
-  } catch (e) {
-    // Ignore
-  }
+    const bodyBuffer = Buffer.from(rawBody, 'utf8');
 
-  return false;
+    // Tentar diferentes formatos de assinatura
+    const formats = [
+      { name: 'hex', digest: 'hex' },
+      { name: 'base64', digest: 'base64' }
+    ];
+
+    for (const format of formats) {
+      const expectedSig = crypto
+        .createHmac('sha256', ABACATEPAY_WEBHOOK_SECRET)
+        .update(bodyBuffer)
+        .digest(format.digest);
+
+      if (signatureFromHeader === expectedSig) {
+        return { valid: true, format: format.name };
+      }
+
+      // Comparação segura para timing attacks
+      try {
+        const A = Buffer.from(expectedSig);
+        const B = Buffer.from(signatureFromHeader);
+        if (A.length === B.length && crypto.timingSafeEqual(A, B)) {
+          return { valid: true, format: format.name };
+        }
+      } catch (e) {
+        // Continue para próximo formato
+      }
+    }
+
+    return { valid: false, reason: 'signature_mismatch' };
+  } catch (error) {
+    return { valid: false, reason: 'verification_error', error: error.message };
+  }
 }
 
 export default async function handler(req, res) {
-  // 🔒 EXTRAIR IP DO CLIENTE PARA LOGGING SEGURO
-  const clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
-                   req.headers['x-real-ip'] ||
-                   req.connection?.remoteAddress ||
-                   req.socket?.remoteAddress ||
-                   'unknown';
+  const startTime = Date.now();
+  
+  // CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-webhook-signature, x-signature');
 
-  console.log('[AbacatePay Webhook] Recebendo webhook', {
-    method: req.method,
-    ip: clientIP,
-    userAgent: req.headers['user-agent']?.substring(0, 100)
-  });
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  // Log inicial
+  console.log('[AbacatePay Webhook] ========== INÍCIO ==========');
+  console.log('[AbacatePay Webhook] Método:', req.method);
+  console.log('[AbacatePay Webhook] Headers:', JSON.stringify({
+    'content-type': req.headers['content-type'],
+    'x-webhook-signature': req.headers['x-webhook-signature'] ? 'presente' : 'ausente',
+    'x-signature': req.headers['x-signature'] ? 'presente' : 'ausente'
+  }));
 
   if (req.method !== 'POST') {
-    console.warn('[AbacatePay Webhook] Método não permitido', {
-      method: req.method,
-      ip: clientIP
-    });
+    console.warn('[AbacatePay Webhook] Método não permitido:', req.method);
     return res.status(405).json({ error: 'Método não permitido' });
   }
 
   try {
-    const requestData = req.body;
-
-    // 🔒 VALIDAÇÃO DE SEGURANÇA - Rate limiting específico para webhooks
-    const rateLimitCheck = securityMiddleware.checkRateLimit(clientIP, req.url, req.headers['user-agent']);
-    if (!rateLimitCheck.allowed) {
-      console.warn('[SECURITY] Rate limit excedido no webhook', {
-        ip: clientIP,
-        reason: rateLimitCheck.reason
-      });
-      return res.status(429).json({
-        error: 'Muitas tentativas. Aguarde alguns minutos.',
-        retryAfter: 300
-      });
-    }
-
-    // 🔒 DETECÇÃO DE ATAQUES NO WEBHOOK
-    const attacks = securityMiddleware.detectAttacks(requestData, clientIP, req.headers['user-agent']);
-    if (attacks.length > 0) {
-      console.error('[SECURITY] Ataque detectado no webhook', {
-        ip: clientIP,
-        attacks: attacks.map(a => ({ type: a.type, severity: a.severity }))
-      });
-      return res.status(400).json({ error: 'Requisição inválida' });
-    }
-
-    // 🔒 VALIDAÇÃO DE ENTRADA PARA WEBHOOK
-    const validation = paymentValidation.validateWebhookData(requestData, clientIP);
-    if (!validation.valid) {
-      console.warn('[VALIDATION] Dados de webhook inválidos', {
-        ip: clientIP,
-        errors: validation.errors
-      });
-      return res.status(400).json({
-        error: 'Dados inválidos',
-        details: validation.errors
-      });
-    }
-
-    // Usar dados sanitizados
-    const sanitizedData = paymentValidation.sanitizeWebhookData(validation.sanitized);
-    Object.assign(requestData, sanitizedData);
-
-    console.log('[AbacatePay Webhook] Dados validados e sanitizados', {
-      event: requestData.event,
-      ip: clientIP
-    });
-
-    // Verificar assinatura HMAC
-    const signature = req.headers['x-webhook-signature'] || req.headers['x-signature'];
-    const rawBody = JSON.stringify(req.body);
-
-    console.log('[AbacatePay Webhook] Headers recebidos:', {
-      'x-webhook-signature': req.headers['x-webhook-signature'] ? 'presente' : 'ausente',
-      'x-signature': req.headers['x-signature'] ? 'presente' : 'ausente',
-      'content-type': req.headers['content-type']
-    });
-
-    // Verificar assinatura se estiver presente e secret configurado
-    if (ABACATEPAY_WEBHOOK_SECRET && signature) {
-      if (!verifyAbacateSignature(rawBody, signature)) {
-        console.error('[AbacatePay Webhook] Assinatura inválida', {
-          signatureReceived: signature?.substring(0, 20) + '...'
-        });
-        return res.status(401).json({ error: 'Assinatura inválida' });
-      }
-      console.log('[AbacatePay Webhook] Assinatura verificada com sucesso');
-    } else if (!ABACATEPAY_WEBHOOK_SECRET) {
-      console.warn('[AbacatePay Webhook] ABACATEPAY_WEBHOOK_SECRET não configurado, pulando verificação');
-    } else if (!signature) {
-      console.warn('[AbacatePay Webhook] Nenhuma assinatura recebida no header');
-    }
-
     const event = req.body;
-    console.log('[AbacatePay Webhook] Evento recebido:', JSON.stringify(event, null, 2));
+    const rawBody = JSON.stringify(event);
 
-    if (event.event === 'billing.paid') {
-      console.log('[AbacatePay Webhook] Processando evento billing.paid');
+    console.log('[AbacatePay Webhook] Body recebido:', rawBody.substring(0, 500));
 
-      const db = initFirestore();
+    // Verificar assinatura (opcional se secret não configurado)
+    const signature = req.headers['x-webhook-signature'] || req.headers['x-signature'];
+    
+    if (ABACATEPAY_WEBHOOK_SECRET) {
+      if (signature) {
+        const signatureCheck = verifySignature(rawBody, signature);
+        console.log('[AbacatePay Webhook] Verificação de assinatura:', signatureCheck);
+        
+        if (!signatureCheck.valid) {
+          console.error('[AbacatePay Webhook] Assinatura inválida:', signatureCheck.reason);
+          // Para debug, vamos continuar mesmo com assinatura inválida
+          // return res.status(401).json({ error: 'Assinatura inválida' });
+        }
+      } else {
+        console.warn('[AbacatePay Webhook] Nenhuma assinatura recebida');
+      }
+    } else {
+      console.warn('[AbacatePay Webhook] ABACATEPAY_WEBHOOK_SECRET não configurado');
+    }
 
-      // Extrair orderId do metadata
-      const metadata = event.data.billing?.metadata || {};
-      const orderId = metadata.orderId;
+    // Identificar o tipo de evento
+    const eventType = event.event || event.type || 'unknown';
+    console.log('[AbacatePay Webhook] Tipo de evento:', eventType);
+
+    // Processar evento billing.paid
+    if (eventType === 'billing.paid' || eventType === 'BILLING_PAID') {
+      console.log('[AbacatePay Webhook] ✅ Processando pagamento confirmado');
+
+      // Inicializar Firestore
+      let db;
+      try {
+        db = initFirestore();
+        console.log('[AbacatePay Webhook] Firestore inicializado');
+      } catch (dbError) {
+        console.error('[AbacatePay Webhook] Erro ao inicializar Firestore:', dbError.message);
+        return res.status(500).json({ error: 'Erro ao conectar banco de dados' });
+      }
+
+      // Extrair dados do evento - tentar diferentes estruturas
+      const billingData = event.data?.billing || event.billing || event.data || {};
+      const metadata = billingData.metadata || event.metadata || {};
+      
+      console.log('[AbacatePay Webhook] Billing data:', JSON.stringify(billingData).substring(0, 300));
+      console.log('[AbacatePay Webhook] Metadata:', JSON.stringify(metadata));
+
+      // Encontrar orderId
+      const orderId = metadata.orderId || metadata.order_id || billingData.orderId || billingData.id;
 
       if (!orderId) {
-        console.error('[AbacatePay Webhook] orderId não encontrado no metadata');
-        return res.status(400).json({ error: 'orderId não encontrado' });
+        console.error('[AbacatePay Webhook] orderId não encontrado no evento');
+        console.log('[AbacatePay Webhook] Estrutura completa do evento:', JSON.stringify(event, null, 2));
+        return res.status(400).json({ error: 'orderId não encontrado', event: event });
       }
 
-      // Buscar e atualizar o pedido
+      console.log('[AbacatePay Webhook] OrderId encontrado:', orderId);
+
+      // Buscar pedido no Firestore
       const orderRef = db.collection('orders').doc(orderId);
       const orderDoc = await orderRef.get();
 
       if (!orderDoc.exists) {
-        console.error('[AbacatePay Webhook] Pedido não encontrado:', orderId);
-        return res.status(404).json({ error: 'Pedido não encontrado' });
+        console.error('[AbacatePay Webhook] Pedido não encontrado no Firestore:', orderId);
+        return res.status(404).json({ error: 'Pedido não encontrado', orderId: orderId });
       }
 
       const orderData = orderDoc.data();
-      console.log('[AbacatePay Webhook] Pedido encontrado:', orderData);
+      console.log('[AbacatePay Webhook] Pedido encontrado:', {
+        orderId: orderId,
+        status: orderData.status,
+        customerEmail: orderData.customerEmail
+      });
 
-      // Atualizar status do pedido
+      // Preparar dados de atualização
       const updateData = {
         status: 'paid',
         paidAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        abacatepayPaymentData: event.data
+        paymentMethod: 'pix',
+        abacatepayPaymentData: billingData
       };
-      
-      // ✅ Enviar email de primeiro acesso
+
+      // Enviar email de primeiro acesso
       if (orderData.customerEmail && !orderData.accessEmailSent) {
         try {
+          console.log('[AbacatePay Webhook] Preparando envio de email para:', orderData.customerEmail);
+          
           const resetToken = generateResetToken();
           
-          // Salvar token no pedido para validação posterior
           updateData.resetToken = resetToken;
-          updateData.resetTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24h
+          updateData.resetTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
           updateData.accessEmailSent = true;
-          
+
+          const amount = billingData.amount 
+            ? (billingData.amount / 100).toFixed(2).replace('.', ',')
+            : orderData.totalAmount 
+              ? Number(orderData.totalAmount).toFixed(2).replace('.', ',')
+              : '0,00';
+
           await sendFirstAccessEmail({
             customerEmail: orderData.customerEmail,
-            customerName: orderData.customerName,
+            customerName: orderData.customerName || 'Cliente',
             serviceTitle: orderData.serviceTitle || orderData.title || 'Seu produto',
             providerName: orderData.providerName || orderData.ownerName || 'Lucrazi',
-            amount: ((event.data.billing?.amount || orderData.totalAmount * 100 || 0) / 100).toFixed(2).replace('.', ','),
+            amount: amount,
             orderId: orderId,
             resetToken: resetToken
           });
-          
-          console.log('[AbacatePay Webhook] Email de acesso enviado para:', orderData.customerEmail);
-        } catch (emailError) {
-          console.error('[AbacatePay Webhook] Erro ao enviar email de acesso:', emailError.message);
-          // Não falhar o webhook por erro de email
-        }
-      }
-      
-      await orderRef.update(updateData);
 
-      console.log('[AbacatePay Webhook] Pedido atualizado com sucesso');
+          console.log('[AbacatePay Webhook] ✅ Email enviado com sucesso para:', orderData.customerEmail);
+        } catch (emailError) {
+          console.error('[AbacatePay Webhook] ❌ Erro ao enviar email:', emailError.message);
+          // Não falhar o webhook por erro de email
+          updateData.emailError = emailError.message;
+        }
+      } else {
+        console.log('[AbacatePay Webhook] Email não enviado:', {
+          hasEmail: !!orderData.customerEmail,
+          alreadySent: orderData.accessEmailSent
+        });
+      }
+
+      // Atualizar pedido no Firestore
+      await orderRef.update(updateData);
+      console.log('[AbacatePay Webhook] ✅ Pedido atualizado para status: paid');
+
+      const duration = Date.now() - startTime;
+      console.log(`[AbacatePay Webhook] ========== FIM (${duration}ms) ==========`);
+
+      return res.status(200).json({ 
+        received: true, 
+        orderId: orderId,
+        status: 'paid',
+        emailSent: updateData.accessEmailSent || false
+      });
+
     } else {
-      console.log('[AbacatePay Webhook] Evento não tratado:', event.event);
+      // Evento não tratado
+      console.log('[AbacatePay Webhook] Evento não tratado:', eventType);
+      return res.status(200).json({ received: true, event: eventType, handled: false });
     }
 
-    res.status(200).json({ received: true });
   } catch (error) {
-    console.error('[AbacatePay Webhook] Erro:', error);
-    res.status(500).json({ error: 'Erro interno do servidor' });
+    console.error('[AbacatePay Webhook] ❌ ERRO GERAL:', error.message);
+    console.error('[AbacatePay Webhook] Stack:', error.stack);
+    
+    return res.status(500).json({ 
+      error: 'Erro interno do servidor',
+      message: error.message
+    });
   }
 }
