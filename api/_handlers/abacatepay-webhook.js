@@ -2,10 +2,10 @@
 // Caminho sugerido: api/abacatepay-webhook.js
 
 import crypto from 'crypto';
-import initFirestore from './_lib/firebaseAdmin.js';
-import { securityMiddleware } from './_lib/securityMiddleware.js';
-import { paymentValidation } from '../src/middleware/paymentValidation.js';
-import { sendFirstAccessEmail, generateResetToken } from './_lib/brevoEmail.js';
+import initFirestore from '../_lib/firebaseAdmin.js';
+import { securityMiddleware } from '../_lib/securityMiddleware.js';
+import { paymentValidation } from '../../src/middleware/paymentValidation.js';
+import { sendFirstAccessEmail, generateResetToken } from '../_lib/brevoEmail.js';
 
 // Usar WEBHOOK_SECRET para verificar assinatura (configurado no painel AbacatePay)
 const ABACATEPAY_WEBHOOK_SECRET = process.env.ABACATEPAY_WEBHOOK_SECRET;

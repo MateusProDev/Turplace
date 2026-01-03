@@ -2,7 +2,7 @@
 // api/abacatepay-webhook.js
 
 import crypto from 'crypto';
-import initFirestore from './_lib/firebaseAdmin.js';
+import initFirestore from '../_lib/firebaseAdmin.js';
 import { withSecurity } from './_middleware/security.js';
 import { securityMiddleware } from '../../src/middleware/security.js';
 

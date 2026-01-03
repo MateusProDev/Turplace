@@ -1,6 +1,6 @@
 // Endpoint para verificar status do pedido no Firestore
 // Usado para polling após pagamento Pix
-import initFirestore from './_lib/firebaseAdmin.js';
+import initFirestore from '../_lib/firebaseAdmin.js';
 
 export default async function handler(req, res) {
   console.log('[Order Status] Verificando status', {

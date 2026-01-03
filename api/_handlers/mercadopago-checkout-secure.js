@@ -3,7 +3,7 @@
 
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import AbacatePay from 'abacatepay-nodejs-sdk';
-import initFirestore from './_lib/firebaseAdmin.js';
+import initFirestore from '../_lib/firebaseAdmin.js';
 import { withSecurity } from './_middleware/security.js';
 import { securityMiddleware } from '../../src/middleware/security.js';
 

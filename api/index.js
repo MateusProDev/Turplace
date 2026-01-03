@@ -16,10 +16,11 @@ import webhook from './_handlers/webhook.js';
 import sharecontent from './_handlers/sharecontent.js';
 import userOrders from './_handlers/user-orders.js';
 import sendAccessEmail from './_handlers/send-access-email.js';
-import mercadopagoCheckout from './mercadopago-checkout.js';
-import abacatepayPixCheckout from './abacatepay-pix-checkout.js';
-import abacatepayWebhook from './abacatepay-webhook.js';
-import orderStatus from './order-status.js';
+import mercadopagoCheckout from './_handlers/mercadopago-checkout.js';
+import abacatepayPixCheckout from './_handlers/abacatepay-pix-checkout.js';
+import abacatepayWebhook from './_handlers/abacatepay-webhook.js';
+import orderStatus from './_handlers/order-status.js';
+import mercadopagoWebhook from './_handlers/mercadopago-webhook.js';
 
 const handlers = {
   'create-checkout-session': createCheckoutSession,
@@ -40,7 +41,8 @@ const handlers = {
   'mercadopago-checkout': mercadopagoCheckout,
   'abacatepay-pix-checkout': abacatepayPixCheckout,
   'abacatepay-webhook': abacatepayWebhook,
-  'order-status': orderStatus
+  'order-status': orderStatus,
+  'mercadopago-webhook': mercadopagoWebhook
 };
 
 export default async (req, res) => {

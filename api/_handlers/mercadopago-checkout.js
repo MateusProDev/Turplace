@@ -3,7 +3,7 @@
 
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import AbacatePay from 'abacatepay-nodejs-sdk';
-import initFirestore from './_lib/firebaseAdmin.js';
+import initFirestore from '../_lib/firebaseAdmin.js';
 
 const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN || process.env.REACT_APP_MERCADO_PAGO_ACCESS_TOKEN;
 const abacateApiKey = process.env.ABACATEPAY_API_KEY;
