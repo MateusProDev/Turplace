@@ -291,6 +291,19 @@ export default function Checkout() {
     }
   }, [aguardandoPix, paymentId, pixAttempts]);
 
+  // Sincronizar dados do cliente com campos ocultos do MercadoPago CardForm
+  useEffect(() => {
+    if (metodoPagamento === 'cartao' && isCardFormReady) {
+      // Atualizar email
+      const emailField = document.getElementById('form-checkout__cardholderEmail') as HTMLInputElement;
+      if (emailField) emailField.value = customerData.email;
+      
+      // Atualizar CPF
+      const cpfField = document.getElementById('form-checkout__identificationNumber') as HTMLInputElement;
+      if (cpfField) cpfField.value = customerData.cpf.replace(/\D/g, '');
+    }
+  }, [customerData.email, customerData.cpf, metodoPagamento, isCardFormReady]);
+
   const handleCustomerDataChange = (field: keyof CustomerData, value: string) => {
     console.log(`[Checkout] Atualizando campo ${field}:`, value);
     setCustomerData(prev => ({ ...prev, [field]: value }));
@@ -833,7 +846,10 @@ export default function Checkout() {
                 <div className="space-y-4 animate-fadeIn">
                   {!isCardFormReady && (
                     <div className="flex items-center justify-center h-48 bg-gray-50 rounded-lg">
-                      <p className="text-gray-500">Carregando formulário de pagamento...</p>
+                      <div className="text-center">
+                        <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-2" />
+                        <p className="text-gray-500">Carregando formulário seguro...</p>
+                      </div>
                     </div>
                   )}
                   <form id="form-checkout" autoComplete="off" className={`space-y-4 ${isCardFormReady ? 'block' : 'hidden'}`}>
@@ -843,6 +859,21 @@ export default function Checkout() {
                         Número do Cartão *
                       </label>
                       <div id="form-checkout__cardNumber" className="mp-secure-field-container"></div>
+                    </div>
+
+                    {/* Nome no Cartão */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-900 mb-2">
+                        Nome no Cartão *
+                      </label>
+                      <input 
+                        type="text" 
+                        id="form-checkout__cardholderName" 
+                        className="mp-input-field" 
+                        placeholder="Nome como impresso no cartão"
+                        autoComplete="cc-name"
+                        data-checkout="cardholderName"
+                      />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -863,67 +894,7 @@ export default function Checkout() {
                       </div>
                     </div>
 
-                    {/* Cardholder Name */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-900 mb-2">
-                        Nome no Cartão *
-                      </label>
-                      <input 
-                        type="text" 
-                        id="form-checkout__cardholderName" 
-                        className="mp-input-field" 
-                        placeholder="Nome como impresso no cartão"
-                        autoComplete="cc-name"
-                        data-checkout="cardholderName"
-                      />
-                    </div>
-
-                    {/* Email */}
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-900 mb-2">
-                        E-mail *
-                      </label>
-                      <input 
-                        type="email" 
-                        id="form-checkout__cardholderEmail" 
-                        className="mp-input-field" 
-                        placeholder="seu@email.com"
-                        autoComplete="email"
-                        data-checkout="cardholderEmail"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      {/* Identification Type */}
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-900 mb-2">
-                          Tipo de Documento *
-                        </label>
-                        <select id="form-checkout__identificationType" className="mp-input-field">
-                          <option value="CPF">CPF</option>
-                        </select>
-                      </div>
-
-                      {/* Identification Number */}
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-900 mb-2">
-                          CPF *
-                        </label>
-                        <input 
-                          type="text" 
-                          id="form-checkout__identificationNumber" 
-                          className="mp-input-field" 
-                          placeholder="000.000.000-00"
-                          autoComplete="off"
-                          data-checkout="identificationNumber"
-                        />
-                      </div>
-                    </div>
-
-                    {/* Issuer - Hidden */}
-                    <select id="form-checkout__issuer" className="hidden"></select>
-                    
-                    {/* Installments */}
+                    {/* Parcelas */}
                     <div>
                       <label className="block text-sm font-semibold text-gray-900 mb-2">
                         Parcelas *
@@ -937,6 +908,24 @@ export default function Checkout() {
                         <option value="6">6x sem juros</option>
                       </select>
                     </div>
+
+                    {/* Campos ocultos - preenchidos automaticamente com dados do cliente */}
+                    <input 
+                      type="hidden" 
+                      id="form-checkout__cardholderEmail" 
+                      value={customerData.email}
+                      data-checkout="cardholderEmail"
+                    />
+                    <select id="form-checkout__identificationType" className="hidden">
+                      <option value="CPF" selected>CPF</option>
+                    </select>
+                    <input 
+                      type="hidden" 
+                      id="form-checkout__identificationNumber" 
+                      value={customerData.cpf.replace(/\D/g, '')}
+                      data-checkout="identificationNumber"
+                    />
+                    <select id="form-checkout__issuer" className="hidden"></select>
                   </form>
                 </div>
               )}
