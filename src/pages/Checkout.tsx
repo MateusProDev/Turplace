@@ -57,6 +57,7 @@ export default function Checkout() {
   const [copied, setCopied] = useState(false);
   const [isCardFormReady, setIsCardFormReady] = useState(false);
   const [cardFormErrors, setCardFormErrors] = useState<Record<string, string>>({});
+  const [documentType, setDocumentType] = useState<'CPF' | 'CNPJ'>('CPF');
 
   // Dados do cartão (Card Form gerencia os campos seguros)
   const [installments] = useState(1);
@@ -298,11 +299,15 @@ export default function Checkout() {
       const emailField = document.getElementById('form-checkout__cardholderEmail') as HTMLInputElement;
       if (emailField) emailField.value = customerData.email;
       
-      // Atualizar CPF
+      // Atualizar CPF/CNPJ
       const cpfField = document.getElementById('form-checkout__identificationNumber') as HTMLInputElement;
       if (cpfField) cpfField.value = customerData.cpf.replace(/\D/g, '');
+      
+      // Atualizar tipo de documento
+      const docTypeField = document.getElementById('form-checkout__identificationType') as HTMLSelectElement;
+      if (docTypeField) docTypeField.value = documentType;
     }
-  }, [customerData.email, customerData.cpf, metodoPagamento, isCardFormReady]);
+  }, [customerData.email, customerData.cpf, documentType, metodoPagamento, isCardFormReady]);
 
   const handleCustomerDataChange = (field: keyof CustomerData, value: string) => {
     console.log(`[Checkout] Atualizando campo ${field}:`, value);
@@ -828,15 +833,51 @@ export default function Checkout() {
 
                 <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    CPF *
+                    Tipo de Documento *
+                  </label>
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <button
+                      type="button"
+                      onClick={() => setDocumentType('CPF')}
+                      className={`p-3 rounded-xl border-2 transition-all ${documentType === 'CPF' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <span className={`font-semibold ${documentType === 'CPF' ? 'text-blue-600' : 'text-gray-700'}`}>CPF</span>
+                        {documentType === 'CPF' && (
+                          <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                            <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-xs text-gray-500">Pessoa Física</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDocumentType('CNPJ')}
+                      className={`p-3 rounded-xl border-2 transition-all ${documentType === 'CNPJ' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <span className={`font-semibold ${documentType === 'CNPJ' ? 'text-blue-600' : 'text-gray-700'}`}>CNPJ</span>
+                        {documentType === 'CNPJ' && (
+                          <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                            <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-xs text-gray-500">Pessoa Jurídica</span>
+                    </button>
+                  </div>
+                  
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    {documentType} *
                   </label>
                   <input
                     type="text"
                     value={customerData.cpf}
                     onChange={(e) => handleCustomerDataChange('cpf', e.target.value)}
                     className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
-                    placeholder="000.000.000-00"
-                    maxLength={14}
+                    placeholder={documentType === 'CPF' ? '000.000.000-00' : '00.000.000/0000-00'}
+                    maxLength={documentType === 'CPF' ? 14 : 18}
                     required
                   />
                 </div>
@@ -929,8 +970,9 @@ export default function Checkout() {
                     value={customerData.email}
                     data-checkout="cardholderEmail"
                   />
-                  <select id="form-checkout__identificationType" className="hidden">
-                    <option value="CPF" selected>CPF</option>
+                  <select id="form-checkout__identificationType" className="hidden" value={documentType}>
+                    <option value="CPF">CPF</option>
+                    <option value="CNPJ">CNPJ</option>
                   </select>
                   <input 
                     type="hidden" 
