@@ -19,6 +19,7 @@ import sendAccessEmail from './_handlers/send-access-email.js';
 import mercadopagoCheckout from './mercadopago-checkout.js';
 import abacatepayPixCheckout from './abacatepay-pix-checkout.js';
 import abacatepayWebhook from './abacatepay-webhook.js';
+import orderStatus from './order-status.js';
 
 const handlers = {
   'create-checkout-session': createCheckoutSession,
@@ -38,7 +39,8 @@ const handlers = {
   'send-access-email': sendAccessEmail,
   'mercadopago-checkout': mercadopagoCheckout,
   'abacatepay-pix-checkout': abacatepayPixCheckout,
-  'abacatepay-webhook': abacatepayWebhook
+  'abacatepay-webhook': abacatepayWebhook,
+  'order-status': orderStatus
 };
 
 export default async (req, res) => {
