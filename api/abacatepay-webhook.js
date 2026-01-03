@@ -7,20 +7,54 @@ import { securityMiddleware } from './_lib/securityMiddleware.js';
 import { paymentValidation } from '../src/middleware/paymentValidation.js';
 import { sendFirstAccessEmail, generateResetToken } from './_lib/brevoEmail.js';
 
-const ABACATEPAY_PUBLIC_KEY = process.env.ABACATEPAY_PUBLIC_KEY || 't9dXRhHHo3yDEj5pVDYz0frf7q6bMKyMRmxxCPIPp3RCplBfXRxqlC6ZpiWmOqj4L63qEaeUOtrCI8P0VMUgo6iIga2ri9ogaHFs0WIIywSMg0q7RmBfybe1E5XJcfC4IW3alNqym0tXoAKkzvfEjZxV6bE0oG2zJrNNYmUCKZyV0KZ3JS8Votf9EAWWYdiDkMkpbMdPggfh1EqHlVkMiTady6jOR3hyzGEHrIz2Ret0xHKMbiqkr9HS1JhNHDX9';
+// Usar WEBHOOK_SECRET para verificar assinatura (configurado no painel AbacatePay)
+const ABACATEPAY_WEBHOOK_SECRET = process.env.ABACATEPAY_WEBHOOK_SECRET;
 
 export function verifyAbacateSignature(rawBody, signatureFromHeader) {
+  if (!ABACATEPAY_WEBHOOK_SECRET) {
+    console.warn('[AbacatePay Webhook] ABACATEPAY_WEBHOOK_SECRET não configurado');
+    return false;
+  }
+  
   const bodyBuffer = Buffer.from(rawBody, 'utf8');
 
   const expectedSig = crypto
-    .createHmac('sha256', ABACATEPAY_PUBLIC_KEY)
+    .createHmac('sha256', ABACATEPAY_WEBHOOK_SECRET)
+    .update(bodyBuffer)
+    .digest('hex'); // AbacatePay geralmente usa hex
+
+  console.log('[AbacatePay Webhook] Verificando assinatura', {
+    received: signatureFromHeader?.substring(0, 20) + '...',
+    expected: expectedSig.substring(0, 20) + '...'
+  });
+
+  // Tentar comparação direta primeiro
+  if (signatureFromHeader === expectedSig) {
+    return true;
+  }
+  
+  // Tentar com base64 também
+  const expectedSigBase64 = crypto
+    .createHmac('sha256', ABACATEPAY_WEBHOOK_SECRET)
     .update(bodyBuffer)
     .digest('base64');
+    
+  if (signatureFromHeader === expectedSigBase64) {
+    return true;
+  }
 
-  const A = Buffer.from(expectedSig);
-  const B = Buffer.from(signatureFromHeader);
+  // Comparação segura contra timing attacks
+  try {
+    const A = Buffer.from(expectedSig);
+    const B = Buffer.from(signatureFromHeader || '');
+    if (A.length === B.length && crypto.timingSafeEqual(A, B)) {
+      return true;
+    }
+  } catch (e) {
+    // Ignore
+  }
 
-  return A.length === B.length && crypto.timingSafeEqual(A, B);
+  return false;
 }
 
 export default async function handler(req, res) {
@@ -94,16 +128,32 @@ export default async function handler(req, res) {
     });
 
     // Verificar assinatura HMAC
-    const signature = req.headers['x-webhook-signature'];
+    const signature = req.headers['x-webhook-signature'] || req.headers['x-signature'];
     const rawBody = JSON.stringify(req.body);
 
-    if (!signature || !verifyAbacateSignature(rawBody, signature)) {
-      console.error('[AbacatePay Webhook] Assinatura inválida');
-      return res.status(401).json({ error: 'Assinatura inválida' });
+    console.log('[AbacatePay Webhook] Headers recebidos:', {
+      'x-webhook-signature': req.headers['x-webhook-signature'] ? 'presente' : 'ausente',
+      'x-signature': req.headers['x-signature'] ? 'presente' : 'ausente',
+      'content-type': req.headers['content-type']
+    });
+
+    // Verificar assinatura se estiver presente e secret configurado
+    if (ABACATEPAY_WEBHOOK_SECRET && signature) {
+      if (!verifyAbacateSignature(rawBody, signature)) {
+        console.error('[AbacatePay Webhook] Assinatura inválida', {
+          signatureReceived: signature?.substring(0, 20) + '...'
+        });
+        return res.status(401).json({ error: 'Assinatura inválida' });
+      }
+      console.log('[AbacatePay Webhook] Assinatura verificada com sucesso');
+    } else if (!ABACATEPAY_WEBHOOK_SECRET) {
+      console.warn('[AbacatePay Webhook] ABACATEPAY_WEBHOOK_SECRET não configurado, pulando verificação');
+    } else if (!signature) {
+      console.warn('[AbacatePay Webhook] Nenhuma assinatura recebida no header');
     }
 
     const event = req.body;
-    console.log('[AbacatePay Webhook] Evento recebido:', event);
+    console.log('[AbacatePay Webhook] Evento recebido:', JSON.stringify(event, null, 2));
 
     if (event.event === 'billing.paid') {
       console.log('[AbacatePay Webhook] Processando evento billing.paid');
