@@ -135,22 +135,26 @@ export default async function handler(req, res) {
 
       // Criar QRCode PIX direto (retorna o QR Code para exibir no frontend)
       const valorEmCentavos = Math.round(valor * 100);
+      
+      // Montar dados do PIX - customer é opcional
       const pixData = {
         amount: valorEmCentavos,
-        description: `Pagamento PIX - ${packageData?.title || 'Produto'}`,
-        expiresIn: 3600, // 1 hora
-        customer: {
+        description: `Pagamento PIX - ${packageData?.title || 'Produto'}`.substring(0, 140),
+        expiresIn: 3600 // 1 hora
+      };
+      
+      // Adicionar customer apenas se todos os campos estiverem preenchidos
+      const cleanPhone = customerPhone?.replace(/\D/g, '') || '';
+      const cleanCPF = customerCPF?.replace(/\D/g, '') || '';
+      
+      if (customerName && customerEmail && cleanPhone && cleanCPF) {
+        pixData.customer = {
           name: customerName,
           email: customerEmail,
-          cellphone: customerPhone.replace(/\D/g, ''),
-          taxId: customerCPF.replace(/\D/g, '')
-        },
-        metadata: {
-          orderId: orderRef.id,
-          customerData: JSON.stringify(reservaData),
-          packageData: JSON.stringify(packageData)
-        }
-      };
+          cellphone: cleanPhone,
+          taxId: cleanCPF
+        };
+      }
 
       console.log('[MercadoPago Checkout] Criando QRCode PIX direto:', pixData);
       const pixResponse = await abacate.pixQrCode.create(pixData);
