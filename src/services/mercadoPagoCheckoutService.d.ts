@@ -41,6 +41,7 @@ export interface CheckoutResponse {
   payment_id?: string;
   orderId?: string;
   status?: string;
+  status_detail?: string;
   qrCode?: string;
   qrCodeBase64?: string;
   ticket_url?: string;
