@@ -702,7 +702,44 @@ export default function Checkout() {
           {/* Coluna Esquerda - Formulário */}
           <div className="lg:col-span-2 space-y-6">
             
-            {/* 1. Card de Método de Pagamento - PRIMEIRO */}
+            {/* 1. Resumo da Compra - PRIMEIRO */}
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl flex items-center justify-center">
+                  <Sparkles className="w-6 h-6 text-purple-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">Resumo da compra</h2>
+                  <p className="text-gray-600 text-sm">Confira os detalhes</p>
+                </div>
+              </div>
+
+              {/* Produto */}
+              <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl mb-4">
+                {service.images && service.images[0] && (
+                  <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                    <img
+                      src={service.images[0]}
+                      alt={service.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <h3 className="font-bold text-gray-900 mb-1 line-clamp-2">{service.title}</h3>
+                  <p className="text-gray-600 text-sm mb-2">Por {service.ownerName}</p>
+                  <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">{billingText}</span>
+                </div>
+              </div>
+
+              {/* Total */}
+              <div className="flex justify-between items-center py-4 border-t border-gray-100">
+                <span className="text-lg font-semibold text-gray-900">Total</span>
+                <span className="text-3xl font-bold text-green-600">R$ {price}</span>
+              </div>
+            </div>
+            
+            {/* 2. Card de Método de Pagamento - SEGUNDO */}
             <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8">
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl flex items-center justify-center">
@@ -970,7 +1007,7 @@ export default function Checkout() {
                     value={customerData.email}
                     data-checkout="cardholderEmail"
                   />
-                  <select id="form-checkout__identificationType" className="hidden" value={documentType}>
+                  <select id="form-checkout__identificationType" style={{ display: 'none', visibility: 'hidden', position: 'absolute', left: '-9999px' }} value={documentType} disabled>
                     <option value="CPF">CPF</option>
                     <option value="CNPJ">CNPJ</option>
                   </select>
@@ -980,7 +1017,7 @@ export default function Checkout() {
                     value={customerData.cpf.replace(/\D/g, '')}
                     data-checkout="identificationNumber"
                   />
-                  <select id="form-checkout__issuer" className="hidden"></select>
+                  <select id="form-checkout__issuer" style={{ display: 'none', visibility: 'hidden', position: 'absolute', left: '-9999px' }}></select>
                 </form>
               </div>
             )}
@@ -1058,46 +1095,10 @@ export default function Checkout() {
             )}
           </div>
 
-          {/* Coluna Direita - Resumo e Pagamento */}
-          <div className="space-y-8">
-            {/* Card de Resumo */}
+          {/* Coluna Direita - Garantias e Botão */}
+          <div className="space-y-6">
+            {/* Card de Pagamento - Sticky */}
             <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8 sticky top-8">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl flex items-center justify-center">
-                  <Sparkles className="w-6 h-6 text-purple-600" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900">Resumo da compra</h2>
-                  <p className="text-gray-600 text-sm">Confira os detalhes</p>
-                </div>
-              </div>
-
-              {/* Produto */}
-              <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl mb-6">
-                {service.images && service.images[0] && (
-                  <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
-                    <img
-                      src={service.images[0]}
-                      alt={service.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
-                <div className="flex-1">
-                  <h3 className="font-bold text-gray-900 mb-1 line-clamp-2">{service.title}</h3>
-                  <p className="text-gray-600 text-sm mb-2">Por {service.ownerName}</p>
-                  <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">{billingText}</span>
-                </div>
-              </div>
-
-              {/* Total */}
-              <div className="space-y-4 mb-8">
-                <div className="flex justify-between items-center py-4 border-t border-gray-100">
-                  <span className="text-lg font-semibold text-gray-900">Total</span>
-                  <span className="text-3xl font-bold text-gray-900">R$ {price}</span>
-                </div>
-              </div>
-
               {/* Garantias */}
               <div className="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-100 rounded-xl p-4 mb-6">
                 <div className="flex items-start gap-3">
