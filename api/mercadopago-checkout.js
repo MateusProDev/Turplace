@@ -241,11 +241,15 @@ export default async function handler(req, res) {
         payment_method_id: paymentMethodId || undefined,
         issuer_id: issuerId ? parseInt(issuerId) : undefined,
         
-        // ✅ BINARY MODE - Resposta imediata (aprovado ou rejeitado)
+        // ✅ BINARY MODE - false para permitir análise de fraude (recomendado)
         binary_mode: false,
         
         // ✅ CAPTURE - true para captura automática
         capture: true,
+        
+        // ✅ STATEMENT DESCRIPTOR - Nome na fatura do cartão (NÍVEL RAIZ) - MAX 22 CHARS
+        // IMPORTANTE: Deve ser enviado ANTES do payer
+        statement_descriptor: 'LUCRAZI',
         
         // ✅ PAYER - Todos os campos obrigatórios (NÍVEL RAIZ)
         payer: {
@@ -269,9 +273,6 @@ export default async function handler(req, res) {
         
         // ✅ EXTERNAL REFERENCE - Obrigatório para conciliação (NÍVEL RAIZ)
         external_reference: orderRef.id,
-        
-        // ✅ STATEMENT DESCRIPTOR - Nome na fatura do cartão (NÍVEL RAIZ) - MAX 22 CHARS
-        statement_descriptor: 'LUCRAZI',
         
         // ✅ NOTIFICATION URL - Obrigatório para webhooks (NÍVEL RAIZ)
         notification_url: webhookUrl,
