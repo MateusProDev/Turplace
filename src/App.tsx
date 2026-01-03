@@ -22,6 +22,7 @@ import Wallet from './pages/Wallet';
 import Checkout from './pages/Checkout';
 import ServiceDiagnostics from './pages/ServiceDiagnostics';
 import Success from './pages/Success';
+import ResetPassword from './pages/ResetPassword';
 import RequireAdmin from './components/Auth/RequireAdmin';
 
 function App() {
@@ -65,6 +66,7 @@ function App() {
         <Route path="/course/:slug" element={<CourseDetail />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/success" element={<Success />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/cancel" element={<div className="min-h-screen flex items-center justify-center"><div className="text-center"><h1 className="text-2xl font-bold text-gray-900 mb-4">Pagamento Cancelado</h1><p className="text-gray-600 mb-6">Você cancelou o pagamento. Pode tentar novamente quando quiser.</p><Link to="/catalog" className="px-6 py-3 bg-gradient-to-r from-[#0097b2] to-[#7ed957] text-white rounded-lg font-semibold hover:opacity-90 transition">Voltar ao Catálogo</Link></div></div>} />
         <Route path="/diagnostics" element={<ServiceDiagnostics />} />
         <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />

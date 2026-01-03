@@ -5,6 +5,7 @@ import crypto from 'crypto';
 import initFirestore from './_lib/firebaseAdmin.js';
 import { securityMiddleware } from './_lib/securityMiddleware.js';
 import { paymentValidation } from '../src/middleware/paymentValidation.js';
+import { sendFirstAccessEmail, generateResetToken } from './_lib/brevoEmail.js';
 
 const ABACATEPAY_PUBLIC_KEY = process.env.ABACATEPAY_PUBLIC_KEY || 't9dXRhHHo3yDEj5pVDYz0frf7q6bMKyMRmxxCPIPp3RCplBfXRxqlC6ZpiWmOqj4L63qEaeUOtrCI8P0VMUgo6iIga2ri9ogaHFs0WIIywSMg0q7RmBfybe1E5XJcfC4IW3alNqym0tXoAKkzvfEjZxV6bE0oG2zJrNNYmUCKZyV0KZ3JS8Votf9EAWWYdiDkMkpbMdPggfh1EqHlVkMiTady6jOR3hyzGEHrIz2Ret0xHKMbiqkr9HS1JhNHDX9';
 
@@ -131,15 +132,43 @@ export default async function handler(req, res) {
       console.log('[AbacatePay Webhook] Pedido encontrado:', orderData);
 
       // Atualizar status do pedido
-      await orderRef.update({
+      const updateData = {
         status: 'paid',
+        paidAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         abacatepayPaymentData: event.data
-      });
+      };
+      
+      // ✅ Enviar email de primeiro acesso
+      if (orderData.customerEmail && !orderData.accessEmailSent) {
+        try {
+          const resetToken = generateResetToken();
+          
+          // Salvar token no pedido para validação posterior
+          updateData.resetToken = resetToken;
+          updateData.resetTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24h
+          updateData.accessEmailSent = true;
+          
+          await sendFirstAccessEmail({
+            customerEmail: orderData.customerEmail,
+            customerName: orderData.customerName,
+            serviceTitle: orderData.serviceTitle || orderData.title || 'Seu produto',
+            providerName: orderData.providerName || orderData.ownerName || 'Lucrazi',
+            amount: ((event.data.billing?.amount || orderData.totalAmount * 100 || 0) / 100).toFixed(2).replace('.', ','),
+            orderId: orderId,
+            resetToken: resetToken
+          });
+          
+          console.log('[AbacatePay Webhook] Email de acesso enviado para:', orderData.customerEmail);
+        } catch (emailError) {
+          console.error('[AbacatePay Webhook] Erro ao enviar email de acesso:', emailError.message);
+          // Não falhar o webhook por erro de email
+        }
+      }
+      
+      await orderRef.update(updateData);
 
       console.log('[AbacatePay Webhook] Pedido atualizado com sucesso');
-
-      // Aqui você pode adicionar lógica adicional, como notificar o provedor, etc.
     } else {
       console.log('[AbacatePay Webhook] Evento não tratado:', event.event);
     }

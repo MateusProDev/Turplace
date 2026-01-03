@@ -4,6 +4,7 @@
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import crypto from 'crypto';
 import initFirestore from './_lib/firebaseAdmin.js';
+import { sendFirstAccessEmail, generateResetToken } from './_lib/brevoEmail.js';
 
 const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN || process.env.REACT_APP_MERCADO_PAGO_ACCESS_TOKEN;
 const client = new MercadoPagoConfig({ accessToken });
@@ -160,6 +161,33 @@ export default async function handler(req, res) {
               transaction_amount: paymentInfo.transaction_amount,
               net_received_amount: paymentInfo.transaction_details?.net_received_amount
             };
+            
+            // ✅ Enviar email de primeiro acesso
+            if (orderData.customerEmail && !orderData.accessEmailSent) {
+              try {
+                const resetToken = generateResetToken();
+                
+                // Salvar token no pedido para validação posterior
+                updateData.resetToken = resetToken;
+                updateData.resetTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24h
+                updateData.accessEmailSent = true;
+                
+                await sendFirstAccessEmail({
+                  customerEmail: orderData.customerEmail,
+                  customerName: orderData.customerName,
+                  serviceTitle: orderData.serviceTitle || orderData.title || 'Seu produto',
+                  providerName: orderData.providerName || orderData.ownerName || 'Lucrazi',
+                  amount: (paymentInfo.transaction_amount || orderData.totalAmount || 0).toFixed(2).replace('.', ','),
+                  orderId: orderId,
+                  resetToken: resetToken
+                });
+                
+                console.log('[MP Webhook] Email de acesso enviado para:', orderData.customerEmail);
+              } catch (emailError) {
+                console.error('[MP Webhook] Erro ao enviar email de acesso:', emailError.message);
+                // Não falhar o webhook por erro de email
+              }
+            }
           }
 
           await orderRef.update(updateData);
