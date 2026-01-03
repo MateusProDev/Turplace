@@ -320,8 +320,19 @@ export default async function handler(req, res) {
       if (!paymentData.payment_method_id) delete paymentData.payment_method_id;
       if (!paymentData.issuer_id) delete paymentData.issuer_id;
 
-      // ⚠️ GARANTIR que external_reference e statement_descriptor estão presentes
-      console.log('[MercadoPago Checkout] Campos obrigatórios:', {
+      // ⚠️ GARANTIR que external_reference, statement_descriptor e notification_url estão presentes
+      // Forçar valores caso estejam undefined
+      if (!paymentData.external_reference) {
+        paymentData.external_reference = orderRef.id;
+      }
+      if (!paymentData.statement_descriptor) {
+        paymentData.statement_descriptor = 'LUCRAZI';
+      }
+      if (!paymentData.notification_url) {
+        paymentData.notification_url = 'https://lucrazi.com.br/api/mercadopago-webhook';
+      }
+      
+      console.log('[MercadoPago Checkout] ✅ Campos obrigatórios verificados:', {
         external_reference: paymentData.external_reference,
         statement_descriptor: paymentData.statement_descriptor,
         notification_url: paymentData.notification_url
