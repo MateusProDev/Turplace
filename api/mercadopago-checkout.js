@@ -276,9 +276,6 @@ export default async function handler(req, res) {
         // ✅ NOTIFICATION URL - Obrigatório para webhooks (NÍVEL RAIZ)
         notification_url: webhookUrl,
         
-        // ✅ DEVICE ID - Melhora aprovação (NÍVEL RAIZ)
-        device_id: deviceId || requestData.deviceId || undefined,
-        
         // ✅ ADDITIONAL INFO - Dados adicionais para melhor análise de fraude
         additional_info: {
           items: [{
@@ -319,7 +316,6 @@ export default async function handler(req, res) {
       };
 
       // Remover campos undefined
-      if (!paymentData.device_id) delete paymentData.device_id;
       if (!paymentData.payment_method_id) delete paymentData.payment_method_id;
       if (!paymentData.issuer_id) delete paymentData.issuer_id;
 
