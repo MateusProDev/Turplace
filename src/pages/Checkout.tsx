@@ -633,6 +633,43 @@ export default function Checkout() {
         setAguardandoPix(true);
       } else {
         console.log('[Checkout] Pagamento com cartão processado');
+        
+        // Verificar se o pagamento foi rejeitado
+        if (response.status === 'rejected') {
+          const statusMessages: Record<string, string> = {
+            'cc_rejected_high_risk': 'Pagamento recusado por segurança. Tente outro cartão ou método de pagamento.',
+            'cc_rejected_insufficient_amount': 'Saldo insuficiente no cartão.',
+            'cc_rejected_bad_filled_card_number': 'Número do cartão incorreto.',
+            'cc_rejected_bad_filled_date': 'Data de validade incorreta.',
+            'cc_rejected_bad_filled_security_code': 'Código de segurança incorreto.',
+            'cc_rejected_bad_filled_other': 'Dados do cartão incorretos.',
+            'cc_rejected_blacklist': 'Cartão não permitido.',
+            'cc_rejected_call_for_authorize': 'Precisa autorizar o pagamento com seu banco.',
+            'cc_rejected_card_disabled': 'Cartão desativado. Entre em contato com seu banco.',
+            'cc_rejected_duplicated_payment': 'Pagamento duplicado. Aguarde alguns minutos.',
+            'cc_rejected_max_attempts': 'Limite de tentativas excedido. Tente mais tarde.',
+            'cc_rejected_other_reason': 'Pagamento recusado pelo banco. Tente outro cartão.',
+          };
+          
+          const errorMessage = statusMessages[response.status_detail] || 
+            `Pagamento recusado: ${response.status_detail || 'erro desconhecido'}`;
+          
+          throw new Error(errorMessage);
+        }
+        
+        // Pagamento aprovado ou em análise
+        if (response.status === 'approved') {
+          // Redirecionar para página de sucesso
+          window.location.href = `/success?orderId=${response.orderId}`;
+          return;
+        }
+        
+        if (response.status === 'in_process' || response.status === 'pending') {
+          // Pagamento em análise
+          setError('Pagamento em análise. Você receberá um email com o resultado.');
+          return;
+        }
+        
         // Redireciona apenas se houver checkoutUrl (checkout externo)
         if (response.checkoutUrl) {
           console.log('[Checkout] Redirecionando para checkout externo');
