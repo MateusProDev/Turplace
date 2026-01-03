@@ -258,22 +258,38 @@ export default function Checkout() {
     };
   }, [metodoPagamento, service]); // Dependências corretas
 
-  // Monitoramento do status do Pix
+  // Monitoramento do status do Pix - Polling no Firestore
   useEffect(() => {
-    if (aguardandoPix && paymentId && pixAttempts < 30) {
-      console.log('[Checkout] Iniciando monitoramento do status do Pix');
+    if (aguardandoPix && paymentId && pixAttempts < 60) {
+      console.log('[Checkout] Iniciando monitoramento do status do Pix, orderId:', paymentId);
+      
+      // Setar status inicial como pending
+      if (!pixStatus) {
+        setPixStatus('pending');
+      }
+      
       const interval = setInterval(async () => {
         try {
-          console.log('[Checkout] Verificando status do pagamento Pix');
-          const resp = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/payment/${paymentId}`);
+          console.log('[Checkout] Verificando status do pagamento Pix, tentativa:', pixAttempts + 1);
+          // Usar novo endpoint que verifica no Firestore
+          const resp = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/order-status?orderId=${paymentId}`);
+          
+          if (!resp.ok) {
+            console.warn('[Checkout] Resposta não ok do order-status:', resp.status);
+            setPixAttempts(prev => prev + 1);
+            return;
+          }
+          
           const data = await resp.json();
-          console.log('[Checkout] Status do Pix:', data);
+          console.log('[Checkout] Status do pedido:', data);
+          
           if (data.status) {
             setPixStatus(data.status);
             setPixAttempts(prev => prev + 1);
+            
             // Parar se o status for final
             if (data.status === 'approved' || data.status === 'rejected' || data.status === 'cancelled') {
-              console.log('[Checkout] Status final alcançado, parando monitoramento');
+              console.log('[Checkout] Status final alcançado:', data.status);
               clearInterval(interval);
               
               // Se aprovado, redirecionar para página de sucesso após 2 segundos
@@ -289,16 +305,17 @@ export default function Checkout() {
           console.error('[Checkout] Erro ao verificar status do Pix:', err);
           setPixAttempts(prev => prev + 1);
         }
-      }, 4000);
+      }, 3000); // Verificar a cada 3 segundos
+      
       return () => {
         console.log('[Checkout] Parando monitoramento do Pix');
         clearInterval(interval);
       };
-    } else if (pixAttempts >= 30) {
-      console.log('[Checkout] Limite de tentativas atingido, parando monitoramento');
+    } else if (pixAttempts >= 60) {
+      console.log('[Checkout] Limite de tentativas atingido (3 minutos), parando monitoramento');
       setPixStatus('timeout');
     }
-  }, [aguardandoPix, paymentId, pixAttempts]);
+  }, [aguardandoPix, paymentId, pixAttempts, pixStatus]);
 
   // Sincronizar dados do cliente com campos ocultos do MercadoPago CardForm
   useEffect(() => {
@@ -637,8 +654,14 @@ export default function Checkout() {
         console.log('[Checkout] Pagamento Pix iniciado');
         setQrCodePix(response.qrCode || null);
         setQrCodeBase64(response.qrCodeBase64 || null);
-        setPaymentId(response.payment_id || null);
+        // Usar orderId para o polling (é o ID do pedido no Firestore)
+        setPaymentId(response.orderId || response.payment_id || null);
         setAguardandoPix(true);
+        // Iniciar com status pending
+        setPixStatus('pending');
+        // Resetar tentativas
+        setPixAttempts(0);
+        console.log('[Checkout] OrderId para polling:', response.orderId || response.payment_id);
       } else {
         console.log('[Checkout] Pagamento com cartão processado');
         
