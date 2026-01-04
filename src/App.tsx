@@ -7,7 +7,6 @@ import Marketplace from './pages/Marketplace';
 import Login from './components/Auth/Login';
 import ClientLogin from './components/Auth/ClientLogin';
 import ProviderLogin from './components/Auth/ProviderLogin';
-import { useAuth } from './hooks/useAuth';
 import ServiceForm from './components/Provider/ServiceForm';
 import AdminDashboard from './pages/AdminDashboard';
 import ServiceDetail from './pages/ServiceDetail';
@@ -27,26 +26,6 @@ import ResetPassword from './pages/ResetPassword';
 import RequireAdmin from './components/Auth/RequireAdmin';
 
 function App() {
-  const { user, userData } = useAuth();
-
-  // Componente para decidir qual dashboard mostrar baseado no role
-  const DashboardRouter = () => {
-    if (!user) return <Login />;
-
-    // Se for admin, vai para admin dashboard
-    if (userData?.isAdmin) {
-      return <AdminDashboard />;
-    }
-
-    // Se for prestador (tem serviços ou role específico), vai para provider dashboard
-    if (userData?.role === 'prestador' || userData?.mpConnected) {
-      return <ProviderDashboard />;
-    }
-
-    // Caso contrário, vai para client dashboard
-    return <ClientDashboard />;
-  };
-
   return (
     <BrowserRouter>
       <Routes>

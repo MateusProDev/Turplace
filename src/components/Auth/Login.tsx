@@ -60,7 +60,7 @@ export default function Login() {
           } else {
             // Verificar se pode ser cliente e prestador
             const canBeProvider = userData?.role === 'prestador' || userData?.mpConnected;
-            const canBeClient = userData?.role === 'cliente' || userData?.hasOrders;
+            const canBeClient = userData?.role === 'cliente';
             
             // Se pode ser ambos, vai para seletor
             if (canBeProvider && canBeClient) {
