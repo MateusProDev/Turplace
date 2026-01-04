@@ -7,7 +7,7 @@ export default function Logout() {
   const handle = async () => {
     await signOut(auth);
     navigate('/');
-  };
+  }; 
   return (
     <button onClick={handle} className="px-3 py-1 border rounded text-sm">Sair</button>
   );
