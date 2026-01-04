@@ -21,8 +21,7 @@ const SECURITY_CONFIG = {
     /data:text/i
   ],
   ALLOWED_ORIGINS: [
-    'https://turplace.turvia.com.br',
-    'https://marketplace.turvia.com.br',
+    'https://lucrazi.com.br',
     'http://localhost:5173',
     'http://localhost:3000'
   ]
@@ -157,19 +156,15 @@ function applySecurityHeaders(res) {
 
 // Origin validation
 function validateOrigin(req) {
-  const origin = req.headers.origin || req.headers.referer;
-  if (!origin) return true; // Allow requests without origin (server-to-server)
-
-  try {
-    const originUrl = new URL(origin);
-    const originDomain = `${originUrl.protocol}//${originUrl.hostname}`;
-
-    return SECURITY_CONFIG.ALLOWED_ORIGINS.some(allowed =>
-      allowed === originDomain || originUrl.hostname === 'localhost'
-    );
-  } catch {
-    return false;
-  }
+  const origin = req.headers.origin;
+  const referer = req.headers.referer;
+  // Permitir se origin está presente e é permitido
+  if (origin && SECURITY_CONFIG.ALLOWED_ORIGINS.includes(origin)) return true;
+  // Permitir se origin está undefined e referer começa com domínio permitido
+  if (!origin && referer && referer.startsWith('https://lucrazi.com.br')) return true;
+  // Permitir requisições sem origin/referer (server-to-server)
+  if (!origin && !referer) return true;
+  return false;
 }
 
 // Log security events

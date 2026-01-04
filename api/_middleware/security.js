@@ -44,6 +44,8 @@ export function withSecurity(handler) {
         res.setHeader('Access-Control-Allow-Origin', origin);
       } else if (!origin && referer && referer.startsWith('https://lucrazi.com.br')) {
         res.setHeader('Access-Control-Allow-Origin', 'https://lucrazi.com.br');
+      } else if (!origin && !referer) {
+        res.setHeader('Access-Control-Allow-Origin', '*'); // Permitir server-to-server
       } else if (process.env.NODE_ENV === 'development') {
         res.setHeader('Access-Control-Allow-Origin', '*'); // Apenas para desenvolvimento
       }
