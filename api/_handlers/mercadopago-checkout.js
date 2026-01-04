@@ -37,6 +37,18 @@ async function createAbacatePayPix(pixData) {
   return await response.json();
 }
 
+// Domínios permitidos para CORS
+const ALLOWED_ORIGINS = [
+  'https://lucrazi.com.br',
+  'https://www.lucrazi.com.br',
+  'http://localhost:5173',
+  'http://localhost:3000'
+];
+
+// Validação de valor
+const MIN_AMOUNT = 1; // R$ 1,00 mínimo
+const MAX_AMOUNT = 50000; // R$ 50.000,00 máximo
+
 export default async function handler(req, res) {
   const clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
                    req.headers['x-real-ip'] ||
@@ -44,19 +56,28 @@ export default async function handler(req, res) {
                    req.socket?.remoteAddress ||
                    'unknown';
 
+  // Configurar CORS seguro
+  const origin = req.headers.origin;
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else if (process.env.NODE_ENV !== 'production') {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+
   // Log seguro (sem dados sensíveis)
   console.log('[MercadoPago Checkout] Requisição recebida', {
     method: req.method,
     ip: clientIP,
+    origin: origin,
     userAgent: req.headers['user-agent']?.substring(0, 100),
     timestamp: new Date().toISOString()
   });
 
   // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.setHeader('Access-Control-Max-Age', '86400'); // 24 horas
     return res.status(200).end();
   }
@@ -74,9 +95,22 @@ export default async function handler(req, res) {
     const requestData = req.body;
     const { valor, metodoPagamento, packageData, reservaData, cardToken, installments, payerData, deviceId, issuerId, paymentMethodId } = requestData;
 
+    // Validação de valor
+    const valorNumerico = Number(valor);
+    if (isNaN(valorNumerico) || valorNumerico < MIN_AMOUNT || valorNumerico > MAX_AMOUNT) {
+      console.warn('[MercadoPago Checkout] Valor inválido:', valor);
+      return res.status(400).json({ error: `Valor deve estar entre R$ ${MIN_AMOUNT} e R$ ${MAX_AMOUNT}` });
+    }
+
+    // Validação de método de pagamento
+    if (!['pix', 'cartao'].includes(metodoPagamento)) {
+      console.warn('[MercadoPago Checkout] Método de pagamento inválido:', metodoPagamento);
+      return res.status(400).json({ error: 'Método de pagamento inválido' });
+    }
+
     console.log('[MercadoPago Checkout] Dados recebidos', {
       metodoPagamento,
-      valor,
+      valor: valorNumerico,
       ip: clientIP,
       issuerId,
       paymentMethodId

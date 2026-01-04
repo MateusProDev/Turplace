@@ -94,8 +94,10 @@ export default async function handler(req, res) {
         
         if (!signatureCheck.valid) {
           console.error('[AbacatePay Webhook] Assinatura inválida:', signatureCheck.reason);
-          // Para debug, vamos continuar mesmo com assinatura inválida
-          // return res.status(401).json({ error: 'Assinatura inválida' });
+          // Em produção, rejeitar requisições com assinatura inválida
+          if (process.env.NODE_ENV === 'production') {
+            return res.status(401).json({ error: 'Assinatura inválida' });
+          }
         }
       } else {
         console.warn('[AbacatePay Webhook] Nenhuma assinatura recebida');

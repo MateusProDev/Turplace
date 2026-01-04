@@ -31,19 +31,62 @@ async function checkAbacatePayStatus(pixId) {
   }
 }
 
+// Domínios permitidos para CORS
+const ALLOWED_ORIGINS = [
+  'https://lucrazi.com.br',
+  'https://www.lucrazi.com.br',
+  'http://localhost:5173',
+  'http://localhost:3000'
+];
+
+// Rate limiting simples em memória (por IP)
+const rateLimitMap = new Map();
+const RATE_LIMIT_WINDOW = 60000; // 1 minuto
+const RATE_LIMIT_MAX = 100; // máx 100 requests por minuto por IP
+
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip) || { count: 0, resetTime: now + RATE_LIMIT_WINDOW };
+  
+  if (now > record.resetTime) {
+    record.count = 1;
+    record.resetTime = now + RATE_LIMIT_WINDOW;
+  } else {
+    record.count++;
+  }
+  
+  rateLimitMap.set(ip, record);
+  return record.count <= RATE_LIMIT_MAX;
+}
+
 export default async function handler(req, res) {
+  const clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown';
+  
   console.log('[Order Status] Verificando status', {
     method: req.method,
-    query: req.query
+    query: req.query,
+    ip: clientIP
   });
 
-  // CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // CORS seguro
+  const origin = req.headers.origin;
+  if (ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else if (process.env.NODE_ENV !== 'production') {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
+  }
+
+  // Rate limiting
+  if (!checkRateLimit(clientIP)) {
+    console.warn('[Order Status] Rate limit excedido para IP:', clientIP);
+    return res.status(429).json({ error: 'Muitas requisições. Tente novamente em 1 minuto.' });
   }
 
   if (req.method !== 'GET') {
@@ -52,8 +95,14 @@ export default async function handler(req, res) {
 
   const { orderId } = req.query;
 
-  if (!orderId) {
-    return res.status(400).json({ error: 'orderId não fornecido' });
+  // Validação de orderId (formato Firebase)
+  if (!orderId || typeof orderId !== 'string' || orderId.length < 10 || orderId.length > 30) {
+    return res.status(400).json({ error: 'orderId inválido' });
+  }
+  
+  // Sanitização - apenas caracteres alfanuméricos permitidos
+  if (!/^[a-zA-Z0-9]+$/.test(orderId)) {
+    return res.status(400).json({ error: 'orderId contém caracteres inválidos' });
   }
 
   try {
