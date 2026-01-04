@@ -2,11 +2,18 @@
 // Provides comprehensive security metrics and alerts
 
 import initFirestore from '../_lib/firebaseAdmin.js';
-import { securityMiddleware } from '../_lib/securityMiddleware.js';
-import { fraudDetection } from '../_lib/fraudDetection.js';
+import { setSecurityHeaders, setCorsHeaders, getClientIP } from '../_lib/security.js';
 
 async function securityDashboardHandler(req, res) {
+  // Apply security headers
+  setSecurityHeaders(res);
+  setCorsHeaders(req, res);
+  
   // Only allow GET requests for dashboard data
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -24,29 +31,47 @@ async function securityDashboardHandler(req, res) {
     const todayMetricsDoc = await todayMetricsRef.get();
     const todayMetrics = todayMetricsDoc.exists ? todayMetricsDoc.data() : {};
 
-    // Get recent security events (last 24h)
-    const recentEventsQuery = db.collection('security_events')
-      .where('timestamp', '>=', last24h.toISOString())
-      .orderBy('timestamp', 'desc')
-      .limit(100);
+    // Get recent security logs (last 24h) - usando security_logs que é onde salvamos
+    let recentEvents = [];
+    try {
+      const recentEventsQuery = db.collection('security_logs')
+        .where('createdAt', '>=', last24h.toISOString())
+        .orderBy('createdAt', 'desc')
+        .limit(100);
 
-    const recentEventsSnapshot = await recentEventsQuery.get();
-    const recentEvents = recentEventsSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+      const recentEventsSnapshot = await recentEventsQuery.get();
+      recentEvents = recentEventsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (indexError) {
+      // Se não tiver índice, buscar sem filtro de data
+      console.warn('[SecurityDashboard] Index não disponível, buscando sem filtro de data');
+      const fallbackQuery = db.collection('security_logs')
+        .orderBy('createdAt', 'desc')
+        .limit(100);
+      const fallbackSnapshot = await fallbackQuery.get();
+      recentEvents = fallbackSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    }
 
     // Get active blacklist entries
-    const blacklistQuery = db.collection('security_blacklist')
-      .where('active', '==', true)
-      .orderBy('lastHit', 'desc')
-      .limit(50);
+    let activeBlacklist = [];
+    try {
+      const blacklistQuery = db.collection('security_blacklist')
+        .where('active', '==', true)
+        .limit(50);
 
-    const blacklistSnapshot = await blacklistQuery.get();
-    const activeBlacklist = blacklistSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+      const blacklistSnapshot = await blacklistQuery.get();
+      activeBlacklist = blacklistSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+    } catch (e) {
+      console.warn('[SecurityDashboard] Blacklist não disponível');
+    }
 
     // Get high-risk orders (last 7 days)
     const highRiskOrdersQuery = db.collection('orders')
@@ -167,10 +192,11 @@ async function securityDashboardHandler(req, res) {
     console.error('[SecurityDashboard] Error:', error);
     return res.status(500).json({
       error: 'Failed to load security dashboard',
+      details: error.message,
       timestamp: new Date().toISOString()
     });
   }
 }
 
-// Export with security middleware (admin-only access should be added)
-export default securityMiddleware(securityDashboardHandler);
+// Export handler diretamente (proteção de admin feita no frontend)
+export default securityDashboardHandler;

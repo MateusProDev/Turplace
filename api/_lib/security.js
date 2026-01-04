@@ -254,22 +254,105 @@ export function validateOrderId(orderId) {
 // LOG DE SEGURANÇA
 // ============================================
 
-export function logSecurityEvent(event) {
+// Importar Firestore dinamicamente para salvar logs
+let firestoreInstance = null;
+
+async function getFirestore() {
+  if (!firestoreInstance) {
+    try {
+      const { default: initFirestore } = await import('./firebaseAdmin.js');
+      firestoreInstance = initFirestore();
+    } catch (error) {
+      console.error('[Security] Erro ao inicializar Firestore:', error);
+    }
+  }
+  return firestoreInstance;
+}
+
+// Mapear tipos de evento para attackType do dashboard
+function mapEventTypeToAttackType(type) {
+  const mapping = {
+    'RATE_LIMIT_EXCEEDED': 'rate_limiting',
+    'SUSPICIOUS_ACTIVITY': 'attack_attempt',
+    'INVALID_CPF': 'input_validation',
+    'INVALID_AMOUNT': 'input_validation',
+    'INVALID_ORDER_ID': 'input_validation',
+    'INVALID_PAYMENT_METHOD': 'input_validation',
+    'WEBHOOK_RATE_LIMIT': 'webhook_security',
+    'WEBHOOK_SIGNATURE_INVALID': 'signature_validation',
+    'SQL_INJECTION': 'sql_injection',
+    'XSS_ATTEMPT': 'xss_attempt',
+    'ORIGIN_VIOLATION': 'origin_violation',
+    'FRAUD_ATTEMPT': 'fraud_attempt'
+  };
+  return mapping[type] || 'other';
+}
+
+// Determinar nível de severidade
+function determineSeverity(type, patterns = []) {
+  const criticalTypes = ['SQL_INJECTION', 'XSS_ATTEMPT', 'FRAUD_ATTEMPT'];
+  const warnTypes = ['RATE_LIMIT_EXCEEDED', 'SUSPICIOUS_ACTIVITY', 'WEBHOOK_SIGNATURE_INVALID'];
+  
+  if (criticalTypes.includes(type) || patterns.length > 2) return 'error';
+  if (warnTypes.includes(type)) return 'warn';
+  return 'info';
+}
+
+export async function logSecurityEvent(event) {
   const logEntry = {
     ...event,
     timestamp: new Date().toISOString(),
-    id: `sec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    id: `sec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    attackType: mapEventTypeToAttackType(event.type),
+    level: determineSeverity(event.type, event.patterns)
   };
   
+  // Adicionar à memória local
   securityLogs.push(logEntry);
   
-  // Manter apenas os últimos N logs
+  // Manter apenas os últimos N logs em memória
   if (securityLogs.length > MAX_SECURITY_LOGS) {
     securityLogs.shift();
   }
   
   // Log no console para monitoramento
   console.warn('[SECURITY]', JSON.stringify(logEntry));
+  
+  // Salvar no Firestore para o dashboard admin
+  try {
+    const db = await getFirestore();
+    if (db) {
+      await db.collection('security_logs').add({
+        ...logEntry,
+        timestamp: new Date(), // Firestore Timestamp
+        createdAt: new Date().toISOString()
+      });
+      
+      // Atualizar métricas diárias
+      const today = new Date().toISOString().split('T')[0];
+      const metricsRef = db.collection('security_metrics').doc(today);
+      const metricsDoc = await metricsRef.get();
+      
+      if (metricsDoc.exists) {
+        const data = metricsDoc.data();
+        await metricsRef.update({
+          totalEvents: (data.totalEvents || 0) + 1,
+          [logEntry.attackType]: (data[logEntry.attackType] || 0) + 1,
+          lastUpdated: new Date().toISOString()
+        });
+      } else {
+        await metricsRef.set({
+          date: today,
+          totalEvents: 1,
+          [logEntry.attackType]: 1,
+          createdAt: new Date().toISOString(),
+          lastUpdated: new Date().toISOString()
+        });
+      }
+    }
+  } catch (error) {
+    console.error('[Security] Erro ao salvar log no Firestore:', error.message);
+  }
   
   return logEntry;
 }
@@ -285,27 +368,74 @@ export function getSecurityLogs(limit = 100) {
 export function detectSuspiciousActivity(req) {
   const suspiciousPatterns = [];
   const ip = getClientIP(req);
+  const userAgent = req.headers['user-agent'] || '';
+  const bodyStr = JSON.stringify(req.body || {});
   
   // Verificar user-agent suspeito
-  const userAgent = req.headers['user-agent'] || '';
   if (!userAgent || userAgent.length < 10) {
     suspiciousPatterns.push('missing_or_short_user_agent');
   }
   
   // Verificar SQL Injection patterns no body
-  const bodyStr = JSON.stringify(req.body || {});
-  const sqlPatterns = /('|"|;|--|\bOR\b|\bAND\b|\bUNION\b|\bSELECT\b|\bDROP\b|\bDELETE\b)/i;
+  const sqlPatterns = /('|"|;|--|\bOR\b|\bAND\b|\bUNION\b|\bSELECT\b|\bDROP\b|\bDELETE\b|\bINSERT\b|\bUPDATE\b)/i;
   if (sqlPatterns.test(bodyStr)) {
     suspiciousPatterns.push('possible_sql_injection');
+    // Logar evento específico de SQL Injection
+    logSecurityEvent({
+      type: 'SQL_INJECTION',
+      ip,
+      userAgent: userAgent.substring(0, 100),
+      path: req.url,
+      method: req.method,
+      severity: 'critical'
+    });
   }
   
   // Verificar XSS patterns
-  const xssPatterns = /<script|javascript:|on\w+\s*=/i;
+  const xssPatterns = /<script|javascript:|on\w+\s*=|<iframe|<object|<embed|eval\s*\(/i;
   if (xssPatterns.test(bodyStr)) {
     suspiciousPatterns.push('possible_xss');
+    // Logar evento específico de XSS
+    logSecurityEvent({
+      type: 'XSS_ATTEMPT',
+      ip,
+      userAgent: userAgent.substring(0, 100),
+      path: req.url,
+      method: req.method,
+      severity: 'critical'
+    });
   }
   
-  if (suspiciousPatterns.length > 0) {
+  // Verificar Path Traversal
+  const pathTraversalPatterns = /\.\.|\/etc\/|\/proc\/|\\windows\\|\\system32\\/i;
+  if (pathTraversalPatterns.test(bodyStr) || pathTraversalPatterns.test(req.url)) {
+    suspiciousPatterns.push('path_traversal');
+    logSecurityEvent({
+      type: 'PATH_TRAVERSAL',
+      ip,
+      userAgent: userAgent.substring(0, 100),
+      path: req.url,
+      method: req.method,
+      severity: 'high'
+    });
+  }
+  
+  // Verificar tentativa de command injection
+  const cmdInjectionPatterns = /;\s*(ls|cat|rm|wget|curl|nc|bash|sh|python|perl|ruby)\s/i;
+  if (cmdInjectionPatterns.test(bodyStr)) {
+    suspiciousPatterns.push('command_injection');
+    logSecurityEvent({
+      type: 'COMMAND_INJECTION',
+      ip,
+      userAgent: userAgent.substring(0, 100),
+      path: req.url,
+      method: req.method,
+      severity: 'critical'
+    });
+  }
+  
+  // Logar atividade suspeita geral se houver padrões mas não for ataque específico
+  if (suspiciousPatterns.length > 0 && suspiciousPatterns.length === 1 && suspiciousPatterns[0] === 'missing_or_short_user_agent') {
     logSecurityEvent({
       type: 'SUSPICIOUS_ACTIVITY',
       ip,

@@ -65,6 +65,8 @@ interface SecurityStats {
   webhookSecurity: number;
   sqlInjectionAttempts: number;
   xssAttempts: number;
+  pathTraversalAttempts: number;
+  commandInjectionAttempts: number;
   signatureValidations: number;
   uniqueIPs: number;
   recentAttacks: SecurityLog[];
@@ -117,6 +119,8 @@ export default function AdminDashboard() {
     webhookSecurity: 0,
     sqlInjectionAttempts: 0,
     xssAttempts: 0,
+    pathTraversalAttempts: 0,
+    commandInjectionAttempts: 0,
     signatureValidations: 0,
     uniqueIPs: 0,
     recentAttacks: []
@@ -179,6 +183,8 @@ export default function AdminDashboard() {
       const webhookSecurity = securityData.filter(log => log.attackType === 'webhook_security').length;
       const sqlInjectionAttempts = securityData.filter(log => log.attackType === 'sql_injection').length;
       const xssAttempts = securityData.filter(log => log.attackType === 'xss_attempt').length;
+      const pathTraversalAttempts = securityData.filter(log => log.attackType === 'path_traversal').length;
+      const commandInjectionAttempts = securityData.filter(log => log.attackType === 'command_injection').length;
       const signatureValidations = securityData.filter(log => log.attackType === 'signature_validation').length;
 
       // Unique IPs
@@ -207,6 +213,8 @@ export default function AdminDashboard() {
         webhookSecurity,
         sqlInjectionAttempts,
         xssAttempts,
+        pathTraversalAttempts,
+        commandInjectionAttempts,
         signatureValidations,
         uniqueIPs,
         recentAttacks
@@ -593,6 +601,30 @@ export default function AdminDashboard() {
                       <span className="text-sm font-semibold">{securityStats.xssAttempts}</span>
                     </div>
                   </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Path Traversal</span>
+                    <div className="flex items-center">
+                      <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
+                        <div
+                          className="bg-red-500 h-2 rounded-full"
+                          style={{ width: `${securityStats.totalLogs > 0 ? (securityStats.pathTraversalAttempts / securityStats.totalLogs) * 100 : 0}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-semibold">{securityStats.pathTraversalAttempts}</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm">Command Injection</span>
+                    <div className="flex items-center">
+                      <div className="w-24 bg-gray-200 rounded-full h-2 mr-2">
+                        <div
+                          className="bg-red-800 h-2 rounded-full"
+                          style={{ width: `${securityStats.totalLogs > 0 ? (securityStats.commandInjectionAttempts / securityStats.totalLogs) * 100 : 0}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-semibold">{securityStats.commandInjectionAttempts}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -672,11 +704,15 @@ export default function AdminDashboard() {
                             log.attackType === 'attack_attempt' ? 'bg-red-100 text-red-800' :
                             log.attackType === 'sql_injection' ? 'bg-red-600 text-white' :
                             log.attackType === 'xss_attempt' ? 'bg-red-700 text-white' :
+                            log.attackType === 'path_traversal' ? 'bg-red-500 text-white' :
+                            log.attackType === 'command_injection' ? 'bg-red-800 text-white' :
                             log.attackType === 'webhook_security' ? 'bg-purple-100 text-purple-800' :
                             log.attackType === 'input_validation' ? 'bg-blue-100 text-blue-800' :
+                            log.attackType === 'cors_violation' ? 'bg-yellow-200 text-yellow-900' :
+                            log.attackType === 'suspicious_request' ? 'bg-pink-100 text-pink-800' :
                             'bg-gray-100 text-gray-800'
                           }`}>
-                            {log.attackType?.replace('_', ' ').toUpperCase() || 'DESCONHECIDO'}
+                            {log.attackType?.replace(/_/g, ' ').toUpperCase() || 'DESCONHECIDO'}
                           </span>
                         </td>
                         <td className="p-2 text-sm">{log.endpoint || 'N/A'}</td>
