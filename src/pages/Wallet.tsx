@@ -39,7 +39,8 @@ interface WalletData {
   sales: Sale[];
   pendingSales: PendingSale[];
   payouts: Payout[];
-  stripeAccountId: string | null;
+  mpConnected: boolean;
+  mpUserId: string | null;
   chavePix: string;
 }
 
@@ -54,7 +55,8 @@ const Wallet = () => {
     sales: [],
     pendingSales: [],
     payouts: [],
-    stripeAccountId: null,
+    mpConnected: false,
+    mpUserId: null,
     chavePix: '',
   });
   const [loading, setLoading] = useState(true);
@@ -134,7 +136,7 @@ const Wallet = () => {
       });
   };
 
-  const handleWithdraw = async (amount: number, method: 'stripe' | 'pix') => {
+  const handleWithdraw = async (amount: number, method: 'mercadopago' | 'pix') => {
     if (!user?.uid || amount <= 0) return;
     setLoading(true);
     try {
@@ -299,17 +301,17 @@ const Wallet = () => {
               <p className="text-gray-300">Pronto para saque imediato</p>
             </div>
             
-            {(data.stripeAccountId && data.stripeAccountId.trim() !== '') || data.chavePix ? (
+            {data.mpConnected || data.chavePix ? (
               <div className="space-y-4">
                 <div className="flex flex-col sm:flex-row gap-3">
-                  {data.stripeAccountId && data.stripeAccountId.trim() !== '' && (
+                  {data.mpConnected && (
                     <button
-                      onClick={() => handleWithdraw(data.availableBalance, 'stripe')}
+                      onClick={() => handleWithdraw(data.availableBalance, 'mercadopago')}
                       disabled={data.availableBalance <= 0 || loading}
-                      className="px-6 py-3.5 bg-white text-gray-900 font-semibold rounded-xl hover:bg-gray-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+                      className="px-6 py-3.5 bg-[#009ee3] text-white font-semibold rounded-xl hover:bg-[#0077b5] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
                     >
                       <CreditCard className="w-5 h-5" />
-                      Sacar via Stripe
+                      Sacar via Mercado Pago
                     </button>
                   )}
                   

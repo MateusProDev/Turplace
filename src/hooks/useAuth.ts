@@ -22,7 +22,11 @@ interface UserData {
   };
   isAdmin?: boolean;
   chavePix?: string;
-  stripeAccountId?: string;
+  // Mercado Pago Connect
+  mpConnected?: boolean;
+  mpUserId?: string;
+  mpAccessToken?: string;
+  mpConnectedAt?: string;
   slug?: string;
   createdAt?: string;
   updatedAt?: string;

@@ -53,7 +53,7 @@ export default function Login() {
             // Admin vai para /admin ou para o destino salvo
             console.log("Login.tsx: Redirecionando admin para:", from || "/admin");
             navigate(from || "/admin", { replace: true });
-          } else if (userData?.role === 'prestador' || userData?.stripeAccountId) {
+          } else if (userData?.role === 'prestador' || userData?.mpConnected) {
             // Prestador vai para /provider ou para o destino salvo (se não for /admin)
             const destination = from && from !== "/admin" ? from : "/provider";
             console.log("Login.tsx: Redirecionando prestador para:", destination);

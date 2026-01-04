@@ -46,7 +46,8 @@ export default function ProfileSettings() {
   const [bio, setBio] = useState('');
   const [photo, setPhoto] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
+  const [mpConnected, setMpConnected] = useState(false);
+  const [mpUserId, setMpUserId] = useState<string | null>(null);
   const [chavePix, setChavePix] = useState('');
 
   // Dashboard settings state
@@ -70,7 +71,8 @@ export default function ProfileSettings() {
           setName(data.name || '');
           setBio(data.bio || '');
           setPhoto(data.photoURL || null);
-          setStripeAccountId(data.stripeAccountId || null);
+          setMpConnected(data.mpConnected || false);
+          setMpUserId(data.mpUserId || null);
           setChavePix(data.chavePix || '');
 
           // Load dashboard settings
@@ -98,45 +100,41 @@ export default function ProfileSettings() {
     }
   };
 
-  const handleConnectStripe = async () => {
+  const handleConnectMercadoPago = async () => {
     if (!user) return;
     setLoading(true);
     setMessage('');
 
     try {
-      console.log('Iniciando conexão com Stripe...');
-      const response = await fetch('/api/create-stripe-account', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.uid }),
-      });
+      console.log('Iniciando conexão com Mercado Pago...');
+      const response = await fetch(`/api/mercadopago-connect?userId=${user.uid}&action=auth`);
 
       console.log('Resposta da API:', response.status);
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro ao conectar conta Stripe');
+        throw new Error(errorData.error || 'Erro ao conectar conta Mercado Pago');
       }
 
-      const { url } = await response.json();
-      console.log('URL de onboarding:', url);
+      const { authUrl } = await response.json();
+      console.log('URL de autorização:', authUrl);
 
-      // Redirect to Stripe onboarding
-      window.location.href = url;
+      // Redirect to Mercado Pago OAuth
+      window.location.href = authUrl;
     } catch (error) {
-      console.error('Erro ao conectar Stripe:', error);
-      setMessage(`Erro ao conectar conta Stripe: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      console.error('Erro ao conectar Mercado Pago:', error);
+      setMessage(`Erro ao conectar conta Mercado Pago: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDisconnectStripe = async () => {
+  const handleDisconnectMercadoPago = async () => {
     if (!user) return;
     
     const confirmDisconnect = window.confirm(
-      'Tem certeza que deseja desconectar sua conta Stripe?\n\n' +
-      'Isso significa que você não poderá receber pagamentos via Stripe Connect.\n' +
+      'Tem certeza que deseja desconectar sua conta do Mercado Pago?\n\n' +
+      'Isso significa que você não poderá receber pagamentos diretamente.\n' +
       'Você ainda poderá usar PIX para receber pagamentos.'
     );
     
@@ -146,23 +144,27 @@ export default function ProfileSettings() {
     setMessage('');
 
     try {
-      console.log('Desconectando conta Stripe...');
+      console.log('Desconectando conta Mercado Pago...');
       
-      // Remove stripeAccountId from user document
+      // Remove MP data from user document
       await updateDoc(doc(db, 'users', user.uid), {
-        stripeAccountId: null,
+        mpConnected: false,
+        mpAccessToken: null,
+        mpRefreshToken: null,
+        mpUserId: null,
         updatedAt: new Date(),
       });
 
       // Update local state
-      setStripeAccountId(null);
+      setMpConnected(false);
+      setMpUserId(null);
       
-      console.log('Conta Stripe desconectada com sucesso!');
-      setMessage('Conta Stripe desconectada com sucesso! Você ainda pode usar PIX para receber pagamentos.');
+      console.log('Conta Mercado Pago desconectada com sucesso!');
+      setMessage('Conta Mercado Pago desconectada com sucesso! Você ainda pode usar PIX para receber pagamentos.');
       setTimeout(() => setMessage(''), 5000);
     } catch (error) {
-      console.error('Erro ao desconectar Stripe:', error);
-      setMessage('Erro ao desconectar conta Stripe. Tente novamente.');
+      console.error('Erro ao desconectar Mercado Pago:', error);
+      setMessage('Erro ao desconectar conta Mercado Pago. Tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -452,62 +454,47 @@ export default function ProfileSettings() {
               </p>
             </div>
 
-            {/* Stripe Account */}
+            {/* Mercado Pago Account */}
             <div className="mb-8">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Conta Stripe para Recebimentos
+                Conta Mercado Pago para Recebimentos
               </label>
-              {stripeAccountId && stripeAccountId.trim() !== '' ? (
+              {mpConnected ? (
                 <div className="space-y-3">
                   <div className="p-4 bg-green-100 text-green-700 rounded-lg border border-green-200">
-                    Conta Stripe conectada com sucesso!
+                    <div className="flex items-center gap-2">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      <span>Conta Mercado Pago conectada com sucesso!</span>
+                    </div>
+                    {mpUserId && <p className="text-sm mt-1 opacity-75">ID: {mpUserId}</p>}
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <button
-                      onClick={handleConnectStripe}
-                      disabled={loading}
-                      className="bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
-                    >
-                      {loading ? (
-                        <>
-                          <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-                          </svg>
-                          Carregando...
-                        </>
-                      ) : (
-                        <>
-                          Gerenciar Conta Stripe
-                        </>
-                      )}
-                    </button>
-                    <button
-                      onClick={handleDisconnectStripe}
-                      disabled={loading}
-                      className="bg-red-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-red-700 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
-                    >
-                      {loading ? (
-                        <>
-                          <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-                          </svg>
-                          Desconectando...
-                        </>
-                      ) : (
-                        <>
-                          Desconectar Stripe
-                        </>
-                      )}
-                    </button>
-                  </div>
+                  <button
+                    onClick={handleDisconnectMercadoPago}
+                    disabled={loading}
+                    className="w-full bg-red-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-red-700 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {loading ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                        </svg>
+                        Desconectando...
+                      </>
+                    ) : (
+                      <>
+                        Desconectar Mercado Pago
+                      </>
+                    )}
+                  </button>
                 </div>
               ) : (
                 <button
-                  onClick={handleConnectStripe}
+                  onClick={handleConnectMercadoPago}
                   disabled={loading}
-                  className="w-full bg-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-purple-700 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full bg-[#009ee3] text-white py-3 px-6 rounded-lg font-semibold hover:bg-[#0077b5] transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {loading ? (
                     <>
@@ -519,13 +506,16 @@ export default function ProfileSettings() {
                     </>
                   ) : (
                     <>
-                      Conectar Conta Stripe
+                      <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                      </svg>
+                      Conectar Mercado Pago
                     </>
                   )}
                 </button>
               )}
               <p className="text-xs text-gray-500 mt-2">
-                Conecte sua conta Stripe para receber pagamentos dos seus serviços. Você pode desconectar a qualquer momento se preferir usar apenas PIX.
+                Conecte sua conta do Mercado Pago para receber pagamentos diretamente. Você pode desconectar a qualquer momento.
               </p>
             </div>
 

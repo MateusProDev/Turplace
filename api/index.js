@@ -3,13 +3,10 @@
 
 import createCheckoutSession from './_handlers/create-checkout-session.js';
 import createCheckoutSessionGuest from './_handlers/create-checkout-session-guest.js';
-import createStripeAccount from './_handlers/create-stripe-account.js';
-import createStripeProduct from './_handlers/create-stripe-product.js';
 import createSubscriptionSession from './_handlers/create-subscription-session.js';
 import getOrderDetails from './_handlers/get-order-details.js';
 import payout from './_handlers/payout.js';
 import status from './_handlers/status.js';
-import stripeWebhookGuest from './_handlers/stripe-webhook-guest.js';
 import testEnv from './_handlers/test-env.js';
 import wallet from './_handlers/wallet.js';
 import webhook from './_handlers/webhook.js';
@@ -21,17 +18,18 @@ import abacatepayPixCheckout from './_handlers/abacatepay-pix-checkout.js';
 import abacatepayWebhook from './_handlers/abacatepay-webhook.js';
 import orderStatus from './_handlers/order-status.js';
 import mercadopagoWebhook from './_handlers/mercadopago-webhook.js';
+import mercadopagoSubscription from './_handlers/mercadopago-subscription.js';
+import mercadopagoSubscriptionWebhook from './_handlers/mercadopago-subscription-webhook.js';
+import mercadopagoConnect from './_handlers/mercadopago-connect.js';
+import mercadopagoConnectCallback from './_handlers/mercadopago-connect-callback.js';
 
 const handlers = {
   'create-checkout-session': createCheckoutSession,
   'create-checkout-session-guest': createCheckoutSessionGuest,
-  'create-stripe-account': createStripeAccount,
-  'create-stripe-product': createStripeProduct,
-  'create-subscription-session': createSubscriptionSession,
+  'create-subscription-session': mercadopagoSubscription, // Agora usa MP
   'get-order-details': getOrderDetails,
   'payout': payout,
   'status': status,
-  'stripe-webhook-guest': stripeWebhookGuest,
   'test-env': testEnv,
   'wallet': wallet,
   'webhook': webhook,
@@ -42,7 +40,12 @@ const handlers = {
   'abacatepay-pix-checkout': abacatepayPixCheckout,
   'abacatepay-webhook': abacatepayWebhook,
   'order-status': orderStatus,
-  'mercadopago-webhook': mercadopagoWebhook
+  'mercadopago-webhook': mercadopagoWebhook,
+  // Novos handlers Mercado Pago
+  'mercadopago-subscription': mercadopagoSubscription,
+  'mercadopago-subscription-webhook': mercadopagoSubscriptionWebhook,
+  'mercadopago-connect': mercadopagoConnect,
+  'mercadopago-connect-callback': mercadopagoConnectCallback
 };
 
 export default async (req, res) => {

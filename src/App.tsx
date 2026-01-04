@@ -38,7 +38,7 @@ function App() {
     }
 
     // Se for prestador (tem serviços ou role específico), vai para provider dashboard
-    if (userData?.role === 'prestador' || userData?.stripeAccountId) {
+    if (userData?.role === 'prestador' || userData?.mpConnected) {
       return <ProviderDashboard />;
     }
 

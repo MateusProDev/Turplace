@@ -374,6 +374,7 @@ export default function Checkout() {
     console.log('[Checkout] Validando dados do cliente:', customerData);
     const { name, email, cpf, phone } = customerData;
     const cpfDigits = cpf.replace(/\D/g, '');
+    const isSubscription = service?.billingType === 'subscription';
 
     if (!name.trim()) {
       setError("Nome é obrigatório");
@@ -384,18 +385,21 @@ export default function Checkout() {
       return false;
     }
     
-    // Validar CPF (11 dígitos) ou CNPJ (14 dígitos)
-    if (documentType === 'CPF' && cpfDigits.length !== 11) {
-      setError("CPF deve ter 11 dígitos");
-      return false;
-    }
-    if (documentType === 'CNPJ' && cpfDigits.length !== 14) {
-      setError("CNPJ deve ter 14 dígitos");
-      return false;
-    }
-    if (!phone.trim()) {
-      setError("Telefone é obrigatório");
-      return false;
+    // Para assinaturas, CPF e telefone são opcionais (serão coletados no MP)
+    if (!isSubscription) {
+      // Validar CPF (11 dígitos) ou CNPJ (14 dígitos)
+      if (documentType === 'CPF' && cpfDigits.length !== 11) {
+        setError("CPF deve ter 11 dígitos");
+        return false;
+      }
+      if (documentType === 'CNPJ' && cpfDigits.length !== 14) {
+        setError("CNPJ deve ter 14 dígitos");
+        return false;
+      }
+      if (!phone.trim()) {
+        setError("Telefone é obrigatório");
+        return false;
+      }
     }
 
     setError(null);
@@ -413,8 +417,8 @@ export default function Checkout() {
       return;
     }
 
-    // Validação adicional para cartão com Card Form
-    if (metodoPagamento === 'cartao') {
+    // Validação adicional para cartão com Card Form (apenas pagamentos únicos, não assinatura)
+    if (metodoPagamento === 'cartao' && service?.billingType !== 'subscription') {
       console.log('[Checkout] Verificando Card Form - isCardFormReady:', isCardFormReady, 'cardFormRef.current:', !!cardFormRef.current);
       console.log('[Checkout] Erros do Card Form:', cardFormErrors);
       
@@ -445,31 +449,34 @@ export default function Checkout() {
         billingType: service.billingType
       });
 
-      // Para subscriptions, usar Stripe
+      // Para subscriptions, usar Mercado Pago Preapproval
       if (service.billingType === 'subscription') {
-        if (!service.priceId) {
-          throw new Error('Item não configurado para assinatura');
-        }
-
-        console.log('[Checkout] Criando sessão de assinatura Stripe');
-        const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/create-subscription-session`, {
+        console.log('[Checkout] Criando assinatura via Mercado Pago');
+        
+        const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/mercadopago-subscription`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            priceId: service.priceId,
+            planId: service.priceId || service.id,
             customerEmail: customerData.email,
-            userId: user?.uid
+            customerName: customerData.name,
+            customerId: user?.uid,
+            providerId: service.ownerId,
+            serviceId: service.id,
+            serviceTitle: service.title,
+            priceMonthly: service.priceMonthly,
+            reason: service.title
           })
         });
 
         const data = await response.json();
         if (!response.ok) {
-          throw new Error(data.error || 'Erro ao criar sessão de assinatura');
+          throw new Error(data.error || 'Erro ao criar assinatura');
         }
 
-        console.log('[Checkout] Sessão Stripe criada, redirecionando', data.checkoutUrl);
+        console.log('[Checkout] Assinatura MP criada, redirecionando', data.checkoutUrl);
         window.location.href = data.checkoutUrl;
         return;
       }
@@ -855,7 +862,7 @@ export default function Checkout() {
                   <h2 className="text-xl font-bold text-gray-900">Método de pagamento</h2>
                   <p className="text-gray-600 text-sm">
                     {service?.billingType === 'subscription' 
-                      ? 'Assinatura mensal processada via Stripe' 
+                      ? 'Assinatura mensal processada via Mercado Pago' 
                       : 'Escolha como deseja pagar'
                     }
                   </p>
@@ -927,7 +934,12 @@ export default function Checkout() {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">Seus dados</h2>
-                  <p className="text-gray-600 text-sm">Informações para a compra</p>
+                  <p className="text-gray-600 text-sm">
+                    {service?.billingType === 'subscription' 
+                      ? 'Apenas nome e email - demais dados serão coletados no Mercado Pago'
+                      : 'Informações para a compra'
+                    }
+                  </p>
                 </div>
               </div>
 
@@ -946,7 +958,7 @@ export default function Checkout() {
                   />
                 </div>
 
-                <div>
+                <div className={service?.billingType === 'subscription' ? 'md:col-span-2' : ''}>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
                     Email *
                   </label>
@@ -960,75 +972,80 @@ export default function Checkout() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Telefone *
-                  </label>
-                  <input
-                    type="tel"
-                    value={customerData.phone}
-                    onChange={(e) => handleCustomerDataChange('phone', e.target.value)}
-                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
-                    placeholder="(11) 99999-9999"
-                    required
-                  />
-                </div>
+                {/* Campos adicionais apenas para pagamentos únicos (não assinatura) */}
+                {service?.billingType !== 'subscription' && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-900 mb-2">
+                        Telefone *
+                      </label>
+                      <input
+                        type="tel"
+                        value={customerData.phone}
+                        onChange={(e) => handleCustomerDataChange('phone', e.target.value)}
+                        className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                        placeholder="(11) 99999-9999"
+                        required
+                      />
+                    </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    Tipo de Documento *
-                  </label>
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <button
-                      type="button"
-                      onClick={() => setDocumentType('CPF')}
-                      className={`p-3 rounded-xl border-2 transition-all ${documentType === 'CPF' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        <span className={`font-semibold ${documentType === 'CPF' ? 'text-blue-600' : 'text-gray-700'}`}>CPF</span>
-                        {documentType === 'CPF' && (
-                          <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                            <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-semibold text-gray-900 mb-2">
+                        Tipo de Documento *
+                      </label>
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        <button
+                          type="button"
+                          onClick={() => setDocumentType('CPF')}
+                          className={`p-3 rounded-xl border-2 transition-all ${documentType === 'CPF' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}
+                        >
+                          <div className="flex items-center justify-center gap-2">
+                            <span className={`font-semibold ${documentType === 'CPF' ? 'text-blue-600' : 'text-gray-700'}`}>CPF</span>
+                            {documentType === 'CPF' && (
+                              <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                                <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                      <span className="text-xs text-gray-500">Pessoa Física</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setDocumentType('CNPJ')}
-                      className={`p-3 rounded-xl border-2 transition-all ${documentType === 'CNPJ' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        <span className={`font-semibold ${documentType === 'CNPJ' ? 'text-blue-600' : 'text-gray-700'}`}>CNPJ</span>
-                        {documentType === 'CNPJ' && (
-                          <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                            <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                          <span className="text-xs text-gray-500">Pessoa Física</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setDocumentType('CNPJ')}
+                          className={`p-3 rounded-xl border-2 transition-all ${documentType === 'CNPJ' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}
+                        >
+                          <div className="flex items-center justify-center gap-2">
+                            <span className={`font-semibold ${documentType === 'CNPJ' ? 'text-blue-600' : 'text-gray-700'}`}>CNPJ</span>
+                            {documentType === 'CNPJ' && (
+                              <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                                <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                              </div>
+                            )}
                           </div>
-                        )}
+                          <span className="text-xs text-gray-500">Pessoa Jurídica</span>
+                        </button>
                       </div>
-                      <span className="text-xs text-gray-500">Pessoa Jurídica</span>
-                    </button>
-                  </div>
-                  
-                  <label className="block text-sm font-semibold text-gray-900 mb-2">
-                    {documentType} *
-                  </label>
-                  <input
-                    type="text"
-                    value={customerData.cpf}
-                    onChange={(e) => handleCustomerDataChange('cpf', e.target.value)}
-                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
-                    placeholder={documentType === 'CPF' ? '000.000.000-00' : '00.000.000/0000-00'}
-                    maxLength={documentType === 'CPF' ? 14 : 18}
-                    required
-                  />
-                </div>
+                      
+                      <label className="block text-sm font-semibold text-gray-900 mb-2">
+                        {documentType} *
+                      </label>
+                      <input
+                        type="text"
+                        value={customerData.cpf}
+                        onChange={(e) => handleCustomerDataChange('cpf', e.target.value)}
+                        className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                        placeholder={documentType === 'CPF' ? '000.000.000-00' : '00.000.000/0000-00'}
+                        maxLength={documentType === 'CPF' ? 14 : 18}
+                        required
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
-            {/* 3. Campos do Cartão - TERCEIRO (apenas se cartão selecionado) */}
-            {metodoPagamento === 'cartao' && (
+            {/* 3. Campos do Cartão - TERCEIRO (apenas se cartão selecionado e NÃO for assinatura) */}
+            {metodoPagamento === 'cartao' && service?.billingType !== 'subscription' && (
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8 animate-fadeIn">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-xl flex items-center justify-center">
