@@ -45,7 +45,7 @@ interface Order {
 }
 
 export default function ClientDashboard() {
-  const { user, userData } = useAuth();
+  const { user, userData, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,13 +53,16 @@ export default function ClientDashboard() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   useEffect(() => {
+    // Não fazer nada enquanto o auth está carregando
+    if (authLoading) return;
+    
     if (!user) {
       navigate('/login');
       return;
     }
 
     fetchUserOrders();
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   const fetchUserOrders = async () => {
     try {
