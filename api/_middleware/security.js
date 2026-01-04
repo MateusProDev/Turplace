@@ -35,8 +35,7 @@ export function withSecurity(handler) {
       const allowedOrigins = [
         'http://localhost:5173', // Desenvolvimento
         'http://localhost:3000', // Desenvolvimento
-        'https://turplace.turvia.com.br', // Produção
-        'https://marketplace.turvia.com.br' // Produção
+        'https://lucrazi.com.br' // Produção
       ];
 
       const origin = req.headers.origin;

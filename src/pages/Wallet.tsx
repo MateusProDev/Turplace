@@ -380,7 +380,7 @@ const Wallet = () => {
                     className="px-4 py-2.5 bg-white text-gray-900 font-medium rounded-lg hover:bg-gray-100 transition flex items-center gap-2"
                   >
                     <CreditCard className="w-4 h-4" />
-                    Conectar Stripe
+                    Conectar Mercado Pago
                   </Link>
                   <Link 
                     to="/profile/settings" 
