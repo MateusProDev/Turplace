@@ -15,7 +15,8 @@ import {
   Play,
   FileText,
   Video,
-  ExternalLink
+  ExternalLink,
+  Store
 } from "lucide-react";
 import { auth } from "../utils/firebase";
 import { signOut } from "firebase/auth";
@@ -229,6 +230,20 @@ export default function ClientDashboard() {
                   <span className="font-medium">Perfil</span>
                 </button>
               </nav>
+
+              {/* Botão para ir para o painel de prestador */}
+              <div className="mt-6 pt-6 border-t">
+                <button
+                  onClick={() => navigate('/provider')}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200"
+                >
+                  <Store className="w-5 h-5" />
+                  <div>
+                    <span className="font-medium block">Painel do Prestador</span>
+                    <span className="text-xs text-emerald-600">Vender produtos e serviços</span>
+                  </div>
+                </button>
+              </div>
             </div>
           </div>
 

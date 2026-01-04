@@ -15,6 +15,7 @@ import CourseDetail from './pages/CourseDetail';
 import RequireAuth from './components/Auth/RequireAuth';
 import ProviderDashboard from './pages/ProviderDashboard';
 import ClientDashboard from './pages/ClientDashboard';
+import DashboardSelector from './pages/DashboardSelector';
 import HowItWorks from './pages/HowItWorks';
 import Partnerships from './pages/Partnerships';
 import Contact from './pages/Contact';
@@ -55,7 +56,8 @@ function App() {
         <Route path="/profile" element={<Navigate to="/profile/settings" replace />} />
         <Route path="/profile/settings" element={<ProfileSettings />} />
         <Route path="/profile/leadpage" element={<RequireAuth><LeadPageEditor /></RequireAuth>} />
-        <Route path="/login" element={<DashboardRouter />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/select-dashboard" element={<RequireAuth><DashboardSelector /></RequireAuth>} />
         <Route path="/provider-login" element={<ProviderLogin />} />
         <Route path="/client-login" element={<ClientLogin />} />
         <Route path="/dashboard" element={<RequireAuth><ServiceForm /></RequireAuth>} />

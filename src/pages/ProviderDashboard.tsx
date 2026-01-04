@@ -20,7 +20,8 @@ import {
   Share2,
   TrendingUp,
   Link as LinkIcon,
-  BookOpen
+  BookOpen,
+  ShoppingBag
 } from 'lucide-react';
 import { collection, query, where, getDocs, deleteDoc, doc, updateDoc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from '../utils/firebase';
@@ -1088,6 +1089,16 @@ export default function ProviderDashboard() {
 
             {/* Ações do Header */}
             <div className="flex items-center gap-3">
+              {/* Link para área do cliente */}
+              <button
+                onClick={() => navigate('/client')}
+                className="flex items-center gap-2 px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                title="Área do Cliente"
+              >
+                <ShoppingBag size={18} />
+                <span className="text-sm font-medium hidden md:inline">Minhas Compras</span>
+              </button>
+
               {/* Configurações */}
               <button
                 onClick={() => navigate('/profile/settings')}

@@ -22,6 +22,7 @@ import mercadopagoSubscription from './_handlers/mercadopago-subscription.js';
 import mercadopagoSubscriptionWebhook from './_handlers/mercadopago-subscription-webhook.js';
 import mercadopagoConnect from './_handlers/mercadopago-connect.js';
 import mercadopagoConnectCallback from './_handlers/mercadopago-connect-callback.js';
+import firstAccess from './_handlers/first-access.js';
 
 const handlers = {
   'create-checkout-session': createCheckoutSession,
@@ -45,7 +46,9 @@ const handlers = {
   'mercadopago-subscription': mercadopagoSubscription,
   'mercadopago-subscription-webhook': mercadopagoSubscriptionWebhook,
   'mercadopago-connect': mercadopagoConnect,
-  'mercadopago-connect-callback': mercadopagoConnectCallback
+  'mercadopago-connect-callback': mercadopagoConnectCallback,
+  // Handler de primeiro acesso
+  'first-access': firstAccess
 };
 
 export default async (req, res) => {

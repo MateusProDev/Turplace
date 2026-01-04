@@ -7,6 +7,7 @@
 
 import initFirestore from '../_lib/firebaseAdmin.js';
 import { logSecurityEvent, setSecurityHeaders } from '../_lib/security.js';
+import { sendFirstAccessEmail, generateResetToken } from '../_lib/brevoEmail.js';
 
 export default async (req, res) => {
   setSecurityHeaders(res);
@@ -97,6 +98,31 @@ export default async (req, res) => {
                 planActivatedAt: new Date().toISOString(),
               });
               console.log('[MP-Sub-Webhook] User plan updated:', subData.customerId);
+            }
+
+            // Enviar email de primeiro acesso se ainda não enviado
+            if (subData.customerEmail && !subData.accessEmailSent) {
+              try {
+                const resetToken = generateResetToken();
+                updateData.resetToken = resetToken;
+                updateData.resetTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+                updateData.accessEmailSent = true;
+
+                await sendFirstAccessEmail({
+                  customerEmail: subData.customerEmail,
+                  customerName: subData.customerName || 'Cliente',
+                  serviceTitle: subData.serviceTitle || 'Assinatura',
+                  providerName: subData.providerName,
+                  amount: subData.amount || preapproval.auto_recurring?.transaction_amount || 0,
+                  orderId: external_reference,
+                  resetToken: resetToken
+                });
+
+                console.log('[MP-Sub-Webhook] Email de primeiro acesso enviado para:', subData.customerEmail);
+              } catch (emailError) {
+                console.error('[MP-Sub-Webhook] Erro ao enviar email:', emailError);
+                // Não falhar o webhook por causa do email
+              }
             }
 
           } else if (status === 'paused') {
