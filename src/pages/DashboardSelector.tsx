@@ -9,21 +9,11 @@ import logoSemFundo from '../assets/logosemfundo.png';
  */
 export default function DashboardSelector() {
   const navigate = useNavigate();
-  const { user, userData } = useAuth();
+  const { user, userData, loading } = useAuth();
   const [showSelector, setShowSelector] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Aguardar um pouco para os dados carregarem
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    if (!isLoading) {
+    if (!loading) {
       if (!user) {
         navigate('/login', { replace: true });
         return;
@@ -59,9 +49,9 @@ export default function DashboardSelector() {
         navigate('/client', { replace: true });
       }
     }
-  }, [user, userData, isLoading, navigate]);
+  }, [user, userData, loading, navigate]);
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-emerald-100">
         <div className="text-center">

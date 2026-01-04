@@ -38,6 +38,7 @@ interface UserData {
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
@@ -50,6 +51,7 @@ export function useAuth() {
           } else {
             setUserData(null);
           }
+          setLoading(false);
         });
 
         // Verificar se o documento do usuário existe, se não, criar com plano free
@@ -79,10 +81,11 @@ export function useAuth() {
         return () => unsubData();
       } else {
         setUserData(null);
+        setLoading(false);
       }
     });
     return () => unsub();
   }, []);
 
-  return { user, userData };
+  return { user, userData, loading };
 }

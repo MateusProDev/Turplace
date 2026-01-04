@@ -1,6 +1,5 @@
 
-import { useState } from "react";
-import { useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import { useNavigate, useLocation } from "react-router-dom";
 import { auth, db } from "../../utils/firebase";
@@ -20,6 +19,8 @@ googleProvider.setCustomParameters({
   prompt: 'select_account'
 });
 
+// Variável global para evitar redirecionamento múltiplo entre remontagens
+let globalRedirectInProgress = false;
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -34,27 +35,33 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, userData } = useAuth();
-  const [hasRedirected, setHasRedirected] = useState(false);
+  const redirectedRef = useRef(false);
 
   // Determinar se é login de cliente baseado na rota
   const isClientLogin = location.pathname === '/client-login';
-  // Log para depuração
-  // console.log("Login.tsx: user:", user);
+
   // Redireciona se já estiver autenticado
   useEffect(() => {
-    // Evitar redirecionamentos múltiplos
-    if (hasRedirected) return;
+    // Evitar redirecionamentos múltiplos usando ref e variável global
+    if (redirectedRef.current || globalRedirectInProgress) return;
     
     if (user && userData !== null) {
-      console.log("Login.tsx: Usuário logado, redirecionando...", { user: user.email, userData });
+      // Marcar imediatamente para evitar múltiplas execuções
+      redirectedRef.current = true;
+      globalRedirectInProgress = true;
       
-      setHasRedirected(true);
+      console.log("Login.tsx: Usuário logado, redirecionando uma vez...", { user: user.email });
 
       // Verifica se há um destino salvo no state
       const from = location.state?.from?.pathname;
       
       // Evitar loop: se o from é uma rota de login ou a mesma página, ignorar
       const validFrom = from && !['/login', '/client-login', '/provider-login'].includes(from);
+      
+      // Resetar flag global após um delay para permitir navegação futura
+      setTimeout(() => {
+        globalRedirectInProgress = false;
+      }, 2000);
       
       if (userData?.isAdmin) {
         // Admin vai para /admin ou para o destino salvo
@@ -82,7 +89,7 @@ export default function Login() {
         }
       }
     }
-  }, [user, userData, navigate, location, hasRedirected]);
+  }, [user, userData, navigate, location]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     console.log("Login.tsx: handleSubmit chamado", { isLogin, email });
@@ -90,6 +97,11 @@ export default function Login() {
     setError("");
     setSuccess("");
     setLoading(true);
+    
+    // Resetar flags para permitir novo redirecionamento após login manual
+    redirectedRef.current = false;
+    globalRedirectInProgress = false;
+    
     try {
       if (isLogin) {
         await signInWithEmailAndPassword(auth, email, password);
