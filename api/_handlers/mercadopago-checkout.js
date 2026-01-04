@@ -2,7 +2,6 @@
 // Caminho sugerido: api/mercadopago-checkout.js
 
 import { MercadoPagoConfig, Payment } from 'mercadopago';
-import AbacatePay from 'abacatepay-nodejs-sdk';
 import initFirestore from '../_lib/firebaseAdmin.js';
 
 const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN || process.env.REACT_APP_MERCADO_PAGO_ACCESS_TOKEN;
@@ -19,9 +18,24 @@ const payment = new Payment(client);
 
 console.log('[MercadoPago Checkout] Cliente Mercado Pago inicializado com sucesso');
 
-const abacate = AbacatePay.default(abacateApiKey);
+// Função para criar PIX via API direta do AbacatePay
+async function createAbacatePayPix(pixData) {
+  const response = await fetch('https://api.abacatepay.com/v1/pixQrCode/create', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${abacateApiKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(pixData)
+  });
 
-console.log('[MercadoPago Checkout] Cliente AbacatePay inicializado com sucesso');
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`AbacatePay error: ${response.status} - ${errorText}`);
+  }
+
+  return await response.json();
+}
 
 export default async function handler(req, res) {
   const clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
@@ -160,15 +174,10 @@ export default async function handler(req, res) {
       
       let pixResponse;
       try {
-        pixResponse = await abacate.pixQrCode.create(pixData);
+        pixResponse = await createAbacatePayPix(pixData);
         console.log('[MercadoPago Checkout] QRCode PIX criado:', JSON.stringify(pixResponse, null, 2));
       } catch (abacateError) {
-        console.error('[MercadoPago Checkout] Erro AbacatePay detalhado:', {
-          message: abacateError.message,
-          response: abacateError.response?.data,
-          status: abacateError.response?.status,
-          stack: abacateError.stack
-        });
+        console.error('[MercadoPago Checkout] Erro AbacatePay detalhado:', abacateError.message);
         throw new Error(`Erro AbacatePay: ${abacateError.message || 'Erro desconhecido'}`);
       }
 
