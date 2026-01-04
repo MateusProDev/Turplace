@@ -34,6 +34,7 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, userData } = useAuth();
+  const [hasRedirected, setHasRedirected] = useState(false);
 
   // Determinar se é login de cliente baseado na rota
   const isClientLogin = location.pathname === '/client-login';
@@ -41,56 +42,47 @@ export default function Login() {
   // console.log("Login.tsx: user:", user);
   // Redireciona se já estiver autenticado
   useEffect(() => {
-    if (user) {
-      console.log("Login.tsx: Usuário logado, verificando dados...", { user: user.email, userData });
+    // Evitar redirecionamentos múltiplos
+    if (hasRedirected) return;
+    
+    if (user && userData !== null) {
+      console.log("Login.tsx: Usuário logado, redirecionando...", { user: user.email, userData });
+      
+      setHasRedirected(true);
 
-      // Aguardar os dados carregarem
-      const checkAndRedirect = () => {
-        console.log("Login.tsx: Verificando userData", { userData, isAdmin: userData?.isAdmin });
-
-        if (userData !== null) {
-          // Verifica se há um destino salvo no state
-          const from = location.state?.from?.pathname;
-          console.log("Login.tsx: Redirecionando usuário", { isAdmin: userData?.isAdmin, from });
-
-          if (userData?.isAdmin) {
-            // Admin vai para /admin ou para o destino salvo
-            console.log("Login.tsx: Redirecionando admin para:", from || "/admin");
-            navigate(from || "/admin", { replace: true });
-          } else {
-            // Verificar se pode ser cliente e prestador
-            const canBeProvider = userData?.role === 'prestador' || userData?.mpConnected;
-            const canBeClient = userData?.role === 'cliente';
-            
-            // Se pode ser ambos, vai para seletor
-            if (canBeProvider && canBeClient) {
-              console.log("Login.tsx: Usuário pode ser ambos, indo para seletor");
-              navigate("/select-dashboard", { replace: true });
-            } else if (canBeProvider) {
-              // Prestador vai para /provider ou para o destino salvo (se não for /admin)
-              const destination = from && from !== "/admin" ? from : "/provider";
-              console.log("Login.tsx: Redirecionando prestador para:", destination);
-              navigate(destination, { replace: true });
-            } else {
-              // Cliente vai para /client ou para o destino salvo (se não for /admin)
-              const destination = from && from !== "/admin" ? from : "/client";
-              console.log("Login.tsx: Redirecionando cliente para:", destination);
-              navigate(destination, { replace: true });
-            }
-          }
+      // Verifica se há um destino salvo no state
+      const from = location.state?.from?.pathname;
+      
+      // Evitar loop: se o from é uma rota de login ou a mesma página, ignorar
+      const validFrom = from && !['/login', '/client-login', '/provider-login'].includes(from);
+      
+      if (userData?.isAdmin) {
+        // Admin vai para /admin ou para o destino salvo
+        console.log("Login.tsx: Redirecionando admin para:", validFrom ? from : "/admin");
+        navigate(validFrom ? from : "/admin", { replace: true });
+      } else {
+        // Verificar se pode ser cliente e prestador
+        const canBeProvider = userData?.role === 'prestador' || userData?.mpConnected;
+        const canBeClient = userData?.role === 'cliente';
+        
+        // Se pode ser ambos, vai para seletor
+        if (canBeProvider && canBeClient) {
+          console.log("Login.tsx: Usuário pode ser ambos, indo para seletor");
+          navigate("/select-dashboard", { replace: true });
+        } else if (canBeProvider) {
+          // Prestador vai para /provider
+          const destination = validFrom && from !== "/admin" ? from : "/provider";
+          console.log("Login.tsx: Redirecionando prestador para:", destination);
+          navigate(destination, { replace: true });
         } else {
-          console.log("Login.tsx: userData ainda null, tentando novamente em 500ms");
-          // Tentar novamente se userData ainda não carregou
-          setTimeout(checkAndRedirect, 500);
+          // Cliente vai para /client
+          const destination = validFrom && from !== "/admin" ? from : "/client";
+          console.log("Login.tsx: Redirecionando cliente para:", destination);
+          navigate(destination, { replace: true });
         }
-      };
-
-      // Iniciar verificação após 500ms
-      const timer = setTimeout(checkAndRedirect, 500);
-
-      return () => clearTimeout(timer);
+      }
     }
-  }, [user, userData, navigate, location]);
+  }, [user, userData, navigate, location, hasRedirected]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     console.log("Login.tsx: handleSubmit chamado", { isLogin, email });
