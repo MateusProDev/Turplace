@@ -1,11 +1,12 @@
 import admin from 'firebase-admin';
 import { getAuth } from 'firebase-admin/auth';
-import MercadoPago from 'mercadopago';
+import { MercadoPagoConfig, PreApproval } from 'mercadopago';
 
 // Inicializar MercadoPago
-const mp = new MercadoPago({ 
+const mpConfig = new MercadoPagoConfig({ 
   accessToken: process.env.MP_ACCESS_TOKEN || process.env.MERCADOPAGO_ACCESS_TOKEN 
 });
+const preApproval = new PreApproval(mpConfig);
 
 export default async function handler(req, res) {
   // Verificar método
@@ -54,7 +55,7 @@ export default async function handler(req, res) {
 
     // Cancelar a assinatura no MercadoPago
     try {
-      await mp.preapproval.update({
+      await preApproval.update({
         id: subscriptionId,
         body: { status: 'cancelled' }
       });
