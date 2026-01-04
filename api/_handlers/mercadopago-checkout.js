@@ -157,11 +157,24 @@ export default async function handler(req, res) {
       }
 
       console.log('[MercadoPago Checkout] Criando QRCode PIX direto:', pixData);
-      const pixResponse = await abacate.pixQrCode.create(pixData);
-      console.log('[MercadoPago Checkout] QRCode PIX criado:', JSON.stringify(pixResponse, null, 2));
+      
+      let pixResponse;
+      try {
+        pixResponse = await abacate.pixQrCode.create(pixData);
+        console.log('[MercadoPago Checkout] QRCode PIX criado:', JSON.stringify(pixResponse, null, 2));
+      } catch (abacateError) {
+        console.error('[MercadoPago Checkout] Erro AbacatePay detalhado:', {
+          message: abacateError.message,
+          response: abacateError.response?.data,
+          status: abacateError.response?.status,
+          stack: abacateError.stack
+        });
+        throw new Error(`Erro AbacatePay: ${abacateError.message || 'Erro desconhecido'}`);
+      }
 
       if (!pixResponse || !pixResponse.data) {
-        throw new Error('Erro ao criar QRCode PIX no AbacatePay');
+        console.error('[MercadoPago Checkout] Resposta inválida:', pixResponse);
+        throw new Error('Erro ao criar QRCode PIX no AbacatePay - resposta inválida');
       }
 
       const pix = pixResponse.data;
