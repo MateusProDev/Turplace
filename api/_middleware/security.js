@@ -39,8 +39,11 @@ export function withSecurity(handler) {
       ];
 
       const origin = req.headers.origin;
+      const referer = req.headers.referer;
       if (origin && allowedOrigins.includes(origin)) {
         res.setHeader('Access-Control-Allow-Origin', origin);
+      } else if (!origin && referer && referer.startsWith('https://lucrazi.com.br')) {
+        res.setHeader('Access-Control-Allow-Origin', 'https://lucrazi.com.br');
       } else if (process.env.NODE_ENV === 'development') {
         res.setHeader('Access-Control-Allow-Origin', '*'); // Apenas para desenvolvimento
       }
