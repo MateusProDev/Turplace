@@ -3,7 +3,6 @@ import { useAuth } from "../hooks/useAuth";
 import { Link, useNavigate } from "react-router-dom";
 import {
   BookOpen,
-  Download,
   LogOut,
   Settings,
   ShoppingBag,
@@ -15,11 +14,62 @@ import {
   Play,
   FileText,
   Video,
-  ExternalLink,
-  Store
+  Store,
+  CreditCard,
+  XCircle,
+  ChevronLeft,
+  ExternalLink
 } from "lucide-react";
 import { auth } from "../utils/firebase";
 import { signOut } from "firebase/auth";
+
+// Função para converter URL de vídeo em embed seguro (esconde origem)
+const getSecureEmbedUrl = (url: string): string | null => {
+  if (!url) return null;
+  
+  // YouTube - várias formas de URL
+  const youtubePatterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/v\/([a-zA-Z0-9_-]{11})/
+  ];
+  
+  for (const pattern of youtubePatterns) {
+    const match = url.match(pattern);
+    if (match) {
+      // Embed com configurações para esconder branding e desabilitar download
+      return `https://www.youtube-nocookie.com/embed/${match[1]}?rel=0&modestbranding=1&showinfo=0&controls=1&disablekb=0&fs=1&playsinline=1`;
+    }
+  }
+  
+  // Vimeo
+  const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if (vimeoMatch) {
+    return `https://player.vimeo.com/video/${vimeoMatch[1]}?title=0&byline=0&portrait=0&badge=0`;
+  }
+  
+  // Google Drive
+  const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (driveMatch) {
+    return `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
+  }
+  
+  // Se já for uma URL de embed, retornar como está
+  if (url.includes('/embed/') || url.includes('/preview') || url.includes('player.vimeo')) {
+    return url;
+  }
+  
+  // URL direta de vídeo (mp4, webm, etc)
+  if (url.match(/\.(mp4|webm|ogg)(\?.*)?$/i)) {
+    return url; // Será tratado com tag <video>
+  }
+  
+  return null;
+};
+
+// Verifica se é URL direta de vídeo
+const isDirectVideoUrl = (url: string): boolean => {
+  return /\.(mp4|webm|ogg)(\?.*)?$/i.test(url);
+};
 
 interface Order {
   id: string;
@@ -35,6 +85,7 @@ interface Order {
   customerEmail: string;
   accessLink?: string;
   contentType?: 'course' | 'infoproduct' | 'service';
+  subscriptionId?: string;
   sections?: Array<{
     id: string;
     title: string;
@@ -49,8 +100,10 @@ export default function ClientDashboard() {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'orders' | 'content' | 'profile'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'content' | 'subscriptions' | 'profile'>('orders');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [cancellingSubscription, setCancellingSubscription] = useState<string | null>(null);
+  const [playingVideo, setPlayingVideo] = useState<{ sectionId: string; url: string; title: string } | null>(null);
 
   useEffect(() => {
     // Não fazer nada enquanto o auth está carregando
@@ -99,6 +152,43 @@ export default function ClientDashboard() {
       navigate('/');
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
+    }
+  };
+
+  const handleCancelSubscription = async (orderId: string, subscriptionId?: string) => {
+    if (!subscriptionId) {
+      alert('ID da assinatura não encontrado');
+      return;
+    }
+    
+    if (!confirm('Tem certeza que deseja cancelar esta assinatura? Você perderá o acesso ao conteúdo.')) {
+      return;
+    }
+
+    setCancellingSubscription(orderId);
+    try {
+      const token = await user?.getIdToken();
+      const response = await fetch('/api/cancel-subscription', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ subscriptionId, orderId }),
+      });
+
+      if (response.ok) {
+        alert('Assinatura cancelada com sucesso');
+        fetchUserOrders(); // Recarregar pedidos
+      } else {
+        const error = await response.json();
+        alert(`Erro ao cancelar assinatura: ${error.message || 'Erro desconhecido'}`);
+      }
+    } catch (error) {
+      console.error('Erro ao cancelar assinatura:', error);
+      alert('Erro ao cancelar assinatura');
+    } finally {
+      setCancellingSubscription(null);
     }
   };
 
@@ -219,6 +309,18 @@ export default function ClientDashboard() {
                 >
                   <BookOpen className="w-5 h-5" />
                   <span className="font-medium">Meu Conteúdo</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('subscriptions')}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                    activeTab === 'subscriptions'
+                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <CreditCard className="w-5 h-5" />
+                  <span className="font-medium">Minhas Assinaturas</span>
                 </button>
 
                 <button
@@ -403,6 +505,112 @@ export default function ClientDashboard() {
               </div>
             )}
 
+            {activeTab === 'subscriptions' && (
+              <div className="bg-white rounded-lg shadow-sm border">
+                <div className="p-6 border-b">
+                  <h2 className="text-2xl font-bold text-gray-900">Minhas Assinaturas</h2>
+                  <p className="text-gray-600 mt-1">Gerencie suas assinaturas ativas</p>
+                </div>
+
+                <div className="p-6">
+                  {orders.filter(o => o.billingType === 'subscription').length === 0 ? (
+                    <div className="text-center py-12">
+                      <CreditCard className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhuma assinatura encontrada</h3>
+                      <p className="text-gray-600 mb-6">Você ainda não tem assinaturas ativas.</p>
+                      <Link
+                        to="/catalog"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        <ShoppingBag className="w-4 h-4" />
+                        Explorar Catálogo
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {orders
+                        .filter(o => o.billingType === 'subscription')
+                        .map((order) => (
+                        <div
+                          key={order.id}
+                          className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-start gap-4">
+                              <div className="w-16 h-16 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <CreditCard className="w-8 h-8 text-purple-600" />
+                              </div>
+
+                              <div className="flex-1">
+                                <h3 className="font-semibold text-gray-900 mb-1">
+                                  {order.serviceTitle}
+                                </h3>
+                                <p className="text-sm text-gray-600 mb-2">
+                                  Por {order.providerName}
+                                </p>
+                                <div className="flex items-center gap-2">
+                                  {getStatusIcon(order.status)}
+                                  <span className={`text-sm font-medium ${
+                                    order.status === 'paid' || order.status === 'completed'
+                                      ? 'text-green-600'
+                                      : order.status === 'pending'
+                                      ? 'text-yellow-600'
+                                      : 'text-red-600'
+                                  }`}>
+                                    {order.status === 'paid' || order.status === 'completed' ? 'Ativa' : 
+                                     order.status === 'cancelled' ? 'Cancelada' : 'Pendente'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="text-right">
+                              <div className="text-lg font-bold text-gray-900">
+                                R$ {Number(order.amount).toFixed(2).replace('.', ',')}/mês
+                              </div>
+                              <div className="text-sm text-gray-500 mb-3">
+                                Desde {new Date(order.createdAt).toLocaleDateString('pt-BR')}
+                              </div>
+                              
+                              <div className="flex flex-col gap-2">
+                                {(order.status === 'paid' || order.status === 'completed') && (
+                                  <>
+                                    <button
+                                      onClick={() => setSelectedOrder(order)}
+                                      className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                                    >
+                                      Acessar Conteúdo
+                                    </button>
+                                    <button
+                                      onClick={() => handleCancelSubscription(order.id, order.subscriptionId)}
+                                      disabled={cancellingSubscription === order.id}
+                                      className="px-4 py-2 bg-red-50 text-red-600 text-sm rounded-lg hover:bg-red-100 transition-colors border border-red-200 flex items-center justify-center gap-1"
+                                    >
+                                      {cancellingSubscription === order.id ? (
+                                        <>
+                                          <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin" />
+                                          Cancelando...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <XCircle className="w-4 h-4" />
+                                          Cancelar Assinatura
+                                        </>
+                                      )}
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {activeTab === 'profile' && (
               <div className="bg-white rounded-lg shadow-sm border">
                 <div className="p-6 border-b">
@@ -466,7 +674,7 @@ export default function ClientDashboard() {
                   {selectedOrder.serviceTitle}
                 </h3>
                 <button
-                  onClick={() => setSelectedOrder(null)}
+                  onClick={() => { setPlayingVideo(null); setSelectedOrder(null); }}
                   className="text-gray-400 hover:text-gray-600"
                 >
                   ✕
@@ -475,40 +683,101 @@ export default function ClientDashboard() {
               <p className="text-gray-600 mt-1">Por {selectedOrder.providerName}</p>
             </div>
 
-            <div className="p-6 overflow-y-auto max-h-96">
+            <div className="p-6 overflow-y-auto max-h-[70vh]">
               {selectedOrder.contentType === 'course' && selectedOrder.sections ? (
                 <div className="space-y-4">
-                  <h4 className="font-semibold text-gray-900 mb-4">Conteúdo do Curso</h4>
-                  {selectedOrder.sections.map((section, index) => (
-                    <div key={section.id} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center gap-3 mb-2">
-                        {section.type === 'video' && <Video className="w-5 h-5 text-blue-600" />}
-                        {section.type === 'text' && <FileText className="w-5 h-5 text-green-600" />}
-                        {section.type === 'download' && <Download className="w-5 h-5 text-purple-600" />}
-                        <span className="font-medium text-gray-900">
-                          {index + 1}. {section.title}
-                        </span>
-                      </div>
-
-                      {section.type === 'text' && (
-                        <div className="text-gray-700 mt-2">
-                          {section.content}
-                        </div>
-                      )}
-
-                      {(section.type === 'video' || section.type === 'download') && section.url && (
-                        <a
-                          href={section.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors mt-2"
+                  {/* Player de vídeo inline */}
+                  {playingVideo && (
+                    <div className="mb-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <button
+                          onClick={() => setPlayingVideo(null)}
+                          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
                         >
-                          {section.type === 'video' ? <Play className="w-4 h-4" /> : <Download className="w-4 h-4" />}
-                          {section.type === 'video' ? 'Assistir' : 'Download'}
-                        </a>
-                      )}
+                          <ChevronLeft className="w-4 h-4" />
+                          Voltar para lista
+                        </button>
+                        <span className="text-sm text-gray-500">Aula atual</span>
+                      </div>
+                      <h4 className="font-semibold text-gray-900 mb-3">{playingVideo.title}</h4>
+                      <div className="relative w-full bg-black rounded-lg overflow-hidden" style={{ paddingBottom: '56.25%' }}>
+                        {isDirectVideoUrl(playingVideo.url) ? (
+                          <video
+                            className="absolute inset-0 w-full h-full"
+                            controls
+                            controlsList="nodownload"
+                            onContextMenu={(e) => e.preventDefault()}
+                            autoPlay
+                          >
+                            <source src={playingVideo.url} type="video/mp4" />
+                            Seu navegador não suporta vídeos HTML5.
+                          </video>
+                        ) : (
+                          <iframe
+                            className="absolute inset-0 w-full h-full"
+                            src={getSecureEmbedUrl(playingVideo.url) || ''}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            title={playingVideo.title}
+                            style={{ border: 'none' }}
+                          />
+                        )}
+                      </div>
                     </div>
-                  ))}
+                  )}
+
+                  {/* Lista de aulas */}
+                  {!playingVideo && (
+                    <>
+                      <h4 className="font-semibold text-gray-900 mb-4">Conteúdo do Curso</h4>
+                      {selectedOrder.sections.map((section, index) => (
+                        <div key={section.id} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              {section.type === 'video' && (
+                                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                  <Play className="w-5 h-5 text-blue-600" />
+                                </div>
+                              )}
+                              {section.type === 'text' && (
+                                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                  <FileText className="w-5 h-5 text-green-600" />
+                                </div>
+                              )}
+                              <div>
+                                <span className="font-medium text-gray-900 block">
+                                  {index + 1}. {section.title}
+                                </span>
+                                <span className="text-sm text-gray-500">
+                                  {section.type === 'video' ? 'Vídeo aula' : 'Material de texto'}
+                                </span>
+                              </div>
+                            </div>
+
+                            {section.type === 'video' && section.url && (
+                              <button
+                                onClick={() => setPlayingVideo({ 
+                                  sectionId: section.id, 
+                                  url: section.url!, 
+                                  title: section.title 
+                                })}
+                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                              >
+                                <Play className="w-4 h-4" />
+                                Assistir
+                              </button>
+                            )}
+                          </div>
+
+                          {section.type === 'text' && (
+                            <div className="text-gray-700 mt-3 pt-3 border-t border-gray-100">
+                              {section.content}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-12">
