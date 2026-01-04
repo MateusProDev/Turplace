@@ -136,13 +136,38 @@ const Wallet = () => {
       });
   };
 
+  // Constantes de saque
+  const PAYOUT_FEE = 4.99;
+  const MIN_PAYOUT = 19.99;
+
   const handleWithdraw = async (amount: number, method: 'mercadopago' | 'pix') => {
     if (!user?.uid || amount <= 0) return;
+    
+    // Validar saque mínimo
+    if (method === 'pix' && amount < MIN_PAYOUT) {
+      alert(`Saque mínimo via PIX é R$ ${MIN_PAYOUT.toFixed(2)}.\nVocê receberá R$ ${(MIN_PAYOUT - PAYOUT_FEE).toFixed(2)} após a taxa de R$ ${PAYOUT_FEE.toFixed(2)}.`);
+      return;
+    }
+    
+    // Confirmar saque mostrando valor líquido
+    const netAmount = amount - PAYOUT_FEE;
+    const confirmMessage = method === 'pix' 
+      ? `Confirmar saque de ${formatCurrency(amount)}?\n\nTaxa de saque: ${formatCurrency(PAYOUT_FEE)}\nVocê receberá: ${formatCurrency(netAmount)}\n\nA transferência será enviada para sua chave PIX.`
+      : `Confirmar saque de ${formatCurrency(amount)}?`;
+    
+    if (!confirm(confirmMessage)) return;
+    
     setLoading(true);
     try {
+      // Obter token de autenticação
+      const token = await user.getIdToken();
+      
       const response = await fetch('/api/payout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ userId: user.uid, amount, method }),
       });
 
@@ -152,8 +177,8 @@ const Wallet = () => {
         throw new Error(result.error || 'Erro ao processar saque');
       }
 
-      // Modal de sucesso moderno
-      alert(`${result.message}\n\nID da transação: ${result.payoutId}\nTempo estimado: ${result.estimatedTime}`);
+      // Modal de sucesso
+      alert(`✅ ${result.message}`);
 
       // Refresh data
       loadWalletData(true);
@@ -318,18 +343,24 @@ const Wallet = () => {
                   {data.chavePix && (
                     <button
                       onClick={() => handleWithdraw(data.availableBalance, 'pix')}
-                      disabled={data.availableBalance < 10 || loading}
+                      disabled={data.availableBalance < MIN_PAYOUT || loading}
                       className="px-6 py-3.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
                     >
                       <Smartphone className="w-5 h-5" />
-                      Sacar via PIX
+                      Sacar via PIX (Taxa: R$ {PAYOUT_FEE.toFixed(2)})
                     </button>
                   )}
                 </div>
                 
-                {data.chavePix && data.availableBalance < 10 && data.availableBalance > 0 && (
+                {data.chavePix && data.availableBalance < MIN_PAYOUT && data.availableBalance > 0 && (
                   <p className="text-amber-200 text-sm">
-                    Saldo mínimo para saque PIX: R$ 10,00
+                    Saldo mínimo para saque PIX: R$ {MIN_PAYOUT.toFixed(2)} (você recebe R$ {(MIN_PAYOUT - PAYOUT_FEE).toFixed(2)})
+                  </p>
+                )}
+                
+                {data.chavePix && data.availableBalance >= MIN_PAYOUT && (
+                  <p className="text-green-300 text-sm">
+                    💰 Você receberá {formatCurrency(data.availableBalance - PAYOUT_FEE)} líquido (taxa de R$ {PAYOUT_FEE.toFixed(2)})
                   </p>
                 )}
                 

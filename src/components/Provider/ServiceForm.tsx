@@ -56,7 +56,7 @@ interface ServiceFormProps {
 }
 
 export default function ServiceForm({ editMode = false, serviceData, onClose }: ServiceFormProps) {
-  const { user } = useAuth();
+  const { user, userData } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({
     title: editMode && serviceData ? serviceData.title || "" : "",
@@ -77,6 +77,11 @@ export default function ServiceForm({ editMode = false, serviceData, onClose }: 
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [myServices, setMyServices] = useState<Service[]>([]);
+
+  // Verificar se o prestador está configurado para receber pagamentos
+  const isMPConnected = userData?.mpConnected === true;
+  const hasPixKey = userData?.chavePix && userData.chavePix.length > 0;
+  const canCreateProducts = isMPConnected && hasPixKey;
 
   // Buscar serviços do usuário
   useEffect(() => {
@@ -442,6 +447,52 @@ export default function ServiceForm({ editMode = false, serviceData, onClose }: 
           className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
         >
           Fazer Login
+        </button>
+      </div>
+    );
+  }
+
+  // Bloquear criação se não tiver MP conectado e chave PIX
+  if (!canCreateProducts && !editMode) {
+    return (
+      <div className="max-w-2xl mx-auto bg-white shadow-xl rounded-xl p-8 text-center">
+        <AlertCircle className="w-16 h-16 text-orange-500 mx-auto mb-4" />
+        <h2 className="text-2xl font-bold mb-4">Configure seus Pagamentos</h2>
+        <p className="text-gray-600 mb-6">
+          Para criar produtos e receber pagamentos, você precisa:
+        </p>
+        
+        <div className="space-y-4 mb-8">
+          <div className={`flex items-center gap-3 p-4 rounded-lg border ${isMPConnected ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+            {isMPConnected ? (
+              <CheckCircle className="w-6 h-6 text-green-600" />
+            ) : (
+              <AlertCircle className="w-6 h-6 text-red-600" />
+            )}
+            <div className="text-left">
+              <p className="font-medium text-gray-900">Mercado Pago Conectado</p>
+              <p className="text-sm text-gray-600">Para receber pagamentos por cartão</p>
+            </div>
+          </div>
+
+          <div className={`flex items-center gap-3 p-4 rounded-lg border ${hasPixKey ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+            {hasPixKey ? (
+              <CheckCircle className="w-6 h-6 text-green-600" />
+            ) : (
+              <AlertCircle className="w-6 h-6 text-red-600" />
+            )}
+            <div className="text-left">
+              <p className="font-medium text-gray-900">Chave PIX Cadastrada</p>
+              <p className="text-sm text-gray-600">Para receber pagamentos via PIX e saques</p>
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={() => navigate("/provider")}
+          className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
+        >
+          Ir para Configurações
         </button>
       </div>
     );

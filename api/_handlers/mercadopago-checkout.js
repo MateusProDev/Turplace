@@ -167,30 +167,23 @@ export default async function handler(req, res) {
       });
 
       // Buscar plano do provider para calcular comissão
-      let commissionPercent = 9; // Default para free
-      if (packageData?.providerId) {
-        try {
-          const providerDoc = await db.collection('users').doc(packageData.providerId).get();
-          const provider = providerDoc.data();
-          const planId = provider?.planId || 'free';
-          const commissions = {
-            free: 9,
-            professional: 7,
-            premium: 6
-          };
-          commissionPercent = commissions[planId] || 9;
-        } catch (error) {
-          console.warn('[MercadoPago Checkout] Erro ao buscar plano do provider:', error);
-        }
-      }
+      // Para PIX: taxa AbacatePay 1,99% + taxa fixa da plataforma R$0,80
+      const PIX_PERCENT_FEE = 1.99; // AbacatePay
+      const PIX_FIXED_FEE = 0.80; // Taxa fixa da plataforma
+      
+      const pixPercentAmount = valor * (PIX_PERCENT_FEE / 100);
+      const totalPixFee = pixPercentAmount + PIX_FIXED_FEE;
+      const providerAmount = valor - totalPixFee;
 
       const order = {
         serviceId: packageData?.serviceId || null,
         providerId: packageData?.providerId || null,
         totalAmount: valor,
-        commissionPercent: commissionPercent,
-        commissionAmount: valor * (commissionPercent / 100),
-        providerAmount: valor * (1 - commissionPercent / 100),
+        // Taxas PIX
+        pixPercentFee: PIX_PERCENT_FEE,
+        pixFixedFee: PIX_FIXED_FEE,
+        commissionAmount: totalPixFee,
+        providerAmount: providerAmount,
         status: 'pending',
         paymentMethod: 'pix',
         createdAt: new Date().toISOString(),
@@ -265,7 +258,7 @@ export default async function handler(req, res) {
       });
     }
     if (metodoPagamento === 'cartao' && cardToken) {
-      console.log('[MercadoPago Checkout] Processando pagamento com cartão');
+      console.log('[MercadoPago Checkout] Processando pagamento com cartão (SPLIT)');
 
       // Criar pedido no Firestore antes de criar o pagamento
       const db = initFirestore();
@@ -284,35 +277,48 @@ export default async function handler(req, res) {
         customerPhone
       });
 
-      // Buscar plano do provider para calcular comissão
+      // 🔥 SPLIT: Buscar dados do provider para split de pagamento
+      let providerData = null;
       let commissionPercent = 9; // Default para free
+      
       if (packageData?.providerId) {
         try {
           const providerDoc = await db.collection('users').doc(packageData.providerId).get();
-          const provider = providerDoc.data();
-          const planId = provider?.planId || 'free';
+          providerData = providerDoc.data();
+          const planId = providerData?.planId || 'free';
           const commissions = {
             free: 9,
             professional: 7,
             premium: 6
           };
           commissionPercent = commissions[planId] || 9;
+          console.log('[MercadoPago Checkout] Provider encontrado:', {
+            mpConnected: providerData?.mpConnected,
+            mpUserId: providerData?.mpUserId,
+            planId,
+            commissionPercent
+          });
         } catch (error) {
-          console.warn('[MercadoPago Checkout] Erro ao buscar plano do provider:', error);
+          console.warn('[MercadoPago Checkout] Erro ao buscar provider:', error);
         }
       }
+
+      // Calcular valores do split
+      const marketplaceFee = Math.round(valor * (commissionPercent / 100) * 100) / 100; // Taxa da plataforma
+      const providerAmount = valor - marketplaceFee;
 
       const order = {
         serviceId: packageData?.serviceId || null,
         providerId: packageData?.providerId || null,
         totalAmount: valor,
         commissionPercent: commissionPercent,
-        commissionAmount: valor * (commissionPercent / 100),
-        providerAmount: valor * (1 - commissionPercent / 100),
+        commissionAmount: marketplaceFee,
+        providerAmount: providerAmount,
         status: 'pending',
         paymentMethod: 'card',
+        paymentType: providerData?.mpConnected ? 'split' : 'platform', // Indica tipo de pagamento
         createdAt: new Date().toISOString(),
-        mercadopagoPaymentId: null, // Será atualizado após criação do pagamento
+        mercadopagoPaymentId: null,
         customerName,
         customerEmail,
         customerCPF,
@@ -322,13 +328,12 @@ export default async function handler(req, res) {
       console.log('[MercadoPago Checkout] Criando pedido no Firestore para cartão:', order);
       await orderRef.set(order);
 
-      // 🔗 URL do webhook - OBRIGATÓRIO para 100% na qualidade
+      // 🔗 URL do webhook
       const webhookUrl = process.env.MERCADO_PAGO_WEBHOOK_URL || 'https://lucrazi.com.br/api/mercadopago-webhook';
       
-      // ✅ Validar e limitar CPF a 11 dígitos ANTES de montar o payload
-      // CPF pode vir com dígitos extras por erro do usuário
+      // ✅ Validar CPF
       const cpfRaw = (payerData?.cpf || customerCPF).replace(/\D/g, '');
-      const cpfValidated = cpfRaw.slice(0, 11); // Garantir máximo 11 dígitos
+      const cpfValidated = cpfRaw.slice(0, 11);
       
       if (cpfValidated.length !== 11) {
         console.error('[MercadoPago Checkout] CPF inválido:', cpfValidated, 'length:', cpfValidated.length);
@@ -337,133 +342,172 @@ export default async function handler(req, res) {
           error: 'CPF inválido. Deve conter exatamente 11 dígitos.'
         });
       }
+
+      // 🔥 DECISÃO: Usar Split ou Pagamento Normal
+      let paymentResult;
       
-      // 🎯 PAYLOAD COMPLETO PARA 100/100 NO MERCADO PAGO
-      const paymentData = {
-        transaction_amount: valor,
-        token: cardToken,
-        description: `${packageData?.title || 'Produto'} - Lucrazi`,
-        installments: parseInt(installments) || 1,
-        // payment_method_id e issuer_id do CardForm
-        payment_method_id: paymentMethodId || undefined,
-        issuer_id: issuerId ? parseInt(issuerId) : undefined,
+      if (providerData?.mpConnected && providerData?.mpAccessToken) {
+        // ✅ SPLIT DE PAGAMENTO - Prestador recebe direto na conta dele!
+        console.log('[MercadoPago Checkout] 💰 Usando SPLIT - Prestador receberá direto na conta MP dele');
         
-        // ✅ BINARY MODE - false para permitir análise de fraude (recomendado)
-        binary_mode: false,
+        // Criar cliente MP com token do PRESTADOR
+        const providerClient = new MercadoPagoConfig({
+          accessToken: providerData.mpAccessToken,
+          options: { timeout: 5000 }
+        });
+        const providerPayment = new Payment(providerClient);
         
-        // ✅ CAPTURE - true para captura automática
-        capture: true,
-        
-        // ✅ STATEMENT DESCRIPTOR - Nome na fatura do cartão (NÍVEL RAIZ) - MAX 22 CHARS
-        // IMPORTANTE: Deve ser enviado ANTES do payer
-        statement_descriptor: 'LUCRAZI',
-        
-        // ✅ PAYER - Todos os campos obrigatórios (NÍVEL RAIZ)
-        payer: {
-          email: payerData?.email || customerEmail,
-          first_name: payerData?.first_name || customerName.split(' ')[0] || 'Cliente',
-          last_name: payerData?.last_name || customerName.split(' ').slice(1).join(' ') || 'Lucrazi',
-          identification: {
-            type: 'CPF',
-            number: cpfValidated
-          },
-          phone: customerPhone ? {
-            area_code: customerPhone.replace(/\D/g, '').substring(0, 2),
-            number: customerPhone.replace(/\D/g, '').substring(2)
-          } : undefined,
-          address: {
-            zip_code: reservaData?.zipCode || '00000000',
-            street_name: reservaData?.address || 'Não informado',
-            street_number: reservaData?.addressNumber || 'S/N'
-          }
-        },
-        
-        // ✅ EXTERNAL REFERENCE - Obrigatório para conciliação (NÍVEL RAIZ)
-        external_reference: orderRef.id,
-        
-        // ✅ NOTIFICATION URL - Obrigatório para webhooks (NÍVEL RAIZ)
-        notification_url: webhookUrl,
-        
-        // ✅ ADDITIONAL INFO - Dados adicionais para melhor análise de fraude
-        additional_info: {
-          items: [{
-            id: packageData?.serviceId || orderRef.id,
-            title: packageData?.title || 'Produto Digital',
-            description: packageData?.description || `Compra realizada na plataforma Lucrazi - ${packageData?.title || 'Produto'}`,
-            category_id: 'services',
-            quantity: 1,
-            unit_price: valor,
-            picture_url: packageData?.imageUrl || undefined
-          }],
+        // Payload com marketplace_fee (sua taxa)
+        const splitPaymentData = {
+          transaction_amount: valor,
+          token: cardToken,
+          description: `${packageData?.title || 'Produto'} - Lucrazi`,
+          installments: parseInt(installments) || 1,
+          payment_method_id: paymentMethodId || undefined,
+          issuer_id: issuerId ? parseInt(issuerId) : undefined,
+          binary_mode: false,
+          capture: true,
+          statement_descriptor: 'LUCRAZI',
+          
+          // 🔥 MARKETPLACE FEE - Sua taxa vai direto para sua conta!
+          marketplace_fee: marketplaceFee,
+          
           payer: {
-            first_name: payerData?.first_name || customerName.split(' ')[0],
-            last_name: payerData?.last_name || customerName.split(' ').slice(1).join(' '),
+            email: payerData?.email || customerEmail,
+            first_name: payerData?.first_name || customerName.split(' ')[0] || 'Cliente',
+            last_name: payerData?.last_name || customerName.split(' ').slice(1).join(' ') || 'Lucrazi',
+            identification: {
+              type: 'CPF',
+              number: cpfValidated
+            }
+          },
+          
+          external_reference: orderRef.id,
+          notification_url: webhookUrl,
+          
+          metadata: {
+            order_id: orderRef.id,
+            service_id: packageData?.serviceId || null,
+            provider_id: packageData?.providerId || null,
+            platform: 'Lucrazi Marketplace',
+            payment_type: 'split',
+            marketplace_fee: marketplaceFee
+          }
+        };
+
+        // Remover campos undefined
+        if (!splitPaymentData.payment_method_id) delete splitPaymentData.payment_method_id;
+        if (!splitPaymentData.issuer_id) delete splitPaymentData.issuer_id;
+
+        console.log('[MercadoPago Checkout] 🚀 Criando pagamento SPLIT:', JSON.stringify(splitPaymentData, null, 2));
+        
+        try {
+          paymentResult = await providerPayment.create({ body: splitPaymentData });
+          console.log('[MercadoPago Checkout] ✅ Pagamento SPLIT criado com sucesso!');
+          
+          // Atualizar order com info do split
+          await orderRef.update({
+            mercadopagoPaymentId: paymentResult.id,
+            splitPayment: true,
+            providerReceivedDirectly: true
+          });
+        } catch (splitError) {
+          console.error('[MercadoPago Checkout] ❌ Erro no split, tentando pagamento normal:', splitError.message);
+          // Fallback para pagamento normal se split falhar
+          providerData.mpConnected = false; // Força usar pagamento normal
+        }
+      }
+      
+      // Pagamento normal (sem split) - fallback ou prestador não conectou MP
+      if (!providerData?.mpConnected || !paymentResult) {
+        console.log('[MercadoPago Checkout] 📦 Usando pagamento NORMAL (prestador sacará depois)');
+        
+        // 🎯 PAYLOAD NORMAL - Pagamento vai para conta da plataforma
+        const paymentData = {
+          transaction_amount: valor,
+          token: cardToken,
+          description: `${packageData?.title || 'Produto'} - Lucrazi`,
+          installments: parseInt(installments) || 1,
+          payment_method_id: paymentMethodId || undefined,
+          issuer_id: issuerId ? parseInt(issuerId) : undefined,
+          binary_mode: false,
+          capture: true,
+          statement_descriptor: 'LUCRAZI',
+          
+          payer: {
+            email: payerData?.email || customerEmail,
+            first_name: payerData?.first_name || customerName.split(' ')[0] || 'Cliente',
+            last_name: payerData?.last_name || customerName.split(' ').slice(1).join(' ') || 'Lucrazi',
+            identification: {
+              type: 'CPF',
+              number: cpfValidated
+            },
             phone: customerPhone ? {
               area_code: customerPhone.replace(/\D/g, '').substring(0, 2),
               number: customerPhone.replace(/\D/g, '').substring(2)
             } : undefined,
-            registration_date: new Date().toISOString()
-          },
-          shipments: {
-            receiver_address: {
+            address: {
               zip_code: reservaData?.zipCode || '00000000',
-              street_name: reservaData?.address || 'Digital',
-              street_number: reservaData?.addressNumber || '0'
+              street_name: reservaData?.address || 'Não informado',
+              street_number: reservaData?.addressNumber || 'S/N'
             }
+          },
+          
+          external_reference: orderRef.id,
+          notification_url: webhookUrl,
+          
+          additional_info: {
+            items: [{
+              id: packageData?.serviceId || orderRef.id,
+              title: packageData?.title || 'Produto Digital',
+              description: packageData?.description || `Compra na Lucrazi`,
+              category_id: 'services',
+              quantity: 1,
+              unit_price: valor
+            }],
+            payer: {
+              first_name: payerData?.first_name || customerName.split(' ')[0],
+              last_name: payerData?.last_name || customerName.split(' ').slice(1).join(' ')
+            }
+          },
+          
+          metadata: {
+            order_id: orderRef.id,
+            service_id: packageData?.serviceId || null,
+            provider_id: packageData?.providerId || null,
+            platform: 'Lucrazi Marketplace',
+            payment_type: 'normal'
           }
-        },
-        
-        // ✅ METADATA - Dados internos para rastreamento
-        metadata: {
-          order_id: orderRef.id,
-          service_id: packageData?.serviceId || null,
-          provider_id: packageData?.providerId || null,
-          platform: 'Lucrazi Marketplace',
-          integration_version: '2.1'
-        }
-      };
+        };
 
-      // Remover campos undefined
-      if (!paymentData.payment_method_id) delete paymentData.payment_method_id;
-      if (!paymentData.issuer_id) delete paymentData.issuer_id;
+        // Remover campos undefined
+        if (!paymentData.payment_method_id) delete paymentData.payment_method_id;
+        if (!paymentData.issuer_id) delete paymentData.issuer_id;
 
-      // ⚠️ GARANTIR que external_reference, statement_descriptor e notification_url estão presentes
-      // Forçar valores caso estejam undefined
-      if (!paymentData.external_reference) {
-        paymentData.external_reference = orderRef.id;
+        console.log('[MercadoPago Checkout] Criando pagamento NORMAL:', JSON.stringify(paymentData, null, 2));
+        paymentResult = await payment.create({ body: paymentData });
+        console.log('[MercadoPago Checkout] ✅ Pagamento NORMAL criado:', paymentResult.id);
+
+        // Atualizar order
+        await orderRef.update({
+          mercadopagoPaymentId: paymentResult.id,
+          splitPayment: false,
+          providerReceivedDirectly: false
+        });
       }
-      if (!paymentData.statement_descriptor) {
-        paymentData.statement_descriptor = 'LUCRAZI';
-      }
-      if (!paymentData.notification_url) {
-        paymentData.notification_url = 'https://lucrazi.com.br/api/mercadopago-webhook';
-      }
-      
-      console.log('[MercadoPago Checkout] ✅ Campos obrigatórios verificados:', {
-        external_reference: paymentData.external_reference,
-        statement_descriptor: paymentData.statement_descriptor,
-        notification_url: paymentData.notification_url
-      });
 
-      console.log('[MercadoPago Checkout] Criando pagamento com cartão no Mercado Pago:', JSON.stringify(paymentData, null, 2));
-      const result = await payment.create({ body: paymentData });
-      console.log('[MercadoPago Checkout] Pagamento com cartão criado:', result);
-
-      // Atualizar pedido com o paymentId
-      await orderRef.update({
-        mercadopagoPaymentId: result.id
-      });
-
+      // Retornar resultado do pagamento (split ou normal)
       return res.status(200).json({
         success: true,
-        payment_id: result.id,
+        payment_id: paymentResult.id,
         orderId: orderRef.id,
-        status: result.status,
-        status_detail: result.status_detail,
-        payment_method_id: result.payment_method_id,
-        installments: result.installments,
-        transaction_amount: result.transaction_amount,
-        date_created: result.date_created
+        status: paymentResult.status,
+        status_detail: paymentResult.status_detail,
+        payment_method_id: paymentResult.payment_method_id,
+        installments: paymentResult.installments,
+        transaction_amount: paymentResult.transaction_amount,
+        date_created: paymentResult.date_created,
+        split_payment: order.paymentType === 'split'
       });
     }
     return res.status(400).json({ error: 'Método de pagamento não suportado ou dados insuficientes.' });

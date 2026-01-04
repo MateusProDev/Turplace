@@ -187,21 +187,23 @@ async function walletHandler(req, res) {
       totalSales += amount;
 
       // Calcular comissão baseada no plano e método de pagamento
-      let commissionPercent;
+      let commission;
       if (order.paymentMethod === 'pix') {
-        // PIX sempre 1,99% (já inclui todas as taxas)
-        commissionPercent = 1.99;
+        // PIX: 1,99% AbacatePay + R$0,80 taxa fixa da plataforma
+        const pixPercentFee = amount * 0.0199;
+        const pixFixedFee = 0.80;
+        commission = pixPercentFee + pixFixedFee;
       } else {
-        // Cartão: baseado no plano (já inclui taxas do Stripe)
+        // Cartão: baseado no plano
         const commissions = {
           free: 9,
           professional: 7,
           premium: 6
         };
-        commissionPercent = commissions[planId] || 9;
+        const commissionPercent = commissions[planId] || 9;
+        commission = (amount * commissionPercent) / 100;
       }
 
-      const commission = (amount * commissionPercent) / 100;
       totalCommissions += commission;
       totalReceived += (amount - commission);
 
