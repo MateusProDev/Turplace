@@ -75,6 +75,8 @@ export default function Checkout() {
   // @ts-ignore
   const courseId = searchParams.get('courseId');
 
+  const qrCodeRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     console.log('[Checkout] Iniciando carregamento, serviceId:', serviceId, 'courseId:', courseId);
     console.log('[Checkout] searchParams:', searchParams.toString());
@@ -756,6 +758,14 @@ export default function Checkout() {
     }
   };
 
+  useEffect(() => {
+    if (qrCodeBase64 && aguardandoPix && qrCodeRef.current) {
+      setTimeout(() => {
+        qrCodeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    }
+  }, [qrCodeBase64, aguardandoPix]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex items-center justify-center">
@@ -1164,7 +1174,7 @@ export default function Checkout() {
 
             {/* QR Code Pix */}
             {metodoPagamento === 'pix' && qrCodePix && aguardandoPix && (
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8 animate-fadeIn">
+              <div ref={qrCodeRef} className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8 animate-fadeIn">
                 <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-6">
                   <div className="text-center mb-6">
                     <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
