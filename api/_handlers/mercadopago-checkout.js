@@ -3,6 +3,15 @@
 
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import initFirestore from '../_lib/firebaseAdmin.js';
+import { 
+  applySecurityMiddleware, 
+  validateCPF, 
+  validateEmail, 
+  validatePhone,
+  sanitizeString,
+  logSecurityEvent,
+  getClientIP
+} from '../_lib/security.js';
 
 const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN || process.env.REACT_APP_MERCADO_PAGO_ACCESS_TOKEN;
 const abacateApiKey = process.env.ABACATEPAY_API_KEY;
@@ -37,48 +46,35 @@ async function createAbacatePayPix(pixData) {
   return await response.json();
 }
 
-// Domínios permitidos para CORS
-const ALLOWED_ORIGINS = [
-  'https://lucrazi.com.br',
-  'https://www.lucrazi.com.br',
-  'http://localhost:5173',
-  'http://localhost:3000'
-];
-
 // Validação de valor
 const MIN_AMOUNT = 1; // R$ 1,00 mínimo
 const MAX_AMOUNT = 50000; // R$ 50.000,00 máximo
 
 export default async function handler(req, res) {
-  const clientIP = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
-                   req.headers['x-real-ip'] ||
-                   req.connection?.remoteAddress ||
-                   req.socket?.remoteAddress ||
-                   'unknown';
-
-  // Configurar CORS seguro
-  const origin = req.headers.origin;
-  if (ALLOWED_ORIGINS.includes(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-  } else if (process.env.NODE_ENV !== 'production') {
-    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  // Aplicar middleware de segurança completo
+  const securityCheck = applySecurityMiddleware(req, res, 'checkout');
+  
+  if (securityCheck.blocked) {
+    return res.status(securityCheck.status).json({ 
+      error: securityCheck.reason === 'rate_limit' 
+        ? 'Muitas requisições. Aguarde um momento.' 
+        : 'Acesso bloqueado por motivos de segurança.'
+    });
   }
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
+
+  const clientIP = securityCheck.ip;
 
   // Log seguro (sem dados sensíveis)
   console.log('[MercadoPago Checkout] Requisição recebida', {
     method: req.method,
     ip: clientIP,
-    origin: origin,
+    origin: req.headers.origin,
     userAgent: req.headers['user-agent']?.substring(0, 100),
     timestamp: new Date().toISOString()
   });
 
   // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Max-Age', '86400'); // 24 horas
     return res.status(200).end();
   }
 
@@ -98,15 +94,42 @@ export default async function handler(req, res) {
     // Validação de valor
     const valorNumerico = Number(valor);
     if (isNaN(valorNumerico) || valorNumerico < MIN_AMOUNT || valorNumerico > MAX_AMOUNT) {
-      console.warn('[MercadoPago Checkout] Valor inválido:', valor);
+      logSecurityEvent({ type: 'INVALID_AMOUNT', ip: clientIP, valor });
       return res.status(400).json({ error: `Valor deve estar entre R$ ${MIN_AMOUNT} e R$ ${MAX_AMOUNT}` });
     }
 
     // Validação de método de pagamento
     if (!['pix', 'cartao'].includes(metodoPagamento)) {
-      console.warn('[MercadoPago Checkout] Método de pagamento inválido:', metodoPagamento);
+      logSecurityEvent({ type: 'INVALID_PAYMENT_METHOD', ip: clientIP, metodoPagamento });
       return res.status(400).json({ error: 'Método de pagamento inválido' });
     }
+
+    // Validação de email
+    const emailValidation = validateEmail(reservaData?.customerEmail);
+    if (!emailValidation.valid) {
+      return res.status(400).json({ error: emailValidation.reason });
+    }
+
+    // Validação de CPF (se fornecido)
+    const cpfInput = reservaData?.customerCPF || '';
+    let cleanCPF = '';
+    if (cpfInput) {
+      const cpfValidation = validateCPF(cpfInput);
+      if (!cpfValidation.valid) {
+        logSecurityEvent({ type: 'INVALID_CPF', ip: clientIP });
+        return res.status(400).json({ error: cpfValidation.reason });
+      }
+      cleanCPF = cpfValidation.cleanCPF;
+    }
+
+    // Validação de telefone
+    const phoneValidation = validatePhone(reservaData?.customerPhone);
+    if (!phoneValidation.valid) {
+      return res.status(400).json({ error: phoneValidation.reason });
+    }
+
+    // Sanitizar nome
+    const customerName = sanitizeString(reservaData?.customerName || 'Cliente', 100);
 
     console.log('[MercadoPago Checkout] Dados recebidos', {
       metodoPagamento,

@@ -4,6 +4,12 @@
 import crypto from 'crypto';
 import initFirestore from '../_lib/firebaseAdmin.js';
 import { sendFirstAccessEmail, generateResetToken } from '../_lib/brevoEmail.js';
+import { 
+  setSecurityHeaders, 
+  checkRateLimit, 
+  logSecurityEvent,
+  getClientIP 
+} from '../_lib/security.js';
 
 const ABACATEPAY_WEBHOOK_SECRET = process.env.ABACATEPAY_WEBHOOK_SECRET;
 
@@ -54,8 +60,12 @@ function verifySignature(rawBody, signatureFromHeader) {
 
 export default async function handler(req, res) {
   const startTime = Date.now();
+  const clientIP = getClientIP(req);
   
-  // CORS headers
+  // Aplicar headers de segurança
+  setSecurityHeaders(res);
+  
+  // CORS para webhooks (permitir AbacatePay)
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-webhook-signature, x-signature');
@@ -64,9 +74,17 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
+  // Rate limiting para webhooks
+  const rateLimit = checkRateLimit(clientIP, 'webhook');
+  if (!rateLimit.allowed) {
+    logSecurityEvent({ type: 'WEBHOOK_RATE_LIMIT', ip: clientIP });
+    return res.status(429).json({ error: 'Too many requests' });
+  }
+
   // Log inicial
   console.log('[AbacatePay Webhook] ========== INÍCIO ==========');
   console.log('[AbacatePay Webhook] Método:', req.method);
+  console.log('[AbacatePay Webhook] IP:', clientIP);
   console.log('[AbacatePay Webhook] Headers:', JSON.stringify({
     'content-type': req.headers['content-type'],
     'x-webhook-signature': req.headers['x-webhook-signature'] ? 'presente' : 'ausente',
