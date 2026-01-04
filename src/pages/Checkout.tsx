@@ -133,8 +133,9 @@ export default function Checkout() {
 
   // Inicializar Card Form (Secure Fields) - PCI Compliance
   useEffect(() => {
-    // Só executa se for cartão e o serviço estiver carregado
-    if (metodoPagamento !== 'cartao' || !service) {
+    // Só executa se for cartão OU assinatura e o serviço estiver carregado
+    const shouldInitCardForm = (metodoPagamento === 'cartao' || service?.billingType === 'subscription') && service;
+    if (!shouldInitCardForm) {
       return;
     }
 
@@ -374,7 +375,6 @@ export default function Checkout() {
     console.log('[Checkout] Validando dados do cliente:', customerData);
     const { name, email, cpf, phone } = customerData;
     const cpfDigits = cpf.replace(/\D/g, '');
-    const isSubscription = service?.billingType === 'subscription';
 
     if (!name.trim()) {
       setError("Nome é obrigatório");
@@ -385,21 +385,20 @@ export default function Checkout() {
       return false;
     }
     
-    // Para assinaturas, CPF e telefone são opcionais (serão coletados no MP)
-    if (!isSubscription) {
-      // Validar CPF (11 dígitos) ou CNPJ (14 dígitos)
-      if (documentType === 'CPF' && cpfDigits.length !== 11) {
-        setError("CPF deve ter 11 dígitos");
-        return false;
-      }
-      if (documentType === 'CNPJ' && cpfDigits.length !== 14) {
-        setError("CNPJ deve ter 14 dígitos");
-        return false;
-      }
-      if (!phone.trim()) {
-        setError("Telefone é obrigatório");
-        return false;
-      }
+    // CPF obrigatório para todos os tipos de pagamento
+    if (documentType === 'CPF' && cpfDigits.length !== 11) {
+      setError("CPF deve ter 11 dígitos");
+      return false;
+    }
+    if (documentType === 'CNPJ' && cpfDigits.length !== 14) {
+      setError("CNPJ deve ter 14 dígitos");
+      return false;
+    }
+    
+    // Telefone obrigatório apenas para pagamentos únicos (não assinatura)
+    if (service?.billingType !== 'subscription' && !phone.trim()) {
+      setError("Telefone é obrigatório");
+      return false;
     }
 
     setError(null);
@@ -417,8 +416,8 @@ export default function Checkout() {
       return;
     }
 
-    // Validação adicional para cartão com Card Form (apenas pagamentos únicos, não assinatura)
-    if (metodoPagamento === 'cartao' && service?.billingType !== 'subscription') {
+    // Validação adicional para cartão com Card Form (pagamentos únicos E assinaturas)
+    if (metodoPagamento === 'cartao' || service?.billingType === 'subscription') {
       console.log('[Checkout] Verificando Card Form - isCardFormReady:', isCardFormReady, 'cardFormRef.current:', !!cardFormRef.current);
       console.log('[Checkout] Erros do Card Form:', cardFormErrors);
       
@@ -449,10 +448,26 @@ export default function Checkout() {
         billingType: service.billingType
       });
 
-      // Para subscriptions, usar Mercado Pago Preapproval
+      // Para subscriptions, usar Mercado Pago Preapproval Transparente
       if (service.billingType === 'subscription') {
-        console.log('[Checkout] Criando assinatura via Mercado Pago');
+        console.log('[Checkout] Criando assinatura transparente via Mercado Pago');
         
+        // Precisamos do card token para assinatura transparente
+        if (!cardFormRef.current) {
+          throw new Error('Formulário de cartão não inicializado. Aguarde o carregamento.');
+        }
+
+        // Criar token do cartão
+        console.log('[Checkout] Criando token do cartão para assinatura...');
+        await cardFormRef.current.createCardToken();
+        const cardFormData = cardFormRef.current.getCardFormData();
+        
+        if (!cardFormData?.token) {
+          throw new Error('Erro ao processar cartão. Verifique os dados e tente novamente.');
+        }
+
+        console.log('[Checkout] Token criado:', cardFormData.token);
+
         const response = await fetch(`${import.meta.env.VITE_API_URL || ''}/api/mercadopago-subscription`, {
           method: 'POST',
           headers: {
@@ -467,7 +482,13 @@ export default function Checkout() {
             serviceId: service.id,
             serviceTitle: service.title,
             priceMonthly: service.priceMonthly,
-            reason: service.title
+            reason: service.title,
+            // Dados para checkout transparente
+            cardToken: cardFormData.token,
+            paymentMethodId: cardFormData.paymentMethodId,
+            issuerId: cardFormData.issuerId,
+            identificationNumber: customerData.cpf?.replace(/\D/g, '') || cardFormData.identificationNumber,
+            identificationType: documentType,
           })
         });
 
@@ -476,8 +497,10 @@ export default function Checkout() {
           throw new Error(data.error || 'Erro ao criar assinatura');
         }
 
-        console.log('[Checkout] Assinatura MP criada, redirecionando', data.checkoutUrl);
-        window.location.href = data.checkoutUrl;
+        console.log('[Checkout] Assinatura criada com sucesso!', data);
+        
+        // Redirecionar para página de sucesso
+        window.location.href = `/success?subscriptionId=${data.subscriptionId}&method=subscription`;
         return;
       }
 
@@ -934,12 +957,7 @@ export default function Checkout() {
                 </div>
                 <div>
                   <h2 className="text-xl font-bold text-gray-900">Seus dados</h2>
-                  <p className="text-gray-600 text-sm">
-                    {service?.billingType === 'subscription' 
-                      ? 'Apenas nome e email - demais dados serão coletados no Mercado Pago'
-                      : 'Informações para a compra'
-                    }
-                  </p>
+                  <p className="text-gray-600 text-sm">Informações para a compra</p>
                 </div>
               </div>
 
@@ -958,7 +976,7 @@ export default function Checkout() {
                   />
                 </div>
 
-                <div className={service?.billingType === 'subscription' ? 'md:col-span-2' : ''}>
+                <div className={service?.billingType === 'subscription' ? '' : ''}>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">
                     Email *
                   </label>
@@ -972,80 +990,79 @@ export default function Checkout() {
                   />
                 </div>
 
-                {/* Campos adicionais apenas para pagamentos únicos (não assinatura) */}
+                {/* Telefone apenas para pagamentos únicos */}
                 {service?.billingType !== 'subscription' && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-900 mb-2">
-                        Telefone *
-                      </label>
-                      <input
-                        type="tel"
-                        value={customerData.phone}
-                        onChange={(e) => handleCustomerDataChange('phone', e.target.value)}
-                        className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
-                        placeholder="(11) 99999-9999"
-                        required
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-semibold text-gray-900 mb-2">
-                        Tipo de Documento *
-                      </label>
-                      <div className="grid grid-cols-2 gap-3 mb-4">
-                        <button
-                          type="button"
-                          onClick={() => setDocumentType('CPF')}
-                          className={`p-3 rounded-xl border-2 transition-all ${documentType === 'CPF' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}
-                        >
-                          <div className="flex items-center justify-center gap-2">
-                            <span className={`font-semibold ${documentType === 'CPF' ? 'text-blue-600' : 'text-gray-700'}`}>CPF</span>
-                            {documentType === 'CPF' && (
-                              <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                                <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-                              </div>
-                            )}
-                          </div>
-                          <span className="text-xs text-gray-500">Pessoa Física</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDocumentType('CNPJ')}
-                          className={`p-3 rounded-xl border-2 transition-all ${documentType === 'CNPJ' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}
-                        >
-                          <div className="flex items-center justify-center gap-2">
-                            <span className={`font-semibold ${documentType === 'CNPJ' ? 'text-blue-600' : 'text-gray-700'}`}>CNPJ</span>
-                            {documentType === 'CNPJ' && (
-                              <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                                <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-                              </div>
-                            )}
-                          </div>
-                          <span className="text-xs text-gray-500">Pessoa Jurídica</span>
-                        </button>
-                      </div>
-                      
-                      <label className="block text-sm font-semibold text-gray-900 mb-2">
-                        {documentType} *
-                      </label>
-                      <input
-                        type="text"
-                        value={customerData.cpf}
-                        onChange={(e) => handleCustomerDataChange('cpf', e.target.value)}
-                        className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
-                        placeholder={documentType === 'CPF' ? '000.000.000-00' : '00.000.000/0000-00'}
-                        maxLength={documentType === 'CPF' ? 14 : 18}
-                        required
-                      />
-                    </div>
-                  </>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">
+                      Telefone *
+                    </label>
+                    <input
+                      type="tel"
+                      value={customerData.phone}
+                      onChange={(e) => handleCustomerDataChange('phone', e.target.value)}
+                      className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                      placeholder="(11) 99999-9999"
+                      required
+                    />
+                  </div>
                 )}
+
+                {/* CPF/CNPJ - obrigatório para todos */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Tipo de Documento *
+                  </label>
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <button
+                      type="button"
+                      onClick={() => setDocumentType('CPF')}
+                      className={`p-3 rounded-xl border-2 transition-all ${documentType === 'CPF' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <span className={`font-semibold ${documentType === 'CPF' ? 'text-blue-600' : 'text-gray-700'}`}>CPF</span>
+                        {documentType === 'CPF' && (
+                          <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                            <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-xs text-gray-500">Pessoa Física</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDocumentType('CNPJ')}
+                      className={`p-3 rounded-xl border-2 transition-all ${documentType === 'CNPJ' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <span className={`font-semibold ${documentType === 'CNPJ' ? 'text-blue-600' : 'text-gray-700'}`}>CNPJ</span>
+                        {documentType === 'CNPJ' && (
+                          <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                            <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-xs text-gray-500">Pessoa Jurídica</span>
+                    </button>
+                  </div>
+                  
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    {documentType} *
+                  </label>
+                  <input
+                    type="text"
+                    value={customerData.cpf}
+                    onChange={(e) => handleCustomerDataChange('cpf', e.target.value)}
+                    className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                    placeholder={documentType === 'CPF' ? '000.000.000-00' : '00.000.000/0000-00'}
+                    maxLength={documentType === 'CPF' ? 14 : 18}
+                    required
+                  />
+                </div>
               </div>
             </div>
 
-            {/* 3. Campos do Cartão - TERCEIRO (apenas se cartão selecionado e NÃO for assinatura) */}
-            {metodoPagamento === 'cartao' && service?.billingType !== 'subscription' && (
+            {/* 3. Campos do Cartão - TERCEIRO (cartão OU assinatura) */}
+            {(metodoPagamento === 'cartao' || service?.billingType === 'subscription') && (
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8 animate-fadeIn">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-xl flex items-center justify-center">
