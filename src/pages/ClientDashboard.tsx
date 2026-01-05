@@ -462,9 +462,29 @@ export default function ClientDashboard() {
                                 <p className="text-sm text-gray-600 mb-2">
                                   Por {order.providerName}
                                 </p>
-                                <p className="text-sm text-gray-500">
-                                  {order.serviceDescription}
-                                </p>
+                                
+                                {/* Descrição com accordion */}
+                                <div className="mb-2">
+                                  <div className={`text-sm text-gray-500 ${expandedSections.has(`desc-${order.id}`) ? '' : 'line-clamp-2'}`}>
+                                    {order.serviceDescription}
+                                  </div>
+                                  {order.serviceDescription && order.serviceDescription.length > 100 && (
+                                    <button
+                                      onClick={() => {
+                                        const newExpanded = new Set(expandedSections);
+                                        if (expandedSections.has(`desc-${order.id}`)) {
+                                          newExpanded.delete(`desc-${order.id}`);
+                                        } else {
+                                          newExpanded.add(`desc-${order.id}`);
+                                        }
+                                        setExpandedSections(newExpanded);
+                                      }}
+                                      className="text-xs text-blue-600 hover:text-blue-800 mt-1"
+                                    >
+                                      {expandedSections.has(`desc-${order.id}`) ? 'Ver menos' : 'Ver mais'}
+                                    </button>
+                                  )}
+                                </div>
                               </div>
                             </div>
 
@@ -560,9 +580,34 @@ export default function ClientDashboard() {
                               <h3 className="font-semibold text-gray-900 mb-1">
                                 {order.serviceTitle}
                               </h3>
-                              <p className="text-sm text-gray-600 mb-3">
+                              <p className="text-sm text-gray-600 mb-2">
                                 {order.providerName}
                               </p>
+                              
+                              {/* Descrição truncada */}
+                              {order.serviceDescription && (
+                                <div className="mb-3">
+                                  <div className={`text-sm text-gray-500 ${expandedSections.has(`content-desc-${order.id}`) ? '' : 'line-clamp-2'}`}>
+                                    {order.serviceDescription}
+                                  </div>
+                                  {order.serviceDescription.length > 100 && (
+                                    <button
+                                      onClick={() => {
+                                        const newExpanded = new Set(expandedSections);
+                                        if (expandedSections.has(`content-desc-${order.id}`)) {
+                                          newExpanded.delete(`content-desc-${order.id}`);
+                                        } else {
+                                          newExpanded.add(`content-desc-${order.id}`);
+                                        }
+                                        setExpandedSections(newExpanded);
+                                      }}
+                                      className="text-xs text-blue-600 hover:text-blue-800 mt-1"
+                                    >
+                                      {expandedSections.has(`content-desc-${order.id}`) ? 'Ver menos' : 'Ver mais'}
+                                    </button>
+                                  )}
+                                </div>
+                              )}
 
                               <button
                                 onClick={() => setSelectedOrder(order)}

@@ -54,6 +54,7 @@ export default function CourseDetail() {
   const [error, setError] = useState<string | null>(null);
   const [contacting, setContacting] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -274,7 +275,17 @@ export default function CourseDetail() {
               </div>
 
               <div className="prose max-w-none">
-                <p className="text-gray-700 leading-relaxed">{course.description}</p>
+                <div className={`text-gray-700 leading-relaxed ${isDescriptionExpanded ? '' : 'line-clamp-3'}`}>
+                  {course.description}
+                </div>
+                {course.description && course.description.length > 200 && (
+                  <button
+                    onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                    className="text-blue-600 hover:text-blue-800 text-sm font-medium mt-2 transition-colors"
+                  >
+                    {isDescriptionExpanded ? 'Ver menos' : 'Ver mais'}
+                  </button>
+                )}
               </div>
             </div>
 

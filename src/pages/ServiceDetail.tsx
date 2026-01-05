@@ -98,6 +98,7 @@ export default function ServiceDetail() {
   const [userReview, setUserReview] = useState('');
   const [hasUserReviewed, setHasUserReviewed] = useState(false);
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   const shareContentService = new ShareContentService();
 
@@ -531,8 +532,24 @@ export default function ServiceDetail() {
               {/* Descrição */}
               <div className="mb-8">
                 <h3 className="text-lg font-bold text-gray-900 mb-3">Descrição</h3>
-                <div className="prose max-w-none text-gray-700 whitespace-pre-line">
-                  {service.description && service.description.trim() !== "" ? service.description : "Este serviço não possui descrição detalhada."}
+                <div className="prose max-w-none text-gray-700">
+                  {service.description && service.description.trim() !== "" ? (
+                    <>
+                      <div className={`whitespace-pre-line ${isDescriptionExpanded ? '' : 'line-clamp-3'}`}>
+                        {service.description}
+                      </div>
+                      {service.description.length > 200 && (
+                        <button
+                          onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                          className="text-blue-600 hover:text-blue-800 text-sm font-medium mt-2 transition-colors"
+                        >
+                          {isDescriptionExpanded ? 'Ver menos' : 'Ver mais'}
+                        </button>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-gray-500 italic">Este serviço não possui descrição detalhada.</p>
+                  )}
                 </div>
               </div>
 
