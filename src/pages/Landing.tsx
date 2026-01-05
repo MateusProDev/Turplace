@@ -151,7 +151,7 @@ export default function Landing() {
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-lg border border-white/20 text-white px-3 py-2 rounded-full mb-8 mt-8 animate-pulse">
                 <Sparkles size={18} />
-                <span className="font-medium">Plataforma Completa para Vendedores Digitais</span>
+                <span className="font-medium">Plataforma para Vendedores Digitais</span>
               </div>
               
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-8 leading-tight">

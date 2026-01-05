@@ -238,9 +238,9 @@ export default function Marketplace() {
               onClick={() => setMenuOpen(!menuOpen)}
             >
               {menuOpen ? (
-                <X className={scrolled ? "text-gray-700" : "text-white"} size={28} />
+                <X className="text-gray-700" size={28} />
               ) : (
-                <Menu className={scrolled ? "text-gray-700" : "text-white"} size={28} />
+                <Menu className="text-gray-700" size={28} />
               )}
             </button>
           </div>
