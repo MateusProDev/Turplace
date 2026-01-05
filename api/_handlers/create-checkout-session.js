@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import initFirestore from '../_lib/firebaseAdmin.js';
+import initFirestore from '../_lib/firebaseAdmin.cjs';
 import { securityMiddleware } from '../_lib/securityMiddleware.js';
 import { fraudDetection } from '../_lib/fraudDetection.js';
 

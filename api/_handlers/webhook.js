@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import initFirestore from '../_lib/firebaseAdmin.js';
+import initFirestore from '.cjs';
 
 function now() { return new Date().toISOString(); }
 

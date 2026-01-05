@@ -5,7 +5,7 @@
  * Documentação: https://www.mercadopago.com.br/developers/pt/docs/subscriptions/additional-content/webhooks
  */
 
-import initFirestore from '../_lib/firebaseAdmin.js';
+import initFirestore from '.cjs';
 import { logSecurityEvent, setSecurityHeaders } from '../_lib/security.js';
 import { sendFirstAccessEmail, generateResetToken } from '../_lib/brevoEmail.js';
 

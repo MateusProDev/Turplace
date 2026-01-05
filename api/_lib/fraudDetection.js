@@ -1,7 +1,7 @@
 // Advanced Fraud Detection and Security Monitoring System
 // Integrates with admin dashboard for real-time security insights
 
-import initFirestore from './firebaseAdmin.js';
+import initFirestore from '.cjs';
 import { logSecurityEvent } from './securityMiddleware.js';
 import { securityAlerts } from './securityAlerts.js';
 

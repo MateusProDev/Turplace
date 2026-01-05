@@ -1,4 +1,4 @@
-import initFirestore from '../_lib/firebaseAdmin.js';
+import initFirestore from '.cjs';
 
 // Dev-only endpoint: apply plan for an orderId. Only enabled when NOT in production.
 export default async (req, res) => {

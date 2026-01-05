@@ -1,5 +1,5 @@
 import admin from 'firebase-admin';
-import initFirestore from '../api/_lib/firebaseAdmin.js';
+import initFirestore from '../api/_lib/firebaseAdmin.cjs';
 import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';

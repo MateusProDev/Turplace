@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import initFirestore from '../_lib/firebaseAdmin.js';
+import initFirestore from '.cjs';
 
 export default async (req, res) => {
   console.log('[get-order-details] Entrada', { method: req.method, url: req.url, query: req.query });

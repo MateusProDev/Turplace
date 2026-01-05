@@ -1,7 +1,7 @@
 import { config } from 'dotenv';
 config({ path: '../.env.local' });
 import admin from 'firebase-admin';
-import initFirestore from '../api/_lib/firebaseAdmin.js';
+import initFirestore from '../api/_lib/firebaseAdmin.cjs';
 
 const db = initFirestore();
 

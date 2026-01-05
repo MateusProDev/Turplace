@@ -1,6 +1,6 @@
 import admin from 'firebase-admin';
 import { getAuth } from 'firebase-admin/auth';
-import initFirestore from '../_lib/firebaseAdmin.js';
+import initFirestore from '.cjs';
 
 export default async function handler(req, res) {
   // Verificar método

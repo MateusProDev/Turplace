@@ -1,7 +1,7 @@
 // Wallet Handler Test Script
 // Tests the optimized wallet handler functionality
 
-import initFirestore from '../api/_lib/firebaseAdmin.js';
+import initFirestore from '../api/_lib/firebaseAdmin.cjs';
 
 console.log('🧪 TESTANDO WALLET HANDLER OTIMIZADO\n');
 

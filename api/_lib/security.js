@@ -260,7 +260,7 @@ let firestoreInstance = null;
 async function getFirestore() {
   if (!firestoreInstance) {
     try {
-      const { default: initFirestore } = await import('./firebaseAdmin.js');
+      const { default: initFirestore } = await import('./firebaseAdmin.cjs');
       firestoreInstance = initFirestore();
     } catch (error) {
       console.error('[Security] Erro ao inicializar Firestore:', error);

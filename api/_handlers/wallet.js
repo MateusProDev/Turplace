@@ -1,4 +1,4 @@
-import initFirestore from '../_lib/firebaseAdmin.js';
+import initFirestore from '.cjs';
 import { securityMiddleware, validateAndSanitizeInput } from '../_lib/securityMiddleware.js';
 
 async function walletHandler(req, res) {

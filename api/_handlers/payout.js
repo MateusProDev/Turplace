@@ -1,4 +1,4 @@
-import initFirestore from '../_lib/firebaseAdmin.js';
+import initFirestore from '.cjs';
 import { getAuth } from 'firebase-admin/auth';
 
 // Configurações de saque

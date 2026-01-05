@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import initFirestore from '../_lib/firebaseAdmin.js';
+import initFirestore from '.cjs';
 
 export default async (req, res) => {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');

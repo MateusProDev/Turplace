@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import initFirestore from '../_lib/firebaseAdmin.js';
+import initFirestore from '.cjs';
 import { getPlanLimits } from '../../src/utils/planUtils.js';
 
 export default async (req, res) => {

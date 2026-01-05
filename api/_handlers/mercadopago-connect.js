@@ -12,7 +12,7 @@
  * Documentação: https://www.mercadopago.com.br/developers/pt/docs/checkout-api/additional-content/credentials
  */
 
-import initFirestore from '../_lib/firebaseAdmin.js';
+import initFirestore from '.cjs';
 import { setSecurityHeaders, logSecurityEvent } from '../_lib/security.js';
 
 // URL de autorização do Mercado Pago

@@ -1,6 +1,6 @@
 // Endpoint para verificar status do pedido no Firestore
 // Usado para polling após pagamento Pix - também verifica na API do AbacatePay
-import initFirestore from '../_lib/firebaseAdmin.js';
+import initFirestore from '.cjs';
 import { sendFirstAccessEmail, generateResetToken } from '../_lib/brevoEmail.js';
 import { 
   applySecurityMiddleware, 
