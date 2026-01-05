@@ -70,9 +70,9 @@ export default async function handler(req, res) {
         }
       }
 
-      // Buscar conteúdo do curso se for um curso
+      // Buscar conteúdo do curso se for um curso ou se tiver seções
       let sections = null;
-      if (serviceData && serviceData.type === 'course' && serviceData.sections) {
+      if (serviceData && serviceData.sections) {
         sections = serviceData.sections;
       }
 
@@ -83,13 +83,13 @@ export default async function handler(req, res) {
         serviceDescription: serviceData?.description || '',
         serviceImageUrl: serviceData?.imageUrl || serviceData?.image || null,
         providerName: providerData?.name || providerData?.displayName || 'Prestador',
-        amount: orderData.amount || orderData.amountTotal || 0,
+        amount: orderData.amount || orderData.totalAmount || 0,
         status: orderData.status || 'pending',
         createdAt: orderData.createdAt || orderData.created_at || new Date().toISOString(),
         billingType: orderData.billingType || orderData.billing_type || 'one-time',
         customerEmail: orderData.customerEmail || orderData.customer_email || '',
         accessLink: orderData.accessLink || null,
-        contentType: serviceData?.type || 'service',
+        contentType: (serviceData?.type === 'course' || sections) ? 'course' : serviceData?.type || 'service',
         sections: sections
       };
 
