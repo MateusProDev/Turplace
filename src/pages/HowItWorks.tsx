@@ -35,7 +35,7 @@ export default function HowItWorks() {
             <nav className="hidden md:flex items-center gap-8">
               <Link to="/" className="text-gray-600 hover:text-blue-600 transition-colors">Início</Link>
               <Link to="/catalog" className="text-gray-600 hover:text-blue-600 transition-colors">Catálogo</Link>
-              <Link to="/how-it-works" className="text-blue-600 font-semibold">Como Funciona</Link>
+              <Link to="/como-funciona" className="text-blue-600 font-semibold">Como Funciona</Link>
               <Link to="/login" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                 Entrar
               </Link>

@@ -57,7 +57,7 @@ export default function Landing() {
             {/* Desktop menu */}
             <nav className="hidden lg:flex items-center gap-8">
               <Link 
-                to="/how-it-works" 
+                to="/como-funciona" 
                 className={`font-medium transition-colors ${scrolled ? 'text-gray-700 hover:text-[#0097b2]' : 'text-white/90 hover:text-white'}`}
               >
                 Como Funciona
@@ -102,7 +102,7 @@ export default function Landing() {
             <div className="lg:hidden mt-4 bg-white rounded-2xl shadow-2xl p-6 border border-gray-100 animate-slide-down">
               <div className="space-y-4">
                 <Link 
-                  to="/how-it-works" 
+                  to="/como-funciona" 
                   className="block px-4 py-3 text-gray-700 font-medium hover:bg-[#0097b2]/10 rounded-xl transition-colors"
                   onClick={() => setMenuOpen(false)}
                 >
@@ -175,7 +175,7 @@ export default function Landing() {
                 </Link>
                 
                 <Link
-                  to="/how-it-works"
+                  to="/como-funciona"
                   className="group px-8 sm:px-10 py-4 sm:py-5 bg-white/10 backdrop-blur-lg border-2 border-white/30 text-white rounded-2xl font-bold text-base sm:text-lg hover:bg-white/20 transition-all duration-300 flex items-center justify-center gap-3 hover:scale-105"
                 >
                   <MessageSquare size={22} />
@@ -513,7 +513,7 @@ export default function Landing() {
               </Link>
               
               <Link
-                to="/how-it-works"
+                to="/como-funciona"
                 className="group px-8 sm:px-12 py-4 sm:py-6 bg-transparent border-2 border-white text-white rounded-2xl font-bold text-lg sm:text-xl hover:bg-white/10 transition-all backdrop-blur-sm hover:scale-105 flex items-center justify-center gap-3"
               >
                 <Clock size={24} />
@@ -557,7 +557,7 @@ export default function Landing() {
               <h3 className="text-lg font-bold mb-6">Para Vendedores</h3>
               <ul className="space-y-4">
                 <li><Link to="/dashboard" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2">Criar Conta <ArrowRight size={14} /></Link></li>
-                <li><Link to="/how-it-works" className="text-gray-400 hover:text-white transition-colors">Como Funciona</Link></li>
+                <li><Link to="/como-funciona" className="text-gray-400 hover:text-white transition-colors">Como Funciona</Link></li>
                 <li><Link to="/success" className="text-gray-400 hover:text-white transition-colors">Casos de Sucesso</Link></li>
               </ul>
             </div>
