@@ -195,14 +195,26 @@ export default function ClientDashboard() {
   };
 
   const handleDeleteOrder = async (orderId: string) => {
-    if (!confirm(`Tem certeza que deseja excluir o pedido ${orderId}?`)) {
+    if (!confirm(`Tem certeza que deseja excluir o pedido ${orderId}? Esta ação não pode ser desfeita.`)) {
       return;
     }
 
     try {
-      // Como não temos endpoint para deletar, vamos usar uma abordagem simples
-      // Em produção, você deveria ter um endpoint seguro para isso
-      alert(`Funcionalidade de exclusão para pedido ${orderId} não implementada ainda. Entre em contato com o suporte.`);
+      const response = await fetch(`/api/delete-order?orderId=${orderId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        alert('Pedido excluído com sucesso');
+        fetchUserOrders(); // Recarregar pedidos
+      } else {
+        const error = await response.json();
+        alert(`Erro ao excluir pedido: ${error.error || 'Erro desconhecido'}`);
+      }
     } catch (error) {
       console.error('Erro ao excluir pedido:', error);
       alert('Erro ao excluir pedido');

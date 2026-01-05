@@ -12,6 +12,7 @@ import wallet from './_handlers/wallet.js';
 import webhook from './_handlers/webhook.js';
 import sharecontent from './_handlers/sharecontent.js';
 import userOrders from './_handlers/user-orders.js';
+import deleteOrder from './_handlers/delete-order.js';
 import sendAccessEmail from './_handlers/send-access-email.js';
 import mercadopagoCheckout from './_handlers/mercadopago-checkout.js';
 import abacatepayPixCheckout from './_handlers/abacatepay-pix-checkout.js';
@@ -37,6 +38,7 @@ const handlers = {
   'webhook': webhook,
   'sharecontent': sharecontent,
   'user-orders': userOrders,
+  'delete-order': deleteOrder,
   'send-access-email': sendAccessEmail,
   'mercadopago-checkout': mercadopagoCheckout,
   'abacatepay-pix-checkout': abacatepayPixCheckout,

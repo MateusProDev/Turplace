@@ -79,7 +79,7 @@ export default async function handler(req, res) {
       const order = {
         id: orderDoc.id,
         serviceId: orderData.serviceId || '',
-        serviceTitle: serviceData?.title || serviceData?.name || 'Serviço',
+        serviceTitle: serviceData?.title || serviceData?.name || (orderData.serviceId ? 'Serviço' : 'Compra pendente'),
         serviceDescription: serviceData?.description || '',
         servicePrice: serviceData?.price || null,
         providerName: providerData?.name || providerData?.displayName || 'Prestador',
