@@ -33,8 +33,7 @@ export default async function handler(req, res) {
     // Buscar pedidos do usuário
     const ordersRef = db.collection('orders');
     const ordersQuery = ordersRef
-      .where('userId', '==', userId)
-      .orderBy('createdAt', 'desc');
+      .where('userId', '==', userId);
 
     const ordersSnap = await ordersQuery.get();
 
@@ -98,6 +97,9 @@ export default async function handler(req, res) {
     }
 
     console.log(`[user-orders] Encontrados ${orders.length} pedidos para usuário ${userId}`);
+
+    // Ordenar pedidos por data de criação (mais recente primeiro)
+    orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     res.status(200).json({
       success: true,
