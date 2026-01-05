@@ -246,24 +246,21 @@ const infoproductTemplate = {
           location: 'São Paulo, SP',
           result: 'R$ 47.000 no primeiro mês',
           text: '"De funcionário para empresário digital. Minha vida mudou completamente!"',
-          image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-          video: 'https://example.com/video1.mp4'
+          image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face'
         },
         {
           name: 'Ana Paula',
           location: 'Rio de Janeiro, RJ',
           result: 'R$ 23.000 em 15 dias',
           text: '"Nunca imaginei que seria possível viver só de infoprodutos"',
-          image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
-          video: 'https://example.com/video2.mp4'
+          image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face'
         },
         {
           name: 'Roberto Silva',
           location: 'Belo Horizonte, MG',
           result: 'Liberdade financeira conquistada',
           text: '"Agora trabalho quando quero e ganho mais que antes"',
-          image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-          video: 'https://example.com/video3.mp4'
+          image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
         }
       ],
       enabled: true

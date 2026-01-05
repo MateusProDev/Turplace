@@ -4,16 +4,8 @@ const initFirestore = require('../api/_lib/firebaseAdmin.cjs');
 (async () => {
   const db = initFirestore();
 
-  // URLs dos vídeos do YouTube
-  const videoUrls = [
-    'https://youtu.be/wt-GasYBS14?si=foL7mRnngsnYd28h',
-    'https://youtu.be/F9EA0Q7T8vY?si=fIdY8cEB-IbWOL_C',
-    'https://youtu.be/0IaIqnUSlUM?si=nCaaCsS5-51ca_8o',
-    'https://youtu.be/oDFKrT5b57w?si=iOi_siNAOBmEbzDL',
-    'https://youtu.be/S6BHQqyMRzA?si=UTfOCYeLhgC3E2yX',
-    'https://youtu.be/fok9DnQJrVM?si=F0UAF0VIE5FEgQPx',
-    'https://youtu.be/uiXcdaxSjCA?si=j1mi944T0E-wyfN8'
-  ];
+  // URLs dos vídeos do YouTube (removidas para manter o sistema dinâmico)
+  const videoUrls = [];
 
   const serviceRef = db.collection('services').doc('p8FYT2NqxizQEvKP0qO7');
   const serviceSnap = await serviceRef.get();

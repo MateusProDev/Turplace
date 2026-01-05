@@ -50,7 +50,6 @@ async function createTestCourse() {
           id: 'section-1',
           title: 'Introdução ao Mercado Digital',
           description: 'Entenda o potencial do mercado de infoprodutos',
-          videoUrl: 'https://www.youtube.com/watch?v=example1',
           duration: '15:30',
           order: 1
         },
@@ -58,7 +57,6 @@ async function createTestCourse() {
           id: 'section-2',
           title: 'Validando sua Ideia',
           description: 'Como saber se sua ideia tem potencial',
-          videoUrl: 'https://www.youtube.com/watch?v=example2',
           duration: '22:45',
           order: 2
         },
@@ -66,7 +64,6 @@ async function createTestCourse() {
           id: 'section-3',
           title: 'Criando seu Primeiro Produto',
           description: 'Passo a passo para criar conteúdo de qualidade',
-          videoUrl: 'https://www.youtube.com/watch?v=example3',
           duration: '28:10',
           order: 3
         }
