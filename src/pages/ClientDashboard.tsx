@@ -19,7 +19,9 @@ import {
   XCircle,
   ChevronLeft,
   Trash2,
-  ExternalLink
+  ExternalLink,
+  Menu,
+  X
 } from "lucide-react";
 import { auth } from "../utils/firebase";
 import { signOut } from "firebase/auth";
@@ -108,6 +110,7 @@ export default function ClientDashboard() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [cancellingSubscription, setCancellingSubscription] = useState<string | null>(null);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     // Não fazer nada enquanto o auth está carregando
@@ -286,11 +289,12 @@ export default function ClientDashboard() {
               <Link to="/" className="text-2xl font-bold text-blue-600">
                 Lucrazi
               </Link>
-              <span className="text-gray-500">|</span>
-              <span className="text-gray-600">Área do Cliente</span>
+              <span className="text-gray-500 hidden sm:inline">|</span>
+              <span className="text-gray-600 hidden sm:inline">Área do Cliente</span>
             </div>
 
-            <div className="flex items-center gap-4">
+            {/* Desktop Menu */}
+            <div className="hidden md:flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                   <User className="w-4 h-4 text-blue-600" />
@@ -308,7 +312,39 @@ export default function ClientDashboard() {
                 <span className="text-sm">Sair</span>
               </button>
             </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+            >
+              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
+
+          {/* Mobile Menu */}
+          {isMobileMenuOpen && (
+            <div className="md:hidden border-t border-gray-200 py-4">
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <User className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">
+                    {userData?.name || user?.email}
+                  </span>
+                </div>
+
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors w-fit"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span className="text-sm">Sair</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
