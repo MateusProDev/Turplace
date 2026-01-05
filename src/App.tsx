@@ -24,6 +24,9 @@ import ServiceDiagnostics from './pages/ServiceDiagnostics';
 import Success from './pages/Success';
 import ResetPassword from './pages/ResetPassword';
 import RequireAdmin from './components/Auth/RequireAdmin';
+import ActionHandler from './pages/auth/action';
+import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
 
 function App() {
   return (
@@ -48,6 +51,7 @@ function App() {
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/success" element={<Success />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/auth/action" element={<ActionHandler />} />
         <Route path="/cancel" element={<div className="min-h-screen flex items-center justify-center"><div className="text-center"><h1 className="text-2xl font-bold text-gray-900 mb-4">Pagamento Cancelado</h1><p className="text-gray-600 mb-6">Você cancelou o pagamento. Pode tentar novamente quando quiser.</p><Link to="/catalog" className="px-6 py-3 bg-gradient-to-r from-[#0097b2] to-[#7ed957] text-white rounded-lg font-semibold hover:opacity-90 transition">Voltar ao Catálogo</Link></div></div>} />
         <Route path="/diagnostics" element={<ServiceDiagnostics />} />
         <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
@@ -55,6 +59,8 @@ function App() {
         <Route path="/partnerships" element={<Partnerships />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/wallet" element={<RequireAuth><Wallet /></RequireAuth>} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
       </Routes>
     </BrowserRouter>
   );
