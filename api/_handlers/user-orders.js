@@ -97,7 +97,13 @@ export default async function handler(req, res) {
         customerEmail: orderData.customerEmail || orderData.customer_email || '',
         accessLink: orderData.accessLink || null,
         contentType: sections ? 'course' : serviceData?.type || 'service',
-        sections: sections
+        sections: sections,
+        // Debug info
+        debug: {
+          hasSections: !!sections,
+          sectionsCount: sections?.length || 0,
+          serviceType: serviceData?.type
+        }
       };
 
       orders.push(order);

@@ -110,6 +110,18 @@ export default function ClientDashboard() {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
 
   useEffect(() => {
+    if (selectedOrder) {
+      console.log('SELECTED ORDER DEBUG:', {
+        contentType: selectedOrder.contentType,
+        hasSections: !!selectedOrder.sections,
+        sectionsCount: selectedOrder.sections?.length || 0,
+        sections: selectedOrder.sections,
+        debug: selectedOrder.debug
+      });
+    }
+  }, [selectedOrder]);
+
+  useEffect(() => {
     // Não fazer nada enquanto o auth está carregando
     if (authLoading) return;
     
