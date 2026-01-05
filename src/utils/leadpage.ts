@@ -4,7 +4,7 @@ import type { LeadPageTemplate, UserLeadPage } from '../types/leadpage.js';
 
 // Função para obter template padrão
 export async function getDefaultTemplate(): Promise<LeadPageTemplate | null> {
-  const templateRef = doc(db, 'templates', 'default-tourism');
+  const templateRef = doc(db, 'templates', 'default-modern');
   const snap = await getDoc(templateRef);
   if (snap.exists()) {
     return snap.data() as LeadPageTemplate;

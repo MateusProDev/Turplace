@@ -327,7 +327,7 @@ const LeadPageEditor = () => {
             setUserLeadPage(data);
           } else {
             // Template não disponível no plano atual, usar template padrão disponível
-            const defaultAvailableTemplate = availableTemplates.find(t => t.id === 'default-tourism') || availableTemplates[0];
+            const defaultAvailableTemplate = availableTemplates.find(t => t.id === 'default-modern') || availableTemplates[0];
             if (defaultAvailableTemplate) {
               setTemplate(defaultAvailableTemplate);
               const updated: UserLeadPage = {
@@ -339,7 +339,7 @@ const LeadPageEditor = () => {
             }
           }
         } else {
-          const defaultTemplate = availableTemplates.find(t => t.id === 'default-tourism') || availableTemplates[0];
+          const defaultTemplate = availableTemplates.find(t => t.id === 'default-modern') || availableTemplates[0];
           if (defaultTemplate) {
             setTemplate(defaultTemplate);
             const initial: UserLeadPage = {

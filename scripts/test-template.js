@@ -3,7 +3,7 @@ import { db } from './firebase.js';
 
 async function testTemplate() {
   try {
-    const templateRef = doc(db, 'templates', 'default-tourism');
+    const templateRef = doc(db, 'templates', 'default-modern');
     const snap = await getDoc(templateRef);
     console.log('Template exists:', snap.exists());
     if (snap.exists()) {

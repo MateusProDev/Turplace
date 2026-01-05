@@ -91,7 +91,7 @@ export function getCommissionRate(userPlanId: string): number {
 export function getAvailableTemplates(userPlanId: string, allTemplates: LeadPageTemplate[]): LeadPageTemplate[] {
   if (userPlanId === 'free') {
     // Plano free: apenas o template padrão
-    return allTemplates.filter(template => template.id === 'default-tourism');
+    return allTemplates.filter(template => template.id === 'default-modern');
   }
   // Planos pagos: todos os templates
   return allTemplates;
