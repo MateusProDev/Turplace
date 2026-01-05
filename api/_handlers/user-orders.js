@@ -81,7 +81,7 @@ export default async function handler(req, res) {
         serviceId: orderData.serviceId || '',
         serviceTitle: serviceData?.title || serviceData?.name || 'Serviço',
         serviceDescription: serviceData?.description || '',
-        serviceImageUrl: serviceData?.imageUrl || serviceData?.image || null,
+        servicePrice: serviceData?.price || null,
         providerName: providerData?.name || providerData?.displayName || 'Prestador',
         amount: orderData.amount || orderData.totalAmount || 0,
         status: orderData.status || 'pending',

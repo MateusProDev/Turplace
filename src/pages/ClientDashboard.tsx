@@ -18,6 +18,7 @@ import {
   CreditCard,
   XCircle,
   ChevronLeft,
+  Trash2,
   ExternalLink
 } from "lucide-react";
 import { auth } from "../utils/firebase";
@@ -189,6 +190,21 @@ export default function ClientDashboard() {
       alert('Erro ao cancelar assinatura');
     } finally {
       setCancellingSubscription(null);
+    }
+  };
+
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!confirm('Tem certeza que deseja excluir este pedido pendente?')) {
+      return;
+    }
+
+    try {
+      // Como não temos endpoint para deletar, vamos usar uma abordagem simples
+      // Em produção, você deveria ter um endpoint seguro para isso
+      alert('Funcionalidade de exclusão não implementada ainda. Entre em contato com o suporte.');
+    } catch (error) {
+      console.error('Erro ao excluir pedido:', error);
+      alert('Erro ao excluir pedido');
     }
   };
 
@@ -416,7 +432,7 @@ export default function ClientDashboard() {
                               </div>
 
                               <div className="text-lg font-bold text-gray-900">
-                                R$ {Number(order.amount).toFixed(2).replace('.', ',')}
+                                R$ {order.amount > 0 ? Number(order.amount).toFixed(2).replace('.', ',') : (order.servicePrice ? order.servicePrice : '0,00')}
                               </div>
 
                               <div className="text-sm text-gray-500">
@@ -440,6 +456,15 @@ export default function ClientDashboard() {
                                   className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
                                 >
                                   Acessar Conteúdo
+                                </button>
+                              )}
+                              {order.status === 'pending' && (
+                                <button
+                                  onClick={() => handleDeleteOrder(order.id)}
+                                  className="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  Excluir
                                 </button>
                               )}
                             </div>
