@@ -81,6 +81,7 @@ export default async function handler(req, res) {
           type: section.videoUrl ? 'video' : 'text',
           url: section.videoUrl || null
         }));
+        console.log(`[user-orders] Transformed ${sections.length} sections for user ${userId}`);
       }
 
       const order = {
