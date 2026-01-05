@@ -178,10 +178,10 @@ export default function Catalog() {
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-8">
             <h1 className="text-3xl md:text-4xl font-bold mb-4">
-              Catálogo de Serviços Turísticos
+              Catálogo de Produtos Digitais, Serviços e Cursos
             </h1>
             <p className="text-lg opacity-90 max-w-3xl mx-auto">
-              Encontre os melhores prestadores, guias e experiências para seu negócio ou viagem
+              Encontre os melhores produtos digitais, prestadores e serviços para seu negócio ou necessidade
             </p>
           </div>
           
@@ -191,7 +191,7 @@ export default function Catalog() {
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={24} />
               <input
                 type="text"
-                placeholder="Buscar serviços, guias, tours, experiências..."
+                placeholder="Buscar produtos digitais, serviços, cursos, consultorias..."
                 className="w-full pl-14 pr-4 py-4 rounded-xl border-0 text-gray-900 text-lg focus:ring-3 focus:ring-blue-300 focus:outline-none shadow-lg"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
@@ -204,7 +204,7 @@ export default function Catalog() {
             <div className="flex flex-col items-center bg-white/20 backdrop-blur-sm rounded-lg px-2 py-2 min-w-[80px]">
               <Eye className="text-blue-100 mb-1" size={20} />
               <span className="text-lg font-bold leading-none">{services.length + courses.length}</span>
-              <span className="text-xs opacity-90 leading-none">Serviços & Cursos</span>
+              <span className="text-xs opacity-90 leading-none">Produtos, Serviços & Cursos</span>
             </div>
             <div className="flex flex-col items-center bg-white/20 backdrop-blur-sm rounded-lg px-2 py-2 min-w-[80px]">
               <Tag className="text-blue-100 mb-1" size={20} />
@@ -225,7 +225,7 @@ export default function Catalog() {
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-8">
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Serviços e Cursos Disponíveis
+              Produtos Digitais, Serviços e Cursos Disponíveis
               {search && ` para "${search}"`}
             </h2>
             
@@ -376,7 +376,7 @@ export default function Catalog() {
                 ) : (
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-gray-900">{filtered.length}</span>
-                    <span>serviço(s) encontrado(s)</span>
+                    <span>produto(s), serviço(s) e curso(s) encontrado(s)</span>
                     {search && (
                       <span className="text-blue-600">para "{search}"</span>
                     )}
@@ -396,7 +396,7 @@ export default function Catalog() {
                   <Search className="text-gray-400" size={32} />
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  Nenhum serviço ou curso encontrado
+                  Nenhum produto, serviço ou curso encontrado
                 </h3>
                 <p className="text-gray-600 mb-6 max-w-md mx-auto">
                   Tente ajustar seus filtros de busca ou explore outras categorias.
@@ -519,22 +519,22 @@ export default function Catalog() {
                   <span className="font-semibold text-gray-900">{Math.min(filtered.length, 9)}</span>
                   <span className="text-gray-600">de</span>
                   <span className="font-semibold text-gray-900">{filtered.length}</span>
-                  <span className="text-gray-600">serviços e cursos</span>
+                  <span className="text-gray-600">produtos, serviços e cursos</span>
                 </div>
               </div>
             )}
             
             {/* CTA final */}
             <div className="mt-12 bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-8 text-center text-white">
-              <h3 className="text-2xl font-bold mb-4">Seu serviço ou curso não está aqui?</h3>
+              <h3 className="text-2xl font-bold mb-4">Seu produto, serviço ou curso não está aqui?</h3>
               <p className="text-lg mb-6 opacity-90">
-                Cadastre gratuitamente e alcance centenas de agências, viajantes e alunos
+                Cadastre gratuitamente e alcance centenas de clientes e alunos
               </p>
               <Link
                 to="/dashboard"
                 className="inline-flex items-center gap-3 px-8 py-4 bg-white text-blue-700 rounded-xl font-bold hover:bg-gray-100 transition text-lg shadow-lg"
               >
-                Cadastrar meu serviço
+                Cadastrar meu produto/serviço
                 <ChevronRight size={20} />
               </Link>
             </div>
