@@ -5,7 +5,7 @@ loadEnv();
 function post(path, body, callback) {
   const options = {
     hostname: '127.0.0.1',  // Force IPv4
-    port: 3000,
+    port: 3002,
     path: path,
     method: 'POST',
     headers: {

@@ -77,7 +77,6 @@ export default async function handler(req, res) {
         sections = serviceData.sections.map(section => {
           // Verificar diferentes possibilidades de campos de vídeo
           const videoUrl = section.videoUrl || section.VideoUrl || section.video_url || section.url;
-          console.log(`[user-orders] Section "${section.title}": videoUrl=${videoUrl}, type will be: ${videoUrl ? 'video' : 'text'}`);
           
           return {
             id: section.id || section.order?.toString() || Math.random().toString(),
@@ -87,7 +86,6 @@ export default async function handler(req, res) {
             url: videoUrl || null
           };
         });
-        console.log(`[user-orders] Transformed ${sections.length} sections for user ${userId}`);
       }
 
       const order = {
@@ -104,13 +102,7 @@ export default async function handler(req, res) {
         customerEmail: orderData.customerEmail || orderData.customer_email || '',
         accessLink: orderData.accessLink || null,
         contentType: sections ? 'course' : serviceData?.type || 'service',
-        sections: sections,
-        // Debug info
-        debug: {
-          hasSections: !!sections,
-          sectionsCount: sections?.length || 0,
-          serviceType: serviceData?.type
-        }
+        sections: sections
       };
 
       orders.push(order);
