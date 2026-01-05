@@ -24,6 +24,54 @@ import {
 import { auth } from "../utils/firebase";
 import { signOut } from "firebase/auth";
 
+// Função para converter URL de vídeo em embed seguro (esconde origem)
+const getSecureEmbedUrl = (url: string): string | null => {
+  if (!url) return null;
+  
+  // YouTube - várias formas de URL
+  const youtubePatterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/v\/([a-zA-Z0-9_-]{11})/
+  ];
+  
+  for (const pattern of youtubePatterns) {
+    const match = url.match(pattern);
+    if (match) {
+      // Embed com configurações para esconder branding e desabilitar download
+      return `https://www.youtube-nocookie.com/embed/${match[1]}?rel=0&modestbranding=1&showinfo=0&controls=1&disablekb=0&fs=1&playsinline=1`;
+    }
+  }
+  
+  // Vimeo
+  const vimeoMatch = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if (vimeoMatch) {
+    return `https://player.vimeo.com/video/${vimeoMatch[1]}?title=0&byline=0&portrait=0&badge=0`;
+  }
+  
+  // Google Drive
+  const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (driveMatch) {
+    return `https://drive.google.com/file/d/${driveMatch[1]}/preview`;
+  }
+  
+  // Se já for uma URL de embed, retornar como está
+  if (url.includes('/embed/') || url.includes('/preview') || url.includes('player.vimeo')) {
+    return url;
+  }
+  
+  // URL direta de vídeo (mp4, webm, etc)
+  if (url.match(/\.(mp4|webm|ogg)(\?.*)?$/i)) {
+    return url; // Será tratado com tag <video>
+  }
+  
+  return null;
+};
+
+// Verifica se é URL direta de vídeo
+const isDirectVideoUrl = (url: string): boolean => {
+  return /\.(mp4|webm|ogg)(\?.*)?$/i.test(url);
+};
+
 
 
 interface Order {
@@ -747,14 +795,32 @@ export default function ClientDashboard() {
                                 <div>
                                   <p className="font-medium mb-2 text-gray-900">Vídeo da aula:</p>
                                   <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                                    <iframe
-                                      src={`https://www.youtube.com/embed/${section.url.split('v=')[1] || section.url}`}
-                                      className="w-full h-full"
-                                      frameBorder="0"
-                                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                      allowFullScreen
-                                      title={section.title}
-                                    />
+                                    {isDirectVideoUrl(section.url) ? (
+                                      <video
+                                        controls
+                                        className="w-full h-full"
+                                        src={section.url}
+                                        preload="metadata"
+                                      >
+                                        Seu navegador não suporta a tag de vídeo.
+                                      </video>
+                                    ) : (() => {
+                                      const embedUrl = getSecureEmbedUrl(section.url);
+                                      return embedUrl ? (
+                                        <iframe
+                                          src={embedUrl}
+                                          className="w-full h-full"
+                                          frameBorder="0"
+                                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                          allowFullScreen
+                                          title={section.title}
+                                        />
+                                      ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-gray-500">
+                                          URL de vídeo não suportada
+                                        </div>
+                                      );
+                                    })()}
                                   </div>
                                 </div>
                               )}

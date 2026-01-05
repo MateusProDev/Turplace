@@ -73,7 +73,14 @@ export default async function handler(req, res) {
       // Buscar conteúdo do curso se for um curso ou se tiver seções
       let sections = null;
       if (serviceData && serviceData.sections) {
-        sections = serviceData.sections;
+        // Transformar seções do formato Firestore para o formato esperado pelo frontend
+        sections = serviceData.sections.map(section => ({
+          id: section.id || section.order?.toString() || Math.random().toString(),
+          title: section.title || '',
+          content: section.description || '',
+          type: section.videoUrl ? 'video' : 'text',
+          url: section.videoUrl || null
+        }));
       }
 
       const order = {
