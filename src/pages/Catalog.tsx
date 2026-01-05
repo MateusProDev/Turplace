@@ -411,15 +411,16 @@ export default function Catalog() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                 {filtered.map((item: CatalogItem) => (
-                  <div 
-                    key={item.id} 
-                    className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-blue-200 group"
+                  <Link
+                    key={item.id}
+                    to={item.type === 'course' ? `/course/${generateSlug(item.title || '')}` : `/service/${generateSlug(item.title || '')}`}
+                    className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-blue-200 group block"
                   >
                     {/* Imagem do item */}
                     <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
                       {item.images && item.images.length > 0 ? (
-                        <img 
-                          src={item.images?.[0]} 
+                        <img
+                          src={item.images?.[0]}
                           alt={item.title || ''}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
@@ -428,7 +429,7 @@ export default function Catalog() {
                           <ImageIcon className="text-gray-300" size={48} />
                         </div>
                       )}
-                      
+
                       {/* Badges */}
                       <div className="absolute top-3 left-3 flex flex-col gap-2">
                         {item.views && item.views > 100 && (
@@ -441,7 +442,7 @@ export default function Catalog() {
                           {item.category}
                         </span>
                       </div>
-                      
+
                       {/* Status */}
                       <div className="absolute top-3 right-3">
                         <span className="bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium">
@@ -449,14 +450,14 @@ export default function Catalog() {
                         </span>
                       </div>
                     </div>
-                    
+
                     {/* Conteúdo do card */}
                     <div className="p-5 flex flex-col h-[calc(100%-12rem)]">
                       <div className="mb-3">
                         <h3 className="font-bold text-lg text-gray-900 mb-2 line-clamp-1 group-hover:text-blue-700 transition">
                           {item.title}
                         </h3>
-                        
+
                         <div className="flex items-center gap-2 mb-2">
                           <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
                             {item.category}
@@ -467,11 +468,11 @@ export default function Catalog() {
                             <span className="text-gray-400 text-xs">({item.bookings || item.courseData?.totalStudents || 0})</span>
                           </div>
                         </div>
-                        
+
                         <p className="text-gray-600 text-sm line-clamp-2 mb-3">
                           Por <span className="font-medium text-gray-900">{item.ownerName || 'Instrutor'}</span>
                         </p>
-                        
+
                         {/* Stats */}
                         <div className="flex items-center gap-3 mb-3">
                           <div className="flex items-center gap-1 text-gray-600">
@@ -484,31 +485,28 @@ export default function Catalog() {
                           </div>
                         </div>
                       </div>
-                      
+
                       {/* Preço e CTA */}
                       <div className="mt-auto">
                         <div className="flex items-center justify-between mb-3">
                           <div>
                             <div className="text-lg font-bold text-gray-900">
                               R$ {item.price ? parseFloat(item.price.replace(',', '.'))?.toFixed(2).replace('.', ',') : '0,00'}
-                            </div> 
+                            </div>
                             <p className="text-xs text-gray-500">
                               {item.billingType === 'subscription' ? 'por mês' : 'valor único'}
                             </p>
                           </div>
-                          
-                          <Link 
-                            to={item.type === 'course' ? `/course/${generateSlug(item.title || '')}` : `/service/${generateSlug(item.title || '')}`}
-                            className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-green-600 to-emerald-500 text-white font-medium rounded-lg hover:from-green-700 hover:to-emerald-600 transition-all shadow-sm hover:shadow-md group/btn text-xs"
-                          >
+
+                          <div className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-green-600 to-emerald-500 text-white font-medium rounded-lg shadow-sm text-xs opacity-90 group-hover:opacity-100 transition-opacity">
                             <Eye className="w-3.5 h-3.5" />
                             <span>Ver detalhes</span>
-                            <ChevronRight className="w-3.5 h-3.5 opacity-0 -translate-x-1 group-hover/btn:opacity-100 group-hover/btn:translate-x-0 transition-all" />
-                          </Link>
+                            <ChevronRight className="w-3.5 h-3.5" />
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}
