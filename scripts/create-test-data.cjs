@@ -2,7 +2,7 @@
 const loadEnv = require('./load-env.cjs');
 loadEnv();
 
-const initFirestore = require('../api/_lib/firebaseAdmin.js').default;
+const initFirestore = require('../api/_lib/firebaseAdmin.cjs');
 
 const db = initFirestore();
 
