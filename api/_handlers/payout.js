@@ -1,4 +1,4 @@
-import initFirestore from '.cjs';
+import initFirestore from '../_lib/firebaseAdmin.cjs';
 import { getAuth } from 'firebase-admin/auth';
 
 // Configurações de saque
@@ -288,3 +288,4 @@ export default async (req, res) => {
     });
   }
 };
+

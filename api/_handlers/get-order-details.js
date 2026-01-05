@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import initFirestore from '.cjs';
+import initFirestore from '../_lib/firebaseAdmin.cjs';
 
 export default async (req, res) => {
   console.log('[get-order-details] Entrada', { method: req.method, url: req.url, query: req.query });
@@ -107,3 +107,4 @@ export default async (req, res) => {
     return res.status(500).json({ error: err.message || 'Internal error' });
   }
 };
+

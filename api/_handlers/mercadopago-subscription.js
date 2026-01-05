@@ -6,7 +6,7 @@
  * Documentação: https://www.mercadopago.com.br/developers/pt/docs/subscriptions/integration-configuration/create-preapproval
  */
 
-import initFirestore from '.cjs';
+import initFirestore from '../_lib/firebaseAdmin.cjs';
 import { applySecurityMiddleware, logSecurityEvent, setSecurityHeaders } from '../_lib/security.js';
 
 export default async (req, res) => {
@@ -263,3 +263,4 @@ export default async (req, res) => {
     });
   }
 };
+

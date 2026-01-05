@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import initFirestore from '.cjs';
+import initFirestore from '../_lib/firebaseAdmin.cjs';
 
 export default async (req, res) => {
   console.log('[create-stripe-product] Entrada', { method: req.method, url: req.url, body: req.body });
@@ -74,3 +74,4 @@ export default async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+

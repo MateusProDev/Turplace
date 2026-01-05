@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import initFirestore from '.cjs';
+import initFirestore from '../_lib/firebaseAdmin.cjs';
 import { getPlanLimits } from '../../src/utils/planUtils.js';
 
 export default async (req, res) => {
@@ -195,3 +195,4 @@ export default async (req, res) => {
     return res.status(500).json({ error: err.message || 'Internal error' });
   }
 };
+

@@ -2,7 +2,7 @@
 // api/abacatepay-webhook.js
 
 import crypto from 'crypto';
-import initFirestore from '.cjs';
+import initFirestore from '../_lib/firebaseAdmin.cjs';
 import { withSecurity } from './_middleware/security.js';
 import { securityMiddleware } from '../../src/middleware/security.js';
 
@@ -219,3 +219,4 @@ async function handler(req, res) {
 }
 
 export default withSecurity(handler);
+

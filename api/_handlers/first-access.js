@@ -4,7 +4,7 @@
  * Envia email de primeiro acesso com link para criar senha
  */
 
-import initFirestore from '.cjs';
+import initFirestore from '../_lib/firebaseAdmin.cjs';
 import { sendFirstAccessEmail, generateResetToken } from '../_lib/brevoEmail.js';
 import { setSecurityHeaders, logSecurityEvent } from '../_lib/security.js';
 
@@ -153,3 +153,4 @@ export default async function handler(req, res) {
     });
   }
 }
+

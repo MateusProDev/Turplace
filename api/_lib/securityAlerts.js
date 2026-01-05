@@ -1,7 +1,7 @@
 // Automated Security Alert System
 // Sends real-time alerts for critical security events
 
-import initFirestore from '.cjs';
+import initFirestore from './firebaseAdmin.cjs';
 
 class SecurityAlertSystem {
   constructor() {
@@ -240,3 +240,4 @@ Please investigate immediately.
 
 // Export singleton instance
 export const securityAlerts = new SecurityAlertSystem();
+

@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import initFirestore from '.cjs';
+import initFirestore from '../_lib/firebaseAdmin.cjs';
 import { securityMiddleware } from '../_lib/securityMiddleware.js';
 import { fraudDetection } from '../_lib/fraudDetection.js';
 
@@ -266,3 +266,4 @@ async function createCheckoutSessionGuestHandler(req, res) {
 
 // Export with security middleware
 export default securityMiddleware(createCheckoutSessionGuestHandler);
+

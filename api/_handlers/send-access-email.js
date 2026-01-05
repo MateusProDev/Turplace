@@ -104,3 +104,4 @@ async function sendAccessEmail(req, res) {
 }
 
 export default sendAccessEmail;
+

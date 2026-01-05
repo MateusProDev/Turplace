@@ -5,7 +5,7 @@
  * Documentação: https://www.mercadopago.com.br/developers/pt/docs/subscriptions/additional-content/webhooks
  */
 
-import initFirestore from '.cjs';
+import initFirestore from '../_lib/firebaseAdmin.cjs';
 import { logSecurityEvent, setSecurityHeaders } from '../_lib/security.js';
 import { sendFirstAccessEmail, generateResetToken } from '../_lib/brevoEmail.js';
 
@@ -190,3 +190,4 @@ export default async (req, res) => {
     return res.status(200).json({ received: true, error: error.message });
   }
 };
+

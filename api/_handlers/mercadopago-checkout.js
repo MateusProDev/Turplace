@@ -2,7 +2,7 @@
 // Caminho sugerido: api/mercadopago-checkout.js
 
 import { MercadoPagoConfig, Payment } from 'mercadopago';
-import initFirestore from '.cjs';
+import initFirestore from '../_lib/firebaseAdmin.cjs';
 import { 
   applySecurityMiddleware, 
   validateCPF, 
@@ -516,3 +516,4 @@ export default async function handler(req, res) {
     return res.status(500).json({ success: false, error: error.message });
   }
 }
+

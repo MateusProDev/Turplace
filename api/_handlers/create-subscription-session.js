@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import initFirestore from '.cjs';
+import initFirestore from '../_lib/firebaseAdmin.cjs';
 
 export default async (req, res) => {
   console.log('[create-subscription-session] Entrada', { method: req.method, url: req.url, body: req.body });
@@ -78,3 +78,4 @@ export default async (req, res) => {
     return res.status(500).json({ error: err.message || 'Internal error' });
   }
 };
+

@@ -3,7 +3,7 @@
  * Recebe o redirecionamento do Mercado Pago após autorização
  */
 
-import initFirestore from '.cjs';
+import initFirestore from '../_lib/firebaseAdmin.cjs';
 import { setSecurityHeaders, logSecurityEvent } from '../_lib/security.js';
 
 const MP_TOKEN_URL = 'https://api.mercadopago.com/oauth/token';
@@ -125,3 +125,4 @@ export default async (req, res) => {
     return res.redirect(`${frontendUrl}/settings?mp_error=${encodeURIComponent(error.message)}`);
   }
 };
+

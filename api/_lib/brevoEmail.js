@@ -216,3 +216,4 @@ export function generateResetToken() {
 }
 
 export default { sendFirstAccessEmail, generateResetToken };
+

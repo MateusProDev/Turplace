@@ -13,3 +13,4 @@ export default {
   'dev/apply-plan': applyPlan,
   'status': status
 }
+

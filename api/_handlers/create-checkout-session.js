@@ -184,3 +184,4 @@ async function createCheckoutSessionHandler(req, res) {
 
 // Export with security middleware
 export default securityMiddleware(createCheckoutSessionHandler);
+

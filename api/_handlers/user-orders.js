@@ -1,6 +1,6 @@
 import admin from 'firebase-admin';
 import { getAuth } from 'firebase-admin/auth';
-import initFirestore from '.cjs';
+import initFirestore from '../_lib/firebaseAdmin.cjs';
 
 export default async function handler(req, res) {
   // Verificar método
@@ -112,3 +112,4 @@ export default async function handler(req, res) {
     });
   }
 }
+

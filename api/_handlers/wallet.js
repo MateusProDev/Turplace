@@ -1,4 +1,4 @@
-import initFirestore from '.cjs';
+import initFirestore from '../_lib/firebaseAdmin.cjs';
 import { securityMiddleware, validateAndSanitizeInput } from '../_lib/securityMiddleware.js';
 
 async function walletHandler(req, res) {
@@ -338,3 +338,4 @@ async function walletHandler(req, res) {
 
 // Export with security middleware
 export default securityMiddleware(walletHandler);
+

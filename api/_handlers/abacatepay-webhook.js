@@ -2,7 +2,7 @@
 // Recebe notificações de pagamento do AbacatePay e atualiza pedidos no Firestore
 
 import crypto from 'crypto';
-import initFirestore from '.cjs';
+import initFirestore from '../_lib/firebaseAdmin.cjs';
 import { sendFirstAccessEmail, generateResetToken } from '../_lib/brevoEmail.js';
 import { 
   setSecurityHeaders, 
@@ -255,3 +255,4 @@ export default async function handler(req, res) {
     });
   }
 }
+

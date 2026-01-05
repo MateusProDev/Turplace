@@ -3,7 +3,7 @@
 
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import crypto from 'crypto';
-import initFirestore from '.cjs';
+import initFirestore from '../_lib/firebaseAdmin.cjs';
 import { sendFirstAccessEmail, generateResetToken } from '../_lib/brevoEmail.js';
 
 const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN || process.env.REACT_APP_MERCADO_PAGO_ACCESS_TOKEN;
@@ -208,3 +208,4 @@ export default async function handler(req, res) {
     return res.status(200).json({ received: true, error: true });
   }
 }
+

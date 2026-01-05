@@ -1,7 +1,7 @@
 // Security Dashboard API - For Admin Real-time Monitoring
 // Provides comprehensive security metrics and alerts
 
-import initFirestore from '.cjs';
+import initFirestore from '../_lib/firebaseAdmin.cjs';
 import { setSecurityHeaders, setCorsHeaders, getClientIP } from '../_lib/security.js';
 
 async function securityDashboardHandler(req, res) {
@@ -200,3 +200,4 @@ async function securityDashboardHandler(req, res) {
 
 // Export handler diretamente (proteção de admin feita no frontend)
 export default securityDashboardHandler;
+

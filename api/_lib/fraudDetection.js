@@ -1,7 +1,7 @@
 // Advanced Fraud Detection and Security Monitoring System
 // Integrates with admin dashboard for real-time security insights
 
-import initFirestore from '.cjs';
+import initFirestore from './firebaseAdmin.cjs';
 import { logSecurityEvent } from './securityMiddleware.js';
 import { securityAlerts } from './securityAlerts.js';
 
@@ -389,3 +389,4 @@ class FraudDetectionEngine {
 // Export singleton instance
 export const fraudDetection = new FraudDetectionEngine();
 export const securityBlacklist = new SecurityBlacklist();
+

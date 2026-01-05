@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import initFirestore from '.cjs';
+import initFirestore from '../_lib/firebaseAdmin.cjs';
 
 function now() { return new Date().toISOString(); }
 
@@ -216,3 +216,4 @@ export default async (req, res) => {
 };
 
 function getRawBody(req) { return new Promise((resolve, reject) => { let data=[]; req.on('data',c=>data.push(c)); req.on('end',()=>resolve(Buffer.concat(data))); req.on('error',e=>reject(e)); }); }
+

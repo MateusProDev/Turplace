@@ -3,7 +3,7 @@
 
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 import AbacatePay from 'abacatepay-nodejs-sdk';
-import initFirestore from '.cjs';
+import initFirestore from '../_lib/firebaseAdmin.cjs';
 import { withSecurity } from './_middleware/security.js';
 import { securityMiddleware } from '../../src/middleware/security.js';
 
@@ -201,3 +201,4 @@ async function handler(req, res) {
 }
 
 export default withSecurity(handler);
+

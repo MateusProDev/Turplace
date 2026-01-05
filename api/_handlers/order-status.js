@@ -1,6 +1,6 @@
 // Endpoint para verificar status do pedido no Firestore
 // Usado para polling após pagamento Pix - também verifica na API do AbacatePay
-import initFirestore from '.cjs';
+import initFirestore from '../_lib/firebaseAdmin.cjs';
 import { sendFirstAccessEmail, generateResetToken } from '../_lib/brevoEmail.js';
 import { 
   applySecurityMiddleware, 
@@ -227,3 +227,4 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Erro ao verificar status do pedido', details: error.message });
   }
 }
+

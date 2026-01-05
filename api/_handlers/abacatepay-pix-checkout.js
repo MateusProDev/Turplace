@@ -2,7 +2,7 @@
 // Caminho sugerido: api/abacatepay-pix-checkout.js
 
 import AbacatePay from 'abacatepay-nodejs-sdk';
-import initFirestore from '.cjs';
+import initFirestore from '../_lib/firebaseAdmin.cjs';
 
 const apiKey = process.env.ABACATEPAY_API_KEY;
 
@@ -170,3 +170,4 @@ export default async function handler(req, res) {
     });
   }
 }
+
