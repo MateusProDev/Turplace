@@ -19,7 +19,6 @@ import {
   Tag, 
   Clock, 
   Users, 
-  Shield, 
   ChevronLeft,
   Share2,
   Eye,
@@ -28,8 +27,7 @@ import {
   AlertCircle,
   DollarSign,
   Briefcase,
-  Star,
-  Lock
+  Star
 } from "lucide-react";
 
 interface ServiceData {
@@ -593,22 +591,6 @@ export default function ServiceDetail() {
                 )}
               </div>
             </div>
-
-            {/* Aviso de Segurança */}
-            <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6">
-              <div className="flex items-start gap-3">
-                <Shield className="text-yellow-600 flex-shrink-0 mt-1" size={24} />
-                <div>
-                  <h4 className="font-bold text-yellow-800 mb-2">Dicas de segurança</h4>
-                  <ul className="text-yellow-700 space-y-1 text-sm">
-                    <li>• Verifique as avaliações e comentários dos clientes</li>
-                    <li>• Leia atentamente a descrição e termos do serviço</li>
-                    <li>• Use apenas a plataforma para pagamentos e comunicações</li>
-                    <li>• Entre em contato com o suporte se tiver dúvidas</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Coluna da Direita - Contato e Prestador */}
@@ -662,22 +644,6 @@ export default function ServiceDetail() {
                 )}
               </button>
 
-              {/* Informações de Segurança */}
-              <div className="space-y-3 mb-6">
-                <div className="flex items-center gap-3 text-gray-600">
-                  <Shield className="w-5 h-5 text-green-600" />
-                  <span className="text-sm font-medium">Pagamento 100% Seguro</span>
-                </div>
-                <div className="flex items-center gap-3 text-gray-600">
-                  <Lock className="w-5 h-5 text-blue-600" />
-                  <span className="text-sm">Protegido por criptografia SSL</span>
-                </div>
-                <div className="flex items-center gap-3 text-gray-600">
-                  <CheckCircle className="w-5 h-5 text-emerald-600" />
-                  <span className="text-sm">Garantia de reembolso</span>
-                </div>
-              </div>
-
               <div className="space-y-4 mb-6">
                 <div className="border-t pt-4">
                   <div className="flex items-center gap-2 text-gray-600 mb-2">
@@ -691,15 +657,6 @@ export default function ServiceDetail() {
                     Atendimento nesta região
                   </p>
                 </div>
-              </div>
-
-              <div className="text-center">
-                <p className="text-sm text-gray-500">
-                  <Shield className="inline-block w-4 h-4 mr-1" />
-                  {service.price || service.priceMonthly 
-                    ? "Pagamento processado de forma segura pela plataforma"
-                    : "Entre em contato de forma segura através da plataforma"}
-                </p>
               </div>
             </div>
 

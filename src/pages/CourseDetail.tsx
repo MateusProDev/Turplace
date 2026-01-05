@@ -15,8 +15,6 @@ import {
   ShoppingCart,
   Heart,
   DollarSign,
-  Shield,
-  Lock,
   Share2
 } from 'lucide-react';
 
@@ -387,22 +385,6 @@ export default function CourseDetail() {
                 <Heart size={20} />
                 Adicionar aos Favoritos
               </button>
-
-              {/* Informações de Segurança */}
-              <div className="space-y-3 mb-6 mt-6">
-                <div className="flex items-center gap-3 text-gray-600">
-                  <Shield className="w-5 h-5 text-green-600" />
-                  <span className="text-sm font-medium">Pagamento 100% Seguro</span>
-                </div>
-                <div className="flex items-center gap-3 text-gray-600">
-                  <Lock className="w-5 h-5 text-blue-600" />
-                  <span className="text-sm">Protegido por criptografia SSL</span>
-                </div>
-                <div className="flex items-center gap-3 text-gray-600">
-                  <CheckCircle className="w-5 h-5 text-emerald-600" />
-                  <span className="text-sm">Garantia de reembolso</span>
-                </div>
-              </div>
 
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <h3 className="font-semibold text-gray-900 mb-4">Este curso inclui:</h3>
