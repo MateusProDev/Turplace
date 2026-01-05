@@ -12,6 +12,7 @@ import {
   X, 
   Eye,
   TrendingUp,
+  ChevronLeft,
   ChevronRight,
   Star,
   Heart
@@ -173,6 +174,21 @@ export default function Catalog() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between py-3 md:py-4">
+            <Link
+              to="/marketplace"
+              className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition"
+            >
+              <ChevronLeft size={18} className="md:w-5 md:h-5" />
+              <span className="font-medium text-sm md:text-base">Voltar ao marketplace</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-emerald-600 text-white py-12 px-4">
         <div className="container mx-auto max-w-6xl">
