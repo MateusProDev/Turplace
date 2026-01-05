@@ -106,6 +106,7 @@ export default function ClientDashboard() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [cancellingSubscription, setCancellingSubscription] = useState<string | null>(null);
   const [playingVideo, setPlayingVideo] = useState<{ sectionId: string; url: string; title: string } | null>(null);
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     // Não fazer nada enquanto o auth está carregando
@@ -768,52 +769,118 @@ export default function ClientDashboard() {
                   {!playingVideo && (
                     <>
                       <h4 className="font-semibold text-gray-900 mb-4">Conteúdo do Curso</h4>
-                      {selectedOrder.sections.map((section, index) => (
-                        <div key={section.id} className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              {section.type === 'video' && (
-                                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                                  <Play className="w-5 h-5 text-blue-600" />
+                      {selectedOrder.sections.map((section, index) => {
+                        const isExpanded = expandedSections.has(section.id);
+                        return (
+                          <div key={section.id} className="border border-gray-200 rounded-lg mb-3 overflow-hidden">
+                            <button
+                              onClick={() => {
+                                const newExpanded = new Set(expandedSections);
+                                if (isExpanded) {
+                                  newExpanded.delete(section.id);
+                                } else {
+                                  newExpanded.add(section.id);
+                                }
+                                setExpandedSections(newExpanded);
+                              }}
+                              className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors text-left"
+                            >
+                              <div className="flex items-center gap-3">
+                                {section.type === 'video' && (
+                                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <Play className="w-5 h-5 text-blue-600" />
+                                  </div>
+                                )}
+                                {section.type === 'text' && (
+                                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                    <FileText className="w-5 h-5 text-green-600" />
+                                  </div>
+                                )}
+                                <div>
+                                  <span className="font-medium text-gray-900 block">
+                                    {index + 1}. {section.title}
+                                  </span>
+                                  <span className="text-sm text-gray-500">
+                                    {section.type === 'video' ? 'Vídeo aula' : 'Material de texto'}
+                                  </span>
                                 </div>
-                              )}
-                              {section.type === 'text' && (
-                                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                                  <FileText className="w-5 h-5 text-green-600" />
-                                </div>
-                              )}
-                              <div>
-                                <span className="font-medium text-gray-900 block">
-                                  {index + 1}. {section.title}
-                                </span>
-                                <span className="text-sm text-gray-500">
-                                  {section.type === 'video' ? 'Vídeo aula' : 'Material de texto'}
-                                </span>
                               </div>
-                            </div>
+                              <div className="flex items-center gap-2">
+                                {section.type === 'video' && section.url && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setPlayingVideo({
+                                        sectionId: section.id,
+                                        url: section.url!,
+                                        title: section.title
+                                      });
+                                    }}
+                                    className="flex items-center gap-2 px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                                  >
+                                    <Play className="w-4 h-4" />
+                                    Assistir
+                                  </button>
+                                )}
+                                <ChevronLeft
+                                  className={`w-5 h-5 text-gray-400 transition-transform ${
+                                    isExpanded ? 'rotate-90' : '-rotate-90'
+                                  }`}
+                                />
+                              </div>
+                            </button>
 
-                            {section.type === 'video' && section.url && (
-                              <button
-                                onClick={() => setPlayingVideo({ 
-                                  sectionId: section.id, 
-                                  url: section.url!, 
-                                  title: section.title 
-                                })}
-                                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
-                              >
-                                <Play className="w-4 h-4" />
-                                Assistir
-                              </button>
+                            {isExpanded && (
+                              <div className="px-4 pb-4 border-t border-gray-100">
+                                {section.type === 'text' && (
+                                  <div className="text-gray-700 mt-3">
+                                    <div className="prose prose-sm max-w-none">
+                                      {section.content.split('\n').map((paragraph, i) => (
+                                        <p key={i} className="mb-3 last:mb-0">
+                                          {paragraph}
+                                        </p>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {section.type === 'video' && section.url && (
+                                  <div className="mt-3">
+                                    <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+                                      {isDirectVideoUrl(section.url) ? (
+                                        <video
+                                          controls
+                                          className="w-full h-full"
+                                          src={section.url}
+                                          preload="metadata"
+                                        >
+                                          Seu navegador não suporta a tag de vídeo.
+                                        </video>
+                                      ) : (() => {
+                                        const embedUrl = getSecureEmbedUrl(section.url);
+                                        return embedUrl ? (
+                                          <iframe
+                                            src={embedUrl}
+                                            className="w-full h-full"
+                                            frameBorder="0"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            allowFullScreen
+                                            title={section.title}
+                                          />
+                                        ) : (
+                                          <div className="w-full h-full flex items-center justify-center text-gray-500">
+                                            URL de vídeo não suportada
+                                          </div>
+                                        );
+                                      })()}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                             )}
                           </div>
-
-                          {section.type === 'text' && (
-                            <div className="text-gray-700 mt-3 pt-3 border-t border-gray-100">
-                              {section.content}
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                        );
+                      })}
                     </>
                   )}
                 </div>
