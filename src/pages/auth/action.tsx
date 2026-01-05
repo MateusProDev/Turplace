@@ -24,15 +24,15 @@ const ActionHandler: React.FC = () => {
       try {
         if (mode === 'resetPassword') {
           // Verificar se o código é válido
-          await verifyPasswordResetCode(auth, code);
+          await verifyPasswordResetCode(auth, code!);
           setStatus('resetForm');
           setMessage('Digite sua nova senha.');
         } else if (mode === 'verifyEmail') {
-          await applyActionCode(auth, code);
+          await applyActionCode(auth, code!);
           setStatus('success');
           setMessage('E-mail verificado com sucesso! Faça login.');
         } else if (mode === 'recoverEmail') {
-          await applyActionCode(auth, code);
+          await applyActionCode(auth, code!);
           setStatus('success');
           setMessage('Seu e-mail foi recuperado. Faça login.');
         } else {
