@@ -407,21 +407,22 @@ export default function ServiceDetail() {
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-4">
+          <div className="flex items-center justify-between py-3 md:py-4">
             <Link
               to="/catalog"
               className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition"
             >
-              <ChevronLeft size={20} />
-              <span className="font-medium">Voltar ao catálogo</span>
+              <ChevronLeft size={18} className="md:w-5 md:h-5" />
+              <span className="font-medium text-sm md:text-base">Voltar ao catálogo</span>
             </Link>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 md:gap-4">
               <button
                 onClick={handleShare}
-                className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                className="flex items-center gap-2 px-3 md:px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition text-sm md:text-base"
               >
-                <Share2 size={18} />
-                Compartilhar
+                <Share2 size={16} className="md:w-[18px] md:h-[18px]" />
+                <span className="hidden sm:inline">Compartilhar</span>
+                <span className="sm:hidden">Share</span>
               </button>
             </div>
           </div>
@@ -433,11 +434,11 @@ export default function ServiceDetail() {
           {/* Coluna da Esquerda - Imagens e Detalhes */}
           <div className="lg:col-span-2">
             {/* Breadcrumb */}
-            <div className="flex items-center gap-2 text-sm text-gray-600 mb-6">
-              <Link to="/" className="hover:text-blue-600">Home</Link>
-              <span>/</span>
-              <Link to="/catalog" className="hover:text-blue-600">Catálogo</Link>
-              <span>/</span>
+            <div className="flex items-center gap-1 md:gap-2 text-xs md:text-sm text-gray-600 mb-4 md:mb-6">
+              <Link to="/" className="hover:text-blue-600 truncate">Home</Link>
+              <span className="mx-1">/</span>
+              <Link to="/catalog" className="hover:text-blue-600 truncate">Catálogo</Link>
+              <span className="mx-1">/</span>
               <span className="text-gray-900 font-medium">{service.category || "Categoria não informada"}</span>
             </div>
 
@@ -493,8 +494,8 @@ export default function ServiceDetail() {
             </div>
 
             {/* Informações Detalhadas */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{
+            <div className="bg-white rounded-2xl shadow-lg p-4 md:p-6 mb-6">
+              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 leading-tight">{
                 (() => {
                   try {
                     return decodeURIComponent(service.title);
@@ -504,32 +505,32 @@ export default function ServiceDetail() {
                 })()
               }</h1>
               
-              <div className="flex flex-wrap gap-4 mb-6">
-                <div className="flex items-center gap-2 text-gray-600">
-                  <Tag size={18} />
-                  <span className="font-medium">{service.category}</span>
+              <div className="flex flex-wrap gap-3 md:gap-4 mb-6">
+                <div className="flex items-center gap-2 text-gray-600 bg-gray-50 px-3 py-1 rounded-full">
+                  <Tag size={16} className="text-blue-600" />
+                  <span className="font-medium text-sm">{service.category}</span>
                 </div>
-                <div className="flex items-center gap-2 text-gray-600">
-                  <MapPin size={18} />
-                  <span>{service.city || "Cidade não informada"}</span>
+                <div className="flex items-center gap-2 text-gray-600 bg-gray-50 px-3 py-1 rounded-full">
+                  <MapPin size={16} className="text-green-600" />
+                  <span className="text-sm">{service.city || "Cidade não informada"}</span>
                 </div>
                 {service.type && (
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Tag size={18} />
-                    <span>{service.type}</span>
+                  <div className="flex items-center gap-2 text-gray-600 bg-gray-50 px-3 py-1 rounded-full">
+                    <Briefcase size={16} className="text-purple-600" />
+                    <span className="text-sm">{service.type}</span>
                   </div>
                 )}
                 {views > 0 && (
-                  <div className="flex items-center gap-2 text-gray-600">
-                    <Eye size={18} />
-                    <span>{views} visualizações</span>
+                  <div className="flex items-center gap-2 text-gray-600 bg-gray-50 px-3 py-1 rounded-full">
+                    <Eye size={16} className="text-orange-600" />
+                    <span className="text-sm">{views} visualizações</span>
                   </div>
                 )}
               </div>
 
               {/* Descrição */}
-              <div className="mb-8">
-                <h3 className="text-lg font-bold text-gray-900 mb-3">Descrição</h3>
+              <div className="mb-6 md:mb-8">
+                <h3 className="text-lg md:text-xl font-bold text-gray-900 mb-3 md:mb-4">Descrição</h3>
                 <div className="prose max-w-none text-gray-700">
                   {service.description && service.description.trim() !== "" ? (
                     <>
@@ -552,41 +553,43 @@ export default function ServiceDetail() {
               </div>
 
               {/* Informações Adicionais */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 {service.duration && (
                   <div className="bg-emerald-50 rounded-xl p-4">
                     <div className="flex items-center gap-3 mb-2">
-                      <Clock className="text-emerald-600" size={24} />
-                      <h4 className="font-bold text-gray-900">Duração</h4>
+                      <Clock className="text-emerald-600" size={20} />
+                      <h4 className="font-bold text-gray-900 text-sm md:text-base">Duração</h4>
                     </div>
-                    <p className="text-lg text-emerald-700">{service.duration}</p>
+                    <p className="text-base md:text-lg text-emerald-700 font-medium">{service.duration}</p>
                   </div>
                 )}
 
                 {service.capacity && (
                   <div className="bg-purple-50 rounded-xl p-4">
                     <div className="flex items-center gap-3 mb-2">
-                      <Users className="text-purple-600" size={24} />
-                      <h4 className="font-bold text-gray-900">Capacidade</h4>
+                      <Users className="text-purple-600" size={20} />
+                      <h4 className="font-bold text-gray-900 text-sm md:text-base">Capacidade</h4>
                     </div>
-                    <p className="text-lg text-purple-700">{service.capacity}</p>
+                    <p className="text-base md:text-lg text-purple-700 font-medium">{service.capacity}</p>
                   </div>
                 )}
 
                 {service.includes && Array.isArray(service.includes) && (
-                  <div className="bg-amber-50 rounded-xl p-4 md:col-span-2">
-                    <div className="flex items-center gap-3 mb-2">
-                      <CheckCircle className="text-amber-600" size={24} />
-                      <h4 className="font-bold text-gray-900">O que está incluso</h4>
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 md:p-6 md:col-span-2">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                        <CheckCircle className="text-green-600" size={20} />
+                      </div>
+                      <h4 className="text-lg md:text-xl font-bold text-gray-900">O que está incluído</h4>
                     </div>
-                    <ul className="space-y-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {service.includes.map((item: string, index: number) => (
-                        <li key={index} className="flex items-center gap-2 text-amber-700">
-                          <CheckCircle size={16} />
-                          {item}
-                        </li>
+                        <div key={index} className="flex items-start gap-3 text-green-700">
+                          <CheckCircle size={16} className="text-green-600 mt-0.5 flex-shrink-0" />
+                          <span className="text-sm md:text-base leading-relaxed">{item}</span>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                 )}
               </div>
