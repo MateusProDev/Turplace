@@ -96,7 +96,7 @@ export default async function handler(req, res) {
         billingType: orderData.billingType || orderData.billing_type || 'one-time',
         customerEmail: orderData.customerEmail || orderData.customer_email || '',
         accessLink: orderData.accessLink || null,
-        contentType: (serviceData?.type === 'course' || sections) ? 'course' : serviceData?.type || 'service',
+        contentType: sections ? 'course' : serviceData?.type || 'service',
         sections: sections
       };
 
