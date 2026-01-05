@@ -739,6 +739,10 @@ export default function ClientDashboard() {
               {selectedOrder.contentType === 'course' && selectedOrder.sections ? (
                 <div className="space-y-4">
                   <h4 className="font-semibold text-gray-900 mb-4">Conteúdo do Curso</h4>
+                  <div className="bg-yellow-100 p-3 rounded mb-4 text-sm">
+                    DEBUG: contentType={selectedOrder.contentType}, sections={selectedOrder.sections?.length || 0}
+                    {selectedOrder.debug && `, hasSections=${selectedOrder.debug.hasSections}, serviceType=${selectedOrder.debug.serviceType}`}
+                  </div>
                   {selectedOrder.sections.map((section, index) => {
                     const isExpanded = expandedSections.has(section.id);
                     return (
