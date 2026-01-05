@@ -1,4 +1,4 @@
-import admin from 'firebase-admin';
+const admin = require('firebase-admin');
 
 function initFirestore() {
   if (!admin.apps.length) {
@@ -60,4 +60,4 @@ function initFirestore() {
   return admin.firestore();
 }
 
-export default initFirestore;
+module.exports = initFirestore;

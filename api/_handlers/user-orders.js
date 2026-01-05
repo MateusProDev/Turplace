@@ -1,5 +1,6 @@
 import admin from 'firebase-admin';
 import { getAuth } from 'firebase-admin/auth';
+import initFirestore from '../_lib/firebaseAdmin.js';
 
 export default async function handler(req, res) {
   // Verificar método
@@ -8,6 +9,8 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Inicializar Firebase
+    const db = initFirestore();
     // Verificar autenticação
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -28,7 +31,7 @@ export default async function handler(req, res) {
     console.log('[user-orders] Buscando pedidos para usuário:', userId);
 
     // Buscar pedidos do usuário
-    const ordersRef = admin.firestore().collection('orders');
+    const ordersRef = db.collection('orders');
     const ordersQuery = ordersRef
       .where('userId', '==', userId)
       .orderBy('createdAt', 'desc');
@@ -44,7 +47,7 @@ export default async function handler(req, res) {
       let serviceData = null;
       if (orderData.serviceId) {
         try {
-          const serviceRef = admin.firestore().collection('services').doc(orderData.serviceId);
+          const serviceRef = db.collection('services').doc(orderData.serviceId);
           const serviceSnap = await serviceRef.get();
           if (serviceSnap.exists) {
             serviceData = serviceSnap.data();
