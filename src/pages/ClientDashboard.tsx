@@ -78,6 +78,7 @@ interface Order {
   serviceTitle: string;
   serviceDescription: string;
   serviceImageUrl?: string;
+  servicePrice?: string;
   providerName: string;
   amount: number;
   status: 'pending' | 'paid' | 'completed' | 'cancelled';
@@ -194,14 +195,14 @@ export default function ClientDashboard() {
   };
 
   const handleDeleteOrder = async (orderId: string) => {
-    if (!confirm('Tem certeza que deseja excluir este pedido pendente?')) {
+    if (!confirm(`Tem certeza que deseja excluir o pedido ${orderId}?`)) {
       return;
     }
 
     try {
       // Como não temos endpoint para deletar, vamos usar uma abordagem simples
       // Em produção, você deveria ter um endpoint seguro para isso
-      alert('Funcionalidade de exclusão não implementada ainda. Entre em contato com o suporte.');
+      alert(`Funcionalidade de exclusão para pedido ${orderId} não implementada ainda. Entre em contato com o suporte.`);
     } catch (error) {
       console.error('Erro ao excluir pedido:', error);
       alert('Erro ao excluir pedido');
