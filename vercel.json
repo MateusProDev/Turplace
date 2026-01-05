@@ -6,7 +6,7 @@
     }
   },
   "rewrites": [
-    { "source": "/__/auth/:path*", "destination": "https://lucrazi.com.br/__/auth/:path*" },
+    { "source": "/__/auth/:path*", "destination": "https://turplace-8468f.firebaseapp.com/__/auth/:path*" },
     { "source": "/api/:path*", "destination": "/api/index.js" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
