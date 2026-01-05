@@ -116,7 +116,7 @@ export default function ClientDashboard() {
         hasSections: !!selectedOrder.sections,
         sectionsCount: selectedOrder.sections?.length || 0,
         sections: selectedOrder.sections,
-        debug: selectedOrder.debug
+        // debug: selectedOrder.debug
       });
     }
   }, [selectedOrder]);
