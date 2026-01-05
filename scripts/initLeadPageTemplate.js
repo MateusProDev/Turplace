@@ -1,49 +1,49 @@
 import { config } from 'dotenv';
-config({ path: '../.env.local' });
+config({ path: '.env.local' });
 import admin from 'firebase-admin';
 import initFirestore from '../api/_lib/firebaseAdmin.cjs';
 
 const db = initFirestore();
 
 const defaultTemplate = {
-  id: 'default-tourism',
-  name: 'Landing Page Turismo - Experiências Únicas',
+  id: 'default-modern',
+  name: 'Leadpage Moderna - Design Contemporâneo',
   sections: [
     {
       id: 'hero-destination',
       type: 'hero',
-      title: 'Viva Experiências Inesquecíveis',
-      subtitle: 'Descubra os melhores destinos do Brasil com guias locais',
-      content: 'Mais de 10.000 viajantes já viveram aventuras únicas conosco. Sua próxima jornada começa aqui.',
-      image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=1080&fit=crop&crop=center',
-      buttonText: 'Explorar Destinos',
-      buttonLink: '#experiences',
-      stats: ['10K+ Viajantes', '200+ Experiências', '4.9★ Avaliação'],
+      title: 'Transforme sua Visão em Realidade',
+      subtitle: 'Soluções inovadoras para o seu negócio',
+      content: 'Mais de 10.000 clientes já confiaram em nós para alcançar seus objetivos. Sua transformação começa aqui.',
+      image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=1920&h=1080&fit=crop&crop=center',
+      buttonText: 'Começar Agora',
+      buttonLink: '#services',
+      stats: ['10K+ Clientes', '500+ Projetos', '4.9★ Avaliação'],
       enabled: true
     },
     {
       id: 'featured-experiences',
       type: 'benefits',
-      title: 'Experiências em Destaque',
-      subtitle: 'Atividades exclusivas com guias especializados',
+      title: 'Nossas Soluções',
+      subtitle: 'Serviços completos e personalizados para seu negócio',
       items: [
         {
-          title: 'Trilha Chapada Diamantina',
-          description: 'Explore cânions e cachoeiras com guia local experiente',
-          image: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=600&h=400&fit=crop&crop=center',
-          price: 'R$ 180/pessoa'
+          title: 'Consultoria Estratégica',
+          description: 'Análise completa e planejamento personalizado para seu crescimento',
+          image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=400&fit=crop&crop=center',
+          price: 'A partir de R$ 500'
         },
         {
-          title: 'Mergulho Fernando de Noronha',
-          description: 'Descubra a vida marinha em águas cristalinas',
-          image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600&h=400&fit=crop&crop=center',
-          price: 'R$ 350/pessoa'
+          title: 'Desenvolvimento Digital',
+          description: 'Soluções tecnológicas modernas e escaláveis',
+          image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=400&fit=crop&crop=center',
+          price: 'A partir de R$ 2.000'
         },
         {
-          title: 'Fotografia Jericoacoara',
-          description: 'Capture pores do sol inesquecíveis nas dunas',
-          image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop&crop=center',
-          price: 'R$ 250/pessoa'
+          title: 'Marketing Digital',
+          description: 'Estratégias comprovadas para aumentar sua presença online',
+          image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=400&fit=crop&crop=center',
+          price: 'A partir de R$ 800'
         }
       ],
       enabled: true
@@ -146,7 +146,7 @@ const defaultTemplate = {
       type: 'contact',
       title: 'Vamos Planejar Sua Viagem',
       subtitle: 'Entre em contato e transforme seus sonhos em realidade',
-      content: '📧 contato@viagens.com\n📱 (11) 99999-9999\n🏢 Rua das Viagens, 123 - São Paulo/SP',
+      content: 'contato@viagens.com\n(11) 99999-9999\nRua das Viagens, 123 - São Paulo/SP',
       formFields: ['name', 'email', 'phone', 'destination', 'message'],
       enabled: true
     }
@@ -154,28 +154,25 @@ const defaultTemplate = {
 };
 
 const infoproductTemplate = {
-  id: 'infoproduct',
-  name: 'Landing Page Infoproduto - Cursos Online',
+  id: 'clean-leadpage',
+  name: 'Leadpage Clean - Design Minimalista',
   sections: [
     {
       id: 'hero-course',
       type: 'hero',
-      title: 'Domine Habilidades que Mudam Vidas',
-      subtitle: 'Aprenda com especialistas e transforme seu futuro profissional',
-      content: 'Mais de 50.000 alunos já conquistaram seus objetivos. Seu sucesso começa com o primeiro passo.',
-      image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1920&h=1080&fit=crop&crop=center',
-      buttonText: 'COMEÇAR AGORA',
-      buttonLink: '#modules',
-      urgencyText: '🎯 Apenas 25 vagas restantes',
-      stats: ['50K+ Alunos', '4.8★ Avaliação', '95% Conclusão'],
+      title: 'Simples. Eficaz. Resultados.',
+      subtitle: 'Soluções claras para problemas complexos',
+      content: 'Foco no essencial. Resultados comprovados. Sua satisfação é nossa prioridade.',
+      image: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1920&h=1080&fit=crop&crop=center',
+      buttonText: 'COMEÇAR',
+      buttonLink: '#benefits',
       enabled: true
     },
     {
       id: 'course-overview',
       type: 'about',
-      title: 'O Que Você Vai Aprender',
-      content: 'Este curso completo foi desenvolvido por especialistas com mais de 10 anos de experiência. Você terá acesso a videoaulas, materiais complementares, comunidade exclusiva e suporte personalizado.',
-      image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&h=600&fit=crop&crop=center',
+      title: 'Por Que Escolher Nossa Solução',
+      content: 'Simplicidade não significa superficialidade. Nossa abordagem clean combina elegância e eficiência para entregar exatamente o que você precisa.',
       enabled: true
     },
     {
@@ -185,17 +182,17 @@ const infoproductTemplate = {
       subtitle: 'Benefícios exclusivos que só você terá',
       items: [
         {
-          title: '⏰ Liberdade de Tempo',
+          title: 'Liberdade de Tempo',
           description: 'Trabalhe apenas 2h por dia e viva a vida que sempre sonhou',
           icon: 'time'
         },
         {
-          title: '🚀 Escalabilidade',
+          title: 'Escalabilidade',
           description: 'Venda para milhares sem precisar produzir mais',
           icon: 'scale'
         },
         {
-          title: '🏆 Autoridade',
+          title: 'Autoridade',
           description: 'Se torne referência no seu nicho de mercado',
           icon: 'authority'
         }
@@ -302,7 +299,7 @@ const infoproductTemplate = {
     {
       id: 'guarantee-banner',
       type: 'cta',
-      title: '🛡️ Garantia Incondicional',
+      title: 'Garantia Incondicional',
       subtitle: 'Sua satisfação é nossa prioridade',
       content: 'Se em 30 dias você não estiver satisfeito, devolvemos 100% do seu investimento. Sem perguntas, sem burocracias.',
       buttonText: 'COMEÇAR AGORA',
@@ -351,19 +348,20 @@ const infoproductTemplate = {
 };
 
 const digitalServicesTemplate = {
-  id: 'digital-services',
-  name: 'Landing Page Marketing Digital - Resultados Comprovados',
+  id: 'commercial-leadpage',
+  name: 'Leadpage Comercial - Foco em Conversão',
   sections: [
     {
       id: 'hero-performance',
       type: 'hero',
-      title: 'Marketing que Gera Vendas Reais',
-      subtitle: 'Estratégias comprovadas que aumentam seu faturamento',
-      content: 'Não prometemos milagres, entregamos resultados. Mais de 500 empresas já multiplicaram suas vendas conosco.',
-      image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1920&h=1080&fit=crop&crop=center',
-      buttonText: 'QUERO MAIS VENDAS',
-      buttonLink: '#services',
-      stats: ['500+ Clientes', 'R$ 50M Faturados', 'ROI Médio 5x'],
+      title: 'INVESTIMENTO QUE RETORNA EM 30 DIAS',
+      subtitle: 'GARANTIDO',
+      content: 'Não perca mais tempo. Nossa solução comprovada gera resultados imediatos. Mais de R$ 50 milhões em vendas geradas para nossos clientes.',
+      image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1920&h=1080&fit=crop&crop=center',
+      buttonText: 'GARANTIR MINHA VAGA AGORA',
+      buttonLink: '#pricing',
+      urgencyText: 'Apenas 5 vagas restantes!',
+      stats: ['R$ 50M+ Vendas', '500+ Clientes', '98% Satisfação'],
       enabled: true
     },
     {
@@ -381,17 +379,17 @@ const digitalServicesTemplate = {
       subtitle: 'Soluções completas para seu negócio digital',
       items: [
         {
-          title: '📊 Google Ads & SEO',
+          title: 'Google Ads & SEO',
           description: 'Posicione sua marca no topo das buscas e gere leads qualificados',
           features: ['Otimização técnica', 'Conteúdo estratégico', 'Relatórios mensais']
         },
         {
-          title: '📱 Social Media Marketing',
+          title: 'Social Media Marketing',
           description: 'Construa comunidades engajadas nas redes sociais',
           features: ['Gestão de conteúdo', 'Anúncios direcionados', 'Analytics avançado']
         },
         {
-          title: '🎯 Funil de Vendas',
+          title: 'Funil de Vendas',
           description: 'Transforme visitantes em clientes fiéis',
           features: ['Landing pages', 'Email marketing', 'CRM integrado']
         }
@@ -405,22 +403,22 @@ const digitalServicesTemplate = {
       subtitle: 'Soluções premium para resultados extraordinários',
       items: [
         {
-          title: '🚀 Facebook & Instagram Ads',
+          title: 'Facebook & Instagram Ads',
           description: 'Campanhas visuais que geram engajamento e conversões',
           features: ['Configuração profissional', 'Públicos customizados', 'Remarketing avançado', 'A/B testing contínuo']
         },
         {
-          title: '🎯 Google Ads Performance',
+          title: 'Google Ads Performance',
           description: 'Anúncios de busca que convertem visitantes em clientes',
           features: ['Otimização de CPC', 'Landing pages otimizadas', 'Remarketing inteligente', 'Relatórios detalhados']
         },
         {
-          title: '📊 TikTok & YouTube Ads',
+          title: 'TikTok & YouTube Ads',
           description: 'Alcance gerações mais jovens com conteúdo viral',
           features: ['Estratégias de engajamento', 'Conteúdo otimizado', 'Targeting preciso', 'Analytics completo']
         },
         {
-          title: '🔧 Consultoria Estratégica',
+          title: 'Consultoria Estratégica',
           description: 'Acompanhamento mensal para maximizar resultados',
           features: ['Análise de concorrência', 'Otimização contínua', 'Suporte prioritário', 'Relatórios semanais']
         }
@@ -542,7 +540,7 @@ const digitalServicesTemplate = {
     {
       id: 'guarantee-trust',
       type: 'cta',
-      title: '🛡️ Garantia de Resultados',
+      title: 'Garantia de Resultados',
       subtitle: 'Se não gerar ROI mínimo de 3x, trabalhamos de graça até conseguir',
       content: 'Não trabalhamos com "talvez" ou "pode ser". Garantimos resultados ou seu dinheiro de volta.',
       buttonText: 'GARANTIR RESULTADOS',
@@ -597,9 +595,9 @@ const digitalServicesTemplate = {
 
 export async function initDefaultTemplate() {
   const templates = [
-    { id: 'default-tourism', data: defaultTemplate },
-    { id: 'infoproduct', data: infoproductTemplate },
-    { id: 'digital-services', data: digitalServicesTemplate }
+    { id: 'default-modern', data: defaultTemplate },
+    { id: 'clean-leadpage', data: infoproductTemplate },
+    { id: 'commercial-leadpage', data: digitalServicesTemplate }
   ];
 
   for (const template of templates) {
