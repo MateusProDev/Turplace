@@ -74,13 +74,19 @@ export default async function handler(req, res) {
       let sections = null;
       if (serviceData && serviceData.sections) {
         // Transformar seções do formato Firestore para o formato esperado pelo frontend
-        sections = serviceData.sections.map(section => ({
-          id: section.id || section.order?.toString() || Math.random().toString(),
-          title: section.title || '',
-          content: section.description || '',
-          type: section.videoUrl ? 'video' : 'text',
-          url: section.videoUrl || null
-        }));
+        sections = serviceData.sections.map(section => {
+          // Verificar diferentes possibilidades de campos de vídeo
+          const videoUrl = section.videoUrl || section.VideoUrl || section.video_url || section.url;
+          console.log(`[user-orders] Section "${section.title}": videoUrl=${videoUrl}, type will be: ${videoUrl ? 'video' : 'text'}`);
+          
+          return {
+            id: section.id || section.order?.toString() || Math.random().toString(),
+            title: section.title || '',
+            content: section.description || section.content || '',
+            type: videoUrl ? 'video' : 'text',
+            url: videoUrl || null
+          };
+        });
         console.log(`[user-orders] Transformed ${sections.length} sections for user ${userId}`);
       }
 

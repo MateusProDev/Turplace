@@ -728,7 +728,6 @@ export default function ClientDashboard() {
                 <div className="space-y-4">
                   <h4 className="font-semibold text-gray-900 mb-4">Conteúdo do Curso</h4>
                   {selectedOrder.sections.map((section, index) => {
-                    console.log('Rendering section:', index, section.title, 'type:', section.type, 'url:', section.url);
                     const isExpanded = expandedSections.has(section.id);
                     return (
                       <div key={section.id} className="border border-gray-200 rounded-lg mb-3 overflow-hidden">
