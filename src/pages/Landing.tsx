@@ -885,21 +885,21 @@ export default function Landing() {
               aumente suas vendas e cresça no mercado digital.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center mb-16">
+            <div className="flex flex-row gap-3 sm:gap-6 justify-center mb-16 flex-wrap">
               <Link
                 to="/login"
-                className="group px-8 sm:px-12 py-4 sm:py-6 bg-white text-[#0097b2] rounded-2xl font-bold text-base sm:text-lg hover:bg-gray-50 transition-all shadow-2xl hover:shadow-white/30 hover:scale-105 flex items-center justify-center gap-3"
+                className="group px-6 sm:px-12 py-3 sm:py-6 bg-white text-[#0097b2] rounded-2xl font-bold text-sm sm:text-lg hover:bg-gray-50 transition-all shadow-2xl hover:shadow-white/30 hover:scale-105 flex items-center justify-center gap-2 sm:gap-3 flex-shrink-0"
               >
-                <Briefcase size={24} />
+                <Briefcase size={20} className="sm:w-6 sm:h-6" />
                 <span>Cadastrar-se Gratuitamente</span>
-                <ArrowUpRight className="transform group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" size={24} />
+                <ArrowUpRight className="transform group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform sm:w-6 sm:h-6" size={20} />
               </Link>
               
               <Link
                 to="/catalog"
-                className="group px-8 sm:px-12 py-4 sm:py-6 bg-transparent border-2 border-white text-white rounded-2xl font-bold text-base sm:text-lg hover:bg-white/10 transition-all backdrop-blur-sm hover:scale-105 flex items-center justify-center gap-3"
+                className="group px-6 sm:px-12 py-3 sm:py-6 bg-transparent border-2 border-white text-white rounded-2xl font-bold text-sm sm:text-lg hover:bg-white/10 transition-all backdrop-blur-sm hover:scale-105 flex items-center justify-center gap-2 sm:gap-3 flex-shrink-0"
               >
-                <Search size={24} />
+                <Search size={20} className="sm:w-6 sm:h-6" />
                 <span>Explorar Catálogo Premium</span>
               </Link>
             </div>
