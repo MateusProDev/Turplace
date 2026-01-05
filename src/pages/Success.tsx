@@ -115,10 +115,7 @@ export default function Success() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-green-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-green-100 rounded-full"></div>
-            <div className="w-16 h-16 border-4 border-green-600 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
-          </div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
           <p className="mt-6 text-gray-600 font-medium">Verificando pagamento...</p>
           <p className="text-sm text-gray-400 mt-2">Aguarde um momento</p>
         </div>

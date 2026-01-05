@@ -799,10 +799,7 @@ export default function ServiceForm({ editMode = false, serviceData, onClose }: 
               >
                 {loading ? (
                   <>
-                    <div className="relative">
-                      <div className="w-5 h-5 border-2 border-white/30 rounded-full"></div>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
-                    </div>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                     Cadastrando...
                   </>
                 ) : (

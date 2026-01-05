@@ -372,10 +372,7 @@ export default function ServiceDetail() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="relative">
-            <div className="w-16 h-16 border-4 border-blue-100 rounded-full"></div>
-            <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
-          </div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="mt-6 text-gray-600 font-medium">Carregando serviço...</p>
           <p className="text-sm text-gray-400 mt-2">Preparando tudo para você</p>
         </div>
@@ -641,10 +638,7 @@ export default function ServiceDetail() {
               >
                 {contacting ? (
                   <>
-                    <div className="relative">
-                      <div className="w-6 h-6 border-2 border-white/30 rounded-full"></div>
-                      <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
-                    </div>
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-2"></div>
                     {service.price || service.priceMonthly ? "Processando..." : "Conectando..."}
                   </>
                 ) : (
