@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { getUserLeadPage, getTemplate, getAllTemplates, saveUserLeadPage, updateLeadPageSection, getLeadPageStats, calculateLeadPageMetrics } from '../utils/leadpage';
+import { addVercelDomain, checkVercelDomain } from '../utils/vercel';
 import type { LeadPageTemplate, UserLeadPage, LeadPageSection } from '../types/leadpage';
 import { 
   Eye, 
@@ -280,6 +281,17 @@ const LeadPageEditor = () => {
     }
 
     try {
+      // Verificar se o domínio já está configurado no Vercel
+      const domainExists = await checkVercelDomain(domain);
+      
+      if (!domainExists) {
+        // Tentar adicionar o domínio no Vercel automaticamente
+        const added = await addVercelDomain(domain);
+        if (!added) {
+          alert('Domínio salvo, mas houve um problema ao configurá-lo automaticamente no Vercel. Você pode adicioná-lo manualmente no painel do Vercel.');
+        }
+      }
+
       const updated: UserLeadPage = {
         ...userLeadPage,
         domain: domain
@@ -287,7 +299,12 @@ const LeadPageEditor = () => {
 
       await saveUserLeadPage(user.uid, updated);
       setUserLeadPage(updated);
-      alert('Domínio salvo com sucesso! Configure o CNAME do seu domínio para apontar para lucrazi.com.br');
+      
+      if (domainExists) {
+        alert('Domínio salvo com sucesso! Ele já estava configurado no Vercel.');
+      } else {
+        alert('Domínio salvo e configurado automaticamente no Vercel! Agora configure o CNAME no seu provedor DNS.');
+      }
     } catch (err) {
       console.error('Erro ao salvar domínio:', err);
       alert('Erro ao salvar domínio. Tente novamente.');
@@ -900,9 +917,9 @@ const LeadPageEditor = () => {
                               <div>
                                 <h4 className="font-medium text-green-800 mb-1">Resultado esperado</h4>
                                 <p className="text-sm text-green-700">
-                                  Após configurar corretamente, sua lead page será acessível através do seu domínio personalizado.
-                                  Por exemplo: se você configurar <code>meuservico.com.br</code>, sua lead page ficará disponível em
-                                  <code>https://meuservico.com.br</code>.
+                                  Após salvar, o domínio será configurado automaticamente no Vercel. Você só precisa configurar o CNAME no seu provedor DNS.
+                                  Por exemplo: se você configurar <code>lead.seudominio.com.br</code>, sua lead page ficará disponível em
+                                  <code>https://lead.seudominio.com.br</code>.
                                 </p>
                               </div>
                             </div>
@@ -911,44 +928,23 @@ const LeadPageEditor = () => {
                           <div className="space-y-3">
                             <h4 className="font-medium text-gray-900">Passos para configuração:</h4>
 
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                              <h5 className="font-medium text-blue-800 mb-2">1. Acesse o painel do seu provedor de domínio</h5>
-                              <p className="text-sm text-blue-700 mb-2">
-                                Entre no site onde você registrou seu domínio (GoDaddy, Registro.br, HostGator, etc.).
+                            <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                              <h5 className="font-medium text-green-800 mb-2">1. Salve seu domínio</h5>
+                              <p className="text-sm text-green-700 mb-2">
+                                Digite seu domínio personalizado acima e clique em "Salvar Domínio". O sistema irá configurá-lo automaticamente no Vercel.
                               </p>
-                              <p className="text-xs text-blue-600">
-                                Geralmente é o mesmo lugar onde você comprou o domínio.
-                              </p>
-                            </div>
-
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                              <h5 className="font-medium text-blue-800 mb-2">2. Encontre as configurações de DNS</h5>
-                              <p className="text-sm text-blue-700 mb-2">
-                                Procure por opções como "DNS", "Zona DNS", "Gerenciar DNS" ou "Configurações Avançadas".
-                              </p>
-                              <p className="text-xs text-blue-600">
-                                Cada provedor organiza isso de forma diferente, mas geralmente está na seção de domínio.
+                              <p className="text-xs text-green-600">
+                                O domínio será adicionado automaticamente à sua conta Vercel.
                               </p>
                             </div>
 
                             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                              <h5 className="font-medium text-blue-800 mb-2">3. Configure o redirecionamento</h5>
-                              <div className="bg-white rounded p-2 mb-2">
-                                <div className="grid grid-cols-3 gap-2 text-xs font-mono">
-                                  <div className="font-medium text-gray-700">Tipo</div>
-                                  <div className="font-medium text-gray-700">Nome/Host</div>
-                                  <div className="font-medium text-gray-700">Valor/Aponta para</div>
-
-                                  <div className="text-blue-600">CNAME</div>
-                                  <div className="text-blue-600">lead</div>
-                                  <div className="text-blue-600">lucrazi.com.br</div>
-                                </div>
-                              </div>
-                              <p className="text-xs text-blue-600 mb-2">
-                                <strong>Exemplo:</strong> Configure <code>lead.seudominio.com.br</code> → <code>lucrazi.com.br</code>
+                              <h5 className="font-medium text-blue-800 mb-2">2. Configure o DNS</h5>
+                              <p className="text-sm text-blue-700 mb-2">
+                                Após salvar, configure o CNAME no seu provedor de domínio (GoDaddy, Registro.br, etc.).
                               </p>
                               <p className="text-xs text-blue-600">
-                                <strong>Resultado:</strong> Sua lead page ficará em <code>https://lead.seudominio.com.br</code>
+                                Use as configurações que aparecem no seu painel Vercel para o domínio.
                               </p>
                             </div>
 

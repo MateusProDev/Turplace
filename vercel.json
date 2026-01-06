@@ -29,5 +29,12 @@
         }
       ]
     }
+  ],
+  "redirects": [
+    {
+      "source": "/lead/:domain",
+      "destination": "/custom/:domain",
+      "statusCode": 301
+    }
   ]
 }
