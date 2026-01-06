@@ -366,7 +366,7 @@ export async function generateCustomDomainUrl(userId: string, path: string = '')
     return path ? `${baseUrl}/${path}` : baseUrl;
   } else {
     // Caso contrário, usar o domínio padrão da plataforma
-    const baseUrl = window?.location?.origin || 'https://marketplace.turvia.com.br';
+    const baseUrl = window?.location?.origin || 'https://lucrazi.com.br';
     return path ? `${baseUrl}/${path}` : baseUrl;
   }
 }

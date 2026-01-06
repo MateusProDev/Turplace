@@ -10,13 +10,13 @@ Mudança de `turplace.turvia.com.br` para `lucrazi.com.br`
 ### URLs que precisam ser alteradas:
 
 ```env
-# ANTES
-VITE_API_URL=https://marketplace.turvia.com.br
-FRONTEND_URL=https://turplace.turvia.com.br
-MERCADO_PAGO_WEBHOOK_URL=https://turplace.turvia.com.br/api/mercadopago-webhook
-ABACATEPAY_RETURN_URL=https://turplace.turvia.com.br/return
-ABACATEPAY_COMPLETION_URL=https://turplace.turvia.com.br/payment/success
-ABACATEPAY_WEBHOOK_URL=https://turplace.turvia.com.br/api/abacatepay-webhook
+# DEPOIS (URLs ATUALIZADAS)
+VITE_API_URL=https://lucrazi.com.br
+FRONTEND_URL=https://lucrazi.com.br
+MERCADO_PAGO_WEBHOOK_URL=https://lucrazi.com.br/api/mercadopago-webhook
+ABACATEPAY_RETURN_URL=https://lucrazi.com.br/return
+ABACATEPAY_COMPLETION_URL=https://lucrazi.com.br/payment/success
+ABACATEPAY_WEBHOOK_URL=https://lucrazi.com.br/api/abacatepay-webhook
 
 # DEPOIS
 VITE_API_URL=https://lucrazi.com.br

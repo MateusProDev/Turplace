@@ -287,7 +287,7 @@ const LeadPageEditor = () => {
 
       await saveUserLeadPage(user.uid, updated);
       setUserLeadPage(updated);
-      alert('Domínio salvo com sucesso! Configure o CNAME do seu domínio para apontar para marketplace.turvia.com.br');
+      alert('Domínio salvo com sucesso! Configure o CNAME do seu domínio para apontar para lucrazi.com.br');
     } catch (err) {
       console.error('Erro ao salvar domínio:', err);
       alert('Erro ao salvar domínio. Tente novamente.');
