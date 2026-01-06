@@ -1,41 +1,34 @@
 import { useAuth } from './useAuth';
-import {
-  canCreateService,
-  canCreateLeadPage,
-  hasCustomDomainAccess,
-  hasAnalyticsAccess,
-  hasPrioritySupport,
-  getCommissionRate
-} from '../utils/planUtils.js';
 
 export function usePlanLimits() {
   const { userData } = useAuth();
 
-  const planId = userData?.planId || 'free';
+  const planId = userData?.planId || 'freemium';
   const planFeatures = userData?.planFeatures;
 
   return {
     planId,
     planFeatures,
 
-    // Verificações de limites
-    canCreateService: (currentCount: number) => canCreateService(planId, currentCount),
-    canCreateLeadPage: (currentCount: number) => canCreateLeadPage(planId, currentCount),
-    hasCustomDomainAccess: () => hasCustomDomainAccess(planId),
-    hasAnalyticsAccess: () => hasAnalyticsAccess(planId),
-    hasPrioritySupport: () => hasPrioritySupport(planId),
+    // No modelo freemium, tudo é ilimitado
+    canCreateService: () => true,
+    canCreateLeadPage: () => true,
+    hasCustomDomainAccess: () => true,
+    hasAnalyticsAccess: () => true,
+    hasPrioritySupport: () => true,
 
-    // Taxas e valores
-    getCommissionRate: () => getCommissionRate(planId),
+    // Taxas fixas do modelo freemium
+    getCommissionRate: () => 0.08, // 8% para cartão, mas isso pode variar por método
 
-    // Limites atuais
-    maxServices: planFeatures?.maxServices || 10,
-    maxLeadPages: planFeatures?.maxLeadPages || 1,
-    commissionRate: planFeatures?.commissionRate || 0.09,
+    // Limites ilimitados no freemium
+    maxServices: Infinity,
+    maxLeadPages: Infinity,
+    commissionRate: 0.08,
 
-    // Status do plano
-    isFreePlan: planId === 'free',
-    isProPlan: planId === 'professional',
-    isPremiumPlan: planId === 'premium'
+    // Status do plano - sempre freemium
+    isFreePlan: false,
+    isProPlan: false,
+    isPremiumPlan: false,
+    isFreemiumPlan: true
   };
 }

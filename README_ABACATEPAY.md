@@ -69,9 +69,10 @@ Cada cobrança PIX cria um registro no Firestore com:
   serviceId: "...",
   providerId: "...",
   totalAmount: 100.00,
-  commissionPercent: 0.05,
-  commissionAmount: 5.00,
-  providerAmount: 95.00,
+  commissionPercent: 1.99, // 1,99% para PIX
+  commissionFixed: 0.80, // R$ 0,80 fixo para PIX
+  commissionAmount: 2.79, // (100 * 0.0199) + 0.80
+  providerAmount: 97.21, // 100 - 2.79
   status: 'pending', // depois 'paid'
   paymentMethod: 'pix',
   createdAt: "2024-12-28T...",

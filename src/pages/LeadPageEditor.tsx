@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { usePlanLimits } from '../hooks/usePlanLimits';
 import { getUserLeadPage, getTemplate, getAllTemplates, saveUserLeadPage, updateLeadPageSection, getLeadPageStats, calculateLeadPageMetrics } from '../utils/leadpage';
-import { getAvailableTemplates } from '../utils/planUtils';
 import type { LeadPageTemplate, UserLeadPage, LeadPageSection } from '../types/leadpage';
 import { 
   Eye, 
@@ -231,7 +229,6 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
 
 const LeadPageEditor = () => {
   const { user, userData } = useAuth();
-  const { planId } = usePlanLimits();
   const [template, setTemplate] = useState<LeadPageTemplate | null>(null);
   const [allTemplates, setAllTemplates] = useState<LeadPageTemplate[]>([]);
   const [userLeadPage, setUserLeadPage] = useState<UserLeadPage | null>(null);
@@ -314,32 +311,30 @@ const LeadPageEditor = () => {
 
         setAllTemplates(templates);
 
-        // Filtrar templates baseado no plano do usuário
-        const availableTemplates = getAvailableTemplates(planId, templates);
-        setAllTemplates(availableTemplates);
+        // Todos os templates estão disponíveis no modelo freemium
+        setAllTemplates(templates);
 
         if (data) {
           const userTemplate = await getTemplate(data.templateId);
-          // Verificar se o template do usuário está disponível no plano atual
-          const isTemplateAvailable = availableTemplates.some(t => t.id === data.templateId);
-          if (userTemplate && isTemplateAvailable) {
+          // Todos os templates estão disponíveis no modelo freemium
+          if (userTemplate) {
             setTemplate(userTemplate);
             setUserLeadPage(data);
           } else {
-            // Template não disponível no plano atual, usar template padrão disponível
-            const defaultAvailableTemplate = availableTemplates.find(t => t.id === 'default-modern') || availableTemplates[0];
-            if (defaultAvailableTemplate) {
-              setTemplate(defaultAvailableTemplate);
+            // Template não encontrado, usar template padrão
+            const defaultTemplate = templates.find(t => t.id === 'default-modern') || templates[0];
+            if (defaultTemplate) {
+              setTemplate(defaultTemplate);
               const updated: UserLeadPage = {
                 ...data,
-                templateId: defaultAvailableTemplate.id
+                templateId: defaultTemplate.id
               };
               await saveUserLeadPage(user.uid, updated);
               setUserLeadPage(updated);
             }
           }
         } else {
-          const defaultTemplate = availableTemplates.find(t => t.id === 'default-modern') || availableTemplates[0];
+          const defaultTemplate = templates.find(t => t.id === 'default-modern') || templates[0];
           if (defaultTemplate) {
             setTemplate(defaultTemplate);
             const initial: UserLeadPage = {
@@ -817,58 +812,40 @@ const LeadPageEditor = () => {
                   </div>
                 </div>
 
-                {userData?.planId === 'premium' ? (
-                  <div className="space-y-4">
-                    <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-100 rounded-xl p-4">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                        <div className="flex-1">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Seu Domínio
-                          </label>
-                          <div className="flex">
-                            <span className="inline-flex items-center px-3 py-2 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500">
-                              https://
-                            </span>
-                            <input
-                              type="text"
-                              placeholder="meuservico.com.br"
-                              value={userLeadPage?.domain || ''}
-                              onChange={(e) => setUserLeadPage(prev => prev ? { ...prev, domain: e.target.value } : null)}
-                              className="flex-1 px-3 py-2 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                            />
-                          </div>
+                <div className="space-y-4">
+                  <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-100 rounded-xl p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                      <div className="flex-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Seu Domínio
+                        </label>
+                        <div className="flex">
+                          <span className="inline-flex items-center px-3 py-2 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500">
+                            https://
+                          </span>
+                          <input
+                            type="text"
+                            placeholder="meuservico.com.br"
+                            value={userLeadPage?.domain || ''}
+                            onChange={(e) => setUserLeadPage(prev => prev ? { ...prev, domain: e.target.value } : null)}
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-r-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          />
                         </div>
-                        <button
-                          onClick={() => {
-                            // Handle domain save
-                          }}
-                          className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition whitespace-nowrap"
-                        >
-                          Salvar Domínio
-                        </button>
                       </div>
-                      <p className="text-xs text-gray-600 mt-3">
-                        ⓘ Configure o CNAME do seu domínio para apontar para <code className="bg-gray-100 px-1 rounded">marketplace.turvia.com.br</code>
-                      </p>
+                      <button
+                        onClick={() => {
+                          // Handle domain save
+                        }}
+                        className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition whitespace-nowrap"
+                      >
+                        Salvar Domínio
+                      </button>
                     </div>
-                  </div>
-                ) : (
-                  <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-100 rounded-xl p-6 text-center">
-                    <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <Globe className="w-6 h-6 text-yellow-600" />
-                    </div>
-                    <h3 className="font-semibold text-gray-900 mb-2">Domínio Personalizado Premium</h3>
-                    <p className="text-gray-600 mb-4 text-sm">
-                      Use seu próprio domínio para aumentar a credibilidade e conversões
+                    <p className="text-xs text-gray-600 mt-3">
+                      ⓘ Configure o CNAME do seu domínio para apontar para <code className="bg-gray-100 px-1 rounded">marketplace.turvia.com.br</code>
                     </p>
-                    <Link
-                      to="/pricing"
-                      className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-5 py-2.5 rounded-lg font-semibold hover:opacity-90 transition-all hover:scale-105"
-                    >
-                      Fazer Upgrade para Premium
-                    </Link>
                   </div>
-                )}
+                </div>
               </div>
             </div>
           </div>

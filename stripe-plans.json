@@ -13,7 +13,7 @@
       "Suporte básico"
     ],
     "price_cents": 0,
-    "createdAt": "2025-12-29T18:20:14.368Z"
+    "createdAt": "2026-01-06T13:44:00.163Z"
   },
   {
     "planId": "professional",
@@ -31,7 +31,7 @@
       "Suporte prioritário"
     ],
     "price_cents": 999,
-    "createdAt": "2025-12-29T18:20:18.924Z"
+    "createdAt": "2026-01-06T13:44:05.395Z"
   },
   {
     "planId": "premium",
@@ -51,6 +51,6 @@
       "Relatórios personalizados"
     ],
     "price_cents": 1999,
-    "createdAt": "2025-12-29T18:20:21.905Z"
+    "createdAt": "2026-01-06T13:44:06.273Z"
   }
 ]

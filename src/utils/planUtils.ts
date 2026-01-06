@@ -58,41 +58,37 @@ export function getPlanLimits(planId: string): PlanLimits {
   return PLAN_LIMITS[planId] || PLAN_LIMITS.free;
 }
 
-export function canCreateService(userPlanId: string, currentServiceCount: number): boolean {
-  const plan = getPlanLimits(userPlanId);
-  return currentServiceCount < plan.features.maxServices;
+export function canCreateService(_userPlanId: string, _currentServiceCount: number): boolean {
+  // No modelo freemium, criação ilimitada de serviços
+  return true;
 }
 
-export function canCreateLeadPage(userPlanId: string, currentLeadPageCount: number): boolean {
-  const plan = getPlanLimits(userPlanId);
-  return currentLeadPageCount < plan.features.maxLeadPages;
+export function canCreateLeadPage(_userPlanId: string, _currentLeadPageCount: number): boolean {
+  // No modelo freemium, criação ilimitada de lead pages
+  return true;
 }
 
-export function hasCustomDomainAccess(userPlanId: string): boolean {
-  const plan = getPlanLimits(userPlanId);
-  return plan.features.hasCustomDomain;
+export function hasCustomDomainAccess(_userPlanId: string): boolean {
+  // No modelo freemium, domínio personalizado disponível para todos
+  return true;
 }
 
-export function hasAnalyticsAccess(userPlanId: string): boolean {
-  const plan = getPlanLimits(userPlanId);
-  return plan.features.hasAnalytics;
+export function hasAnalyticsAccess(_userPlanId: string): boolean {
+  // No modelo freemium, analytics disponível para todos
+  return true;
 }
 
-export function hasPrioritySupport(userPlanId: string): boolean {
-  const plan = getPlanLimits(userPlanId);
-  return plan.features.hasPrioritySupport;
+export function hasPrioritySupport(_userPlanId: string): boolean {
+  // No modelo freemium, suporte prioritário disponível para todos
+  return true;
 }
 
-export function getCommissionRate(userPlanId: string): number {
-  const plan = getPlanLimits(userPlanId);
-  return plan.features.commissionRate;
+export function getCommissionRate(_userPlanId: string): number {
+  // Taxa fixa de 8% para cartão no modelo freemium
+  return 0.08;
 }
 
-export function getAvailableTemplates(userPlanId: string, allTemplates: LeadPageTemplate[]): LeadPageTemplate[] {
-  if (userPlanId === 'free') {
-    // Plano free: apenas o template padrão
-    return allTemplates.filter(template => template.id === 'default-modern');
-  }
-  // Planos pagos: todos os templates
+export function getAvailableTemplates(_userPlanId: string, allTemplates: LeadPageTemplate[]): LeadPageTemplate[] {
+  // No modelo freemium, todos os templates estão disponíveis
   return allTemplates;
 }
