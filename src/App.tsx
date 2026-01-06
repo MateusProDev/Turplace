@@ -11,6 +11,7 @@ import ServiceForm from './components/Provider/ServiceForm';
 import AdminDashboard from './pages/AdminDashboard';
 import ServiceDetail from './pages/ServiceDetail';
 import CourseDetail from './pages/CourseDetail';
+import EbookDetail from './pages/EbookDetail';
 import RequireAuth from './components/Auth/RequireAuth';
 import ProviderDashboard from './pages/ProviderDashboard';
 import ClientDashboard from './pages/ClientDashboard';
@@ -48,6 +49,7 @@ function App() {
         <Route path="/client" element={<RequireAuth><ClientDashboard /></RequireAuth>} />
         <Route path="/service/:slug" element={<ServiceDetail />} />
         <Route path="/course/:slug" element={<CourseDetail />} />
+        <Route path="/ebook/:slug" element={<EbookDetail />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="/success" element={<Success />} />
         <Route path="/reset-password" element={<ResetPassword />} />

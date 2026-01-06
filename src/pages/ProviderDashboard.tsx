@@ -21,7 +21,8 @@ import {
   TrendingUp,
   Link as LinkIcon,
   BookOpen,
-  ShoppingBag
+  ShoppingBag,
+  X
 } from 'lucide-react';
 import { collection, query, where, getDocs, deleteDoc, doc, updateDoc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from '../utils/firebase';
@@ -94,12 +95,241 @@ interface Course {
   views?: number;
 }
 
+interface Ebook {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  coverImage?: string;
+  fileUrl?: string;
+  status: 'draft' | 'published';
+  createdAt: any;
+  updatedAt: any;
+  authorId: string;
+  downloads?: number;
+  views?: number;
+}
+
 interface Tab {
-  id: 'services' | 'courses' | 'profile' | 'plans' | 'wallet' | 'leadpage' | 'leadpage-editor';
+  id: 'services' | 'courses' | 'ebooks' | 'profile' | 'plans' | 'wallet' | 'leadpage' | 'leadpage-editor';
   label: string;
   icon: React.ComponentType<any>;
   color: string;
   gradient: string;
+}
+
+interface EbookFormProps {
+  ebook?: Ebook;
+  onSave: (ebook: Omit<Ebook, 'id' | 'createdAt' | 'updatedAt' | 'authorId' | 'downloads'>) => void;
+  onCancel: () => void;
+}
+
+function EbookForm({ ebook, onSave, onCancel }: EbookFormProps) {
+  const [title, setTitle] = useState(ebook?.title || '');
+  const [description, setDescription] = useState(ebook?.description || '');
+  const [price, setPrice] = useState(ebook?.price?.toString() || '');
+  const [coverImage, setCoverImage] = useState(ebook?.coverImage || '');
+  const [fileUrl, setFileUrl] = useState(ebook?.fileUrl || '');
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [status, setStatus] = useState<'draft' | 'published'>(ebook?.status || 'draft');
+
+  const handleCoverUpload = async (file: File) => {
+    if (!file) return;
+    
+    setUploadingCover(true);
+    try {
+      const imageUrl = await uploadToCloudinary(file);
+      setCoverImage(imageUrl);
+    } catch (error) {
+      console.error('Erro ao fazer upload da capa:', error);
+      alert('Erro ao fazer upload da capa. Tente novamente.');
+    } finally {
+      setUploadingCover(false);
+    }
+  };
+
+  const handleFileUpload = async (file: File) => {
+    if (!file) return;
+    
+    // Validar tipo de arquivo (PDF, EPUB, etc.)
+    const allowedTypes = ['application/pdf', 'application/epub+zip', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Tipo de arquivo não suportado. Use PDF, EPUB ou DOCX.');
+      return;
+    }
+
+    setUploadingFile(true);
+    try {
+      const fileUrl = await uploadToCloudinary(file);
+      setFileUrl(fileUrl);
+    } catch (error) {
+      console.error('Erro ao fazer upload do arquivo:', error);
+      alert('Erro ao fazer upload do arquivo. Tente novamente.');
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!title.trim() || !description.trim() || !fileUrl.trim()) {
+      alert('Título, descrição e arquivo são obrigatórios');
+      return;
+    }
+
+    const ebookData = {
+      title: title.trim(),
+      description: description.trim(),
+      price: parseFloat(price) || 0,
+      coverImage: coverImage.trim(),
+      fileUrl: fileUrl.trim(),
+      status
+    };
+
+    onSave(ebookData);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Informações Básicas */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Título do eBook *
+          </label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            placeholder="Ex: Guia Completo de Marketing Digital"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Preço (R$) *
+          </label>
+          <input
+            type="number"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            placeholder="0.00"
+            min="0"
+            step="0.01"
+            required
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Descrição *
+        </label>
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={4}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+          placeholder="Descreva o conteúdo do seu eBook..."
+          required
+        />
+      </div>
+
+      {/* Upload da Capa */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Capa do eBook
+        </label>
+        <div className="flex items-center gap-4">
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => e.target.files?.[0] && handleCoverUpload(e.target.files[0])}
+            className="hidden"
+            id="cover-upload"
+            disabled={uploadingCover}
+          />
+          <label
+            htmlFor="cover-upload"
+            className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors cursor-pointer disabled:opacity-50"
+          >
+            <Camera size={16} />
+            {uploadingCover ? 'Enviando...' : 'Escolher Capa'}
+          </label>
+          {coverImage && (
+            <img src={coverImage} alt="Capa" className="w-16 h-20 object-cover rounded border" />
+          )}
+        </div>
+      </div>
+
+      {/* Upload do Arquivo */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Arquivo do eBook *
+        </label>
+        <div className="flex items-center gap-4">
+          <input
+            type="file"
+            accept=".pdf,.epub,.docx"
+            onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
+            className="hidden"
+            id="file-upload"
+            disabled={uploadingFile}
+          />
+          <label
+            htmlFor="file-upload"
+            className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors cursor-pointer disabled:opacity-50"
+          >
+            <FileText size={16} />
+            {uploadingFile ? 'Enviando...' : 'Escolher Arquivo'}
+          </label>
+          {fileUrl && (
+            <span className="text-sm text-gray-600">Arquivo enviado ✓</span>
+          )}
+        </div>
+        <p className="text-xs text-gray-500 mt-1">
+          Formatos aceitos: PDF, EPUB, DOCX. Tamanho máximo: 50MB
+        </p>
+      </div>
+
+      {/* Status */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Status
+        </label>
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value as 'draft' | 'published')}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+        >
+          <option value="draft">Rascunho</option>
+          <option value="published">Publicado</option>
+        </select>
+      </div>
+
+      {/* Botões */}
+      <div className="flex gap-4 pt-6 border-t border-gray-200">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium"
+        >
+          {ebook ? 'Atualizar eBook' : 'Criar eBook'}
+        </button>
+      </div>
+    </form>
+  );
 }
 
 interface CourseFormProps {
@@ -538,8 +768,10 @@ export default function ProviderDashboard() {
   // Estados principais
   const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
   const [services, setServices] = useState<Service[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [ebooks, setEbooks] = useState<Ebook[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentTab, setCurrentTab] = useState<'services' | 'courses' | 'profile' | 'plans' | 'wallet' | 'leadpage' | 'leadpage-editor'>('services');
+  const [currentTab, setCurrentTab] = useState<'services' | 'courses' | 'ebooks' | 'profile' | 'plans' | 'wallet' | 'leadpage' | 'leadpage-editor'>('services');
   
   // Estados do perfil
   const [editMode, setEditMode] = useState(false);
@@ -559,10 +791,14 @@ export default function ProviderDashboard() {
   const [editServiceModal, setEditServiceModal] = useState(false);
   
   // Estados de cursos
-  const [courses, setCourses] = useState<Course[]>([]);
   const [editingCourse, setEditingCourse] = useState<Course | undefined>(undefined);
   const [courseModal, setCourseModal] = useState(false);
   const [deleteCourseId, setDeleteCourseId] = useState<string | null>(null);
+  
+  // Estados de eBooks
+  const [editingEbook, setEditingEbook] = useState<Ebook | undefined>(undefined);
+  const [ebookModal, setEbookModal] = useState(false);
+  const [deleteEbookId, setDeleteEbookId] = useState<string | null>(null);
   
   // Estados do link encurtado
   const [shortLink, setShortLink] = useState<string | null>(null);
@@ -614,6 +850,13 @@ export default function ProviderDashboard() {
       icon: BookOpen, 
       color: 'text-green-600', 
       gradient: 'from-green-500 to-green-600' 
+    },
+    { 
+      id: 'ebooks', 
+      label: 'eBooks', 
+      icon: FileText, 
+      color: 'text-orange-600', 
+      gradient: 'from-orange-500 to-orange-600' 
     },
     { 
       id: 'profile', 
@@ -739,6 +982,7 @@ export default function ProviderDashboard() {
     fetchServices();
     
     loadCourses();
+    loadEbooks();
     
     // Carregar estatísticas da leadpage
     handleLoadLeadStats();
@@ -872,6 +1116,19 @@ export default function ProviderDashboard() {
     }
   };
 
+  const handleDeleteEbook = async () => {
+    if (!deleteEbookId) return;
+
+    try {
+      await deleteDoc(doc(db, "ebooks", deleteEbookId));
+      setEbooks(prev => prev.filter(e => e.id !== deleteEbookId));
+      setDeleteEbookId(null);
+    } catch (err) {
+      console.error("Erro ao excluir eBook:", err);
+      alert("Erro ao excluir eBook.");
+    }
+  };
+
   const loadCourses = async () => {
     if (!user) return;
     
@@ -885,6 +1142,22 @@ export default function ProviderDashboard() {
       setCourses(coursesData);
     } catch (error) {
       console.error("Erro ao carregar cursos:", error);
+    }
+  };
+
+  const loadEbooks = async () => {
+    if (!user) return;
+    
+    try {
+      const q = query(collection(db, "ebooks"), where("authorId", "==", user.uid));
+      const snapshot = await getDocs(q);
+      const ebooksData = snapshot.docs.map(doc => ({ 
+        id: doc.id, 
+        ...doc.data() 
+      } as Ebook));
+      setEbooks(ebooksData);
+    } catch (error) {
+      console.error("Erro ao carregar eBooks:", error);
     }
   };
 
@@ -1597,6 +1870,92 @@ export default function ProviderDashboard() {
             </div>
           )}
 
+          {/* eBooks Tab */}
+          {currentTab === 'ebooks' && (
+            <div className="p-6">
+              <div className="max-w-6xl mx-auto">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Meus eBooks</h2>
+                    <p className="text-gray-600 mt-1">Crie e venda seus eBooks digitais</p>
+                  </div>
+                  <button
+                    onClick={() => setEbookModal(true)}
+                    className="flex items-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-700 transition-colors"
+                  >
+                    <Plus size={18} />
+                    Novo eBook
+                  </button>
+                </div>
+
+                {ebooks.length === 0 ? (
+                  <div className="bg-white rounded-2xl p-12 text-center border border-gray-200">
+                    <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">Nenhum eBook criado ainda</h3>
+                    <p className="text-gray-600 mb-6">Comece criando seu primeiro eBook digital</p>
+                    <button
+                      onClick={() => setEbookModal(true)}
+                      className="bg-orange-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-orange-700 transition-colors"
+                    >
+                      Criar Primeiro eBook
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {ebooks.map((ebook) => (
+                      <div key={ebook.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
+                        <div className="aspect-[3/4] bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center">
+                          {ebook.coverImage ? (
+                            <img src={ebook.coverImage} alt={ebook.title} className="w-full h-full object-cover" />
+                          ) : (
+                            <FileText className="w-12 h-12 text-white" />
+                          )}
+                        </div>
+                        <div className="p-6">
+                          <h3 className="font-semibold text-gray-900 mb-2">{ebook.title}</h3>
+                          <p className="text-gray-600 text-sm mb-4 line-clamp-2">{ebook.description}</p>
+                          <div className="flex items-center justify-between mb-4">
+                            <span className="text-lg font-bold text-orange-600">R$ {Number(ebook.price).toFixed(2)}</span>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              ebook.status === 'published' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {ebook.status === 'published' ? 'Publicado' : 'Rascunho'}
+                            </span>
+                          </div>
+                          <div className="text-sm text-gray-500 mb-4">
+                            <span>{ebook.views || 0} visualizações</span>
+                            {ebook.downloads && ebook.downloads > 0 && (
+                              <span> • {ebook.downloads} downloads</span>
+                            )}
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => {
+                                setEditingEbook(ebook);
+                                setEbookModal(true);
+                              }}
+                              className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                            >
+                              Editar
+                            </button>
+                            <button
+                              onClick={() => setDeleteEbookId(ebook.id)}
+                              className="px-3 py-2 border border-red-300 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors"
+                            >
+                              Excluir
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Profile Tab */}
           {currentTab === 'profile' && (
             <div className="p-6">
@@ -2079,6 +2438,15 @@ export default function ProviderDashboard() {
         onConfirm={handleDeleteCourse}
       />
 
+      {/* Modal de Confirmação para eBooks */}
+      <ConfirmModal
+        open={!!deleteEbookId}
+        title="Excluir eBook"
+        description="Tem certeza que deseja excluir este eBook? Esta ação não pode ser desfeita."
+        onCancel={() => setDeleteEbookId(null)}
+        onConfirm={handleDeleteEbook}
+      />
+
       {/* Modal de Edição de Serviço */}
       {editServiceModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -2181,6 +2549,64 @@ export default function ProviderDashboard() {
                 onCancel={() => {
                   setCourseModal(false);
                   setEditingCourse(undefined);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de eBooks */}
+      {ebookModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900">
+                {editingEbook ? "Editar eBook" : "Criar Novo eBook"}
+              </h2>
+              <button
+                onClick={() => {
+                  setEbookModal(false);
+                  setEditingEbook(undefined);
+                }}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <div className="p-6">
+              <EbookForm
+                ebook={editingEbook}
+                onSave={async (ebookData) => {
+                  try {
+                    if (editingEbook) {
+                      // Atualizar eBook existente
+                      await updateDoc(doc(db, "ebooks", editingEbook.id), {
+                        ...ebookData,
+                        updatedAt: new Date()
+                      });
+                    } else {
+                      // Criar novo eBook
+                      await setDoc(doc(collection(db, "ebooks")), {
+                        ...ebookData,
+                        authorId: user?.uid,
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                        downloads: 0,
+                        views: 0
+                      });
+                    }
+                    await loadEbooks();
+                    setEbookModal(false);
+                    setEditingEbook(undefined);
+                  } catch (error) {
+                    console.error('Erro ao salvar eBook:', error);
+                    alert('Erro ao salvar eBook. Tente novamente.');
+                  }
+                }}
+                onCancel={() => {
+                  setEbookModal(false);
+                  setEditingEbook(undefined);
                 }}
               />
             </div>

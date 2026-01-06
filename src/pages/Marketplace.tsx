@@ -16,7 +16,8 @@ import {
   Eye,
   Heart,
   BookOpen,
-  ShoppingCart
+  ShoppingCart,
+  FileText
 } from "lucide-react";
 
 interface CategoryData {
@@ -36,6 +37,7 @@ interface CategoryData {
 export default function Marketplace() {
   const [categories, setCategories] = useState<CategoryData[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
+  const [ebooks, setEbooks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -64,6 +66,16 @@ export default function Marketplace() {
         setCourses(coursesData);
       } catch (error) {
         console.error('Erro ao carregar cursos:', error);
+      }
+
+      // Fetch ebooks
+      try {
+        const ebooksQuery = query(collection(db, 'ebooks'), where('status', '==', 'published'));
+        const ebooksSnap = await getDocs(ebooksQuery);
+        const ebooksData = ebooksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setEbooks(ebooksData);
+      } catch (error) {
+        console.error('Erro ao carregar eBooks:', error);
       }
 
       setLoading(false);
@@ -140,6 +152,18 @@ export default function Marketplace() {
       normalizeText(course.instructor).includes(searchNormalized) ||
       normalizeText(course.author).includes(searchNormalized) ||
       course.tags?.some((tag: string) => normalizeText(tag).includes(searchNormalized));
+  });
+
+  // Filtrar eBooks baseado na busca
+  const filteredEbooks = ebooks.filter(ebook => {
+    const searchNormalized = normalizeText(searchTerm);
+    
+    // Busca em múltiplos campos com normalização (sem acentos, case insensitive)
+    return !searchNormalized ||
+      normalizeText(ebook.title).includes(searchNormalized) ||
+      normalizeText(ebook.description).includes(searchNormalized) ||
+      normalizeText(ebook.author).includes(searchNormalized) ||
+      ebook.tags?.some((tag: string) => normalizeText(tag).includes(searchNormalized));
   });
 
   const trackUniqueView = async (opts: { kind: 'course' | 'service'; id: string }) => {
@@ -867,6 +891,128 @@ export default function Marketplace() {
                       <div className="flex items-center gap-2 text-[#0097b2] group-hover:text-[#7ed957] transition-colors">
                         <BookOpen className="w-5 h-5" />
                         <span className="text-sm font-medium">Ver Curso</span>
+                        <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* eBooks Section */}
+      <section className="py-12 bg-gray-50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-8">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                  eBooks <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600">Digitais</span>
+                </h2>
+                {searchTerm && (
+                  <p className="text-gray-600">
+                    Encontrados <span className="font-bold text-orange-600">{filteredEbooks.length}</span> eBooks para "{searchTerm}"
+                  </p>
+                )}
+              </div>
+            </div>
+            {!searchTerm && (
+              <p className="text-gray-600 max-w-2xl">
+                Aprenda com nossos eBooks digitais de alta qualidade.
+              </p>
+            )}
+          </div>
+
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="bg-white rounded-2xl shadow-lg border border-gray-100 animate-pulse">
+                  <div className="aspect-[3/4] bg-gray-200 rounded-t-2xl"></div>
+                  <div className="p-6">
+                    <div className="h-4 bg-gray-200 rounded mb-3"></div>
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                    <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredEbooks.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="w-24 h-24 bg-gradient-to-br from-orange-500/10 to-orange-600/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <FileText className="w-12 h-12 text-orange-600" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                Nenhum eBook encontrado
+              </h3>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                Não encontramos eBooks para "{searchTerm}". Tente buscar com outras palavras-chave.
+              </p>
+              <button
+                onClick={() => setSearchTerm('')}
+                className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-xl hover:opacity-90 transition-all"
+              >
+                Limpar busca
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredEbooks.map((ebook) => (
+                <Link
+                  key={ebook.id}
+                  to={`/ebook/${generateSlug(ebook.title)}`}
+                  onClick={() => {
+                    // Incrementar visualizações
+                    void updateDoc(doc(db, 'ebooks', ebook.id), {
+                      views: increment(1)
+                    });
+                  }}
+                  className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 overflow-hidden border border-gray-100"
+                >
+                  <div className="relative aspect-[3/4] overflow-hidden">
+                    <img
+                      src={ebook.coverImage || 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&h=600&fit=crop'}
+                      alt={ebook.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&h=600&fit=crop';
+                      }}
+                    />
+                    <div className="absolute top-3 left-3">
+                      <span className="px-2 py-1 bg-orange-500 text-white text-xs font-medium rounded-full">
+                        eBook
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors line-clamp-2">
+                      {ebook.title}
+                    </h3>
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                      {ebook.description}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-xl font-bold text-gray-900">
+                          R$ {(() => {
+                            const price = ebook.price;
+                            if (typeof price === 'number') return price.toFixed(2).replace('.', ',');
+                            if (typeof price === 'string') {
+                              const cleaned = price.replace(/[^\d,.-]/g, '').replace(',', '.');
+                              const parsed = parseFloat(cleaned);
+                              return isNaN(parsed) ? '0,00' : parsed.toFixed(2).replace('.', ',');
+                            }
+                            return '0,00';
+                          })()}
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          Acesso vitalício
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 text-orange-600 group-hover:text-orange-700 transition-colors">
+                        <span className="text-sm font-medium">Comprar</span>
                         <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
                       </div>
                     </div>
