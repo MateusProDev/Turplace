@@ -156,13 +156,6 @@ const LeadPage = () => {
     };
     loadData();
   }, [actualSlug]);
-        console.error('Erro ao carregar dados:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadData();
-  }, [actualSlug]);
 
   // Tracking de visualizações
   useEffect(() => {
