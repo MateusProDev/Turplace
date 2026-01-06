@@ -932,7 +932,7 @@ const LeadPageEditor = () => {
                             </div>
 
                             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                              <h5 className="font-medium text-blue-800 mb-2">3. Adicione o registro CNAME</h5>
+                              <h5 className="font-medium text-blue-800 mb-2">3. Configure o redirecionamento</h5>
                               <div className="bg-white rounded p-2 mb-2">
                                 <div className="grid grid-cols-3 gap-2 text-xs font-mono">
                                   <div className="font-medium text-gray-700">Tipo</div>
@@ -945,12 +945,10 @@ const LeadPageEditor = () => {
                                 </div>
                               </div>
                               <p className="text-xs text-blue-600 mb-2">
-                                <strong>Recomendado:</strong> Use "lead" como subdomínio para evitar conflitos DNS.
-                                Sua URL ficará: <code>https://lead.seudominio.com.br</code>
+                                <strong>Exemplo:</strong> Configure <code>lead.seudominio.com.br</code> → <code>lucrazi.com.br</code>
                               </p>
                               <p className="text-xs text-blue-600">
-                                <strong>Alternativa:</strong> Se preferir usar a raiz, configure "@" ou "www" apontando para "lucrazi.com.br".
-                                Não inclua "https://" no valor.
+                                <strong>Resultado:</strong> Sua lead page ficará em <code>https://lead.seudominio.com.br</code>
                               </p>
                             </div>
 

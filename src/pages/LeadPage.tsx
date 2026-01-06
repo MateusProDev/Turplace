@@ -7,6 +7,7 @@ import type { LeadPageTemplate, UserLeadPage, LeadPageSection } from '../types/l
 
 const LeadPage = () => {
   const { userSlug } = useParams<{ userSlug: string }>();
+  const { domain } = useParams<{ domain: string }>();
   
   // Se o userSlug começa com "lead/", extrair o slug real (para compatibilidade com URLs antigas)
   const actualSlug = userSlug?.startsWith('lead/') ? userSlug.substring(5) : userSlug;
@@ -129,6 +130,9 @@ const LeadPage = () => {
         if (isCustomDomain && !actualSlug) {
           // Acesso direto via domínio personalizado (sem slug na URL)
           foundUser = await getUserByCustomDomain(hostname);
+        } else if (domain) {
+          // Acesso via rota /custom/:domain (redirecionamento)
+          foundUser = await getUserByCustomDomain(domain);
         } else if (actualSlug) {
           // Acesso via URL padrão com slug
           foundUser = await getUserBySlugOrId(actualSlug);
@@ -155,7 +159,7 @@ const LeadPage = () => {
       }
     };
     loadData();
-  }, [actualSlug]);
+  }, [actualSlug, domain]);
 
   // Tracking de visualizações
   useEffect(() => {

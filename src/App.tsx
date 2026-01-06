@@ -1,5 +1,6 @@
 import ProfileSettings from './pages/ProfileSettings';
 import LeadPageEditor from './pages/LeadPageEditor';
+import LeadPage from './pages/LeadPage';
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import Landing from './pages/Landing';
 import Catalog from './pages/Catalog';
@@ -39,6 +40,8 @@ function App() {
         <Route path="/profile" element={<Navigate to="/profile/settings" replace />} />
         <Route path="/profile/settings" element={<ProfileSettings />} />
         <Route path="/profile/leadpage" element={<RequireAuth><LeadPageEditor /></RequireAuth>} />
+        <Route path="/lead/:userSlug" element={<LeadPage />} />
+        <Route path="/custom/:domain" element={<LeadPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/select-dashboard" element={<RequireAuth><DashboardSelector /></RequireAuth>} />
         <Route path="/provider-login" element={<ProviderLogin />} />
