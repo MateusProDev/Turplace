@@ -109,3 +109,53 @@ Copy sugerida para o site:
 > Simples. Justo. Aceitável.
 
 Para criar os planos no Stripe e gravar seus IDs no Firestore (ou arquivo local), veja `README_STRIPE.md` e execute o script `npm run create:stripe-plans` após configurar `.env`.
+
+---
+
+# Vercel Domain Configuration
+
+## Configuração Automática de Domínios Personalizados
+
+O sistema agora suporta configuração automática de domínios personalizados via Vercel API, permitindo que cada usuário configure seu próprio domínio de forma dinâmica.
+
+### Pré-requisitos
+
+1. **Token de Acesso do Vercel**:
+   - Acesse [Vercel Account Settings](https://vercel.com/account/tokens)
+   - Crie um novo token com permissões para gerenciar domínios
+   - Adicione no `.env`:
+   ```env
+   VERCEL_ACCESS_TOKEN=seu_token_aqui
+   VERCEL_TEAM_ID=seu_team_id_aqui (opcional, para contas de equipe)
+   ```
+
+2. **ID do Projeto**:
+   - Certifique-se de que `VITE_FIREBASE_PROJECT_ID` no `.env` corresponde ao ID do projeto Vercel
+
+### Como Funciona
+
+1. **Usuário salva domínio**: No LeadPageEditor, ao salvar um domínio personalizado
+2. **Configuração automática**: O sistema adiciona o domínio no Vercel via API
+3. **DNS Configuration**: Usuário configura CNAME conforme instruções do Vercel
+4. **Acesso**: Domínio personalizado funciona automaticamente
+
+### Processo para Usuários
+
+1. **Salvar Domínio**: Digite o domínio (ex: `lead.meuservico.com.br`) e clique em "Salvar"
+2. **Configuração Automática**: Sistema adiciona o domínio no Vercel
+3. **DNS**: Configure o CNAME no seu provedor DNS conforme mostrado no Vercel
+4. **Pronto**: Domínio personalizado ativo
+
+### Limitações
+
+- Requer token válido do Vercel com permissões adequadas
+- Domínios são adicionados ao projeto atual
+- Rate limits da API do Vercel se aplicam (1000 requests/hora)
+- Domínios precisam ser verificados via DNS antes de funcionar
+
+### Troubleshooting
+
+- **Erro de permissão**: Verifique se o token tem permissões para gerenciar domínios
+- **Domínio já existe**: Sistema detecta domínios já configurados
+- **Rate limit**: Aguarde alguns minutos antes de tentar novamente
+- **DNS não propaga**: Pode levar até 48 horas para propagação global
