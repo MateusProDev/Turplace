@@ -385,7 +385,7 @@ const LeadPage = () => {
                             ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white' 
                             : 'bg-gradient-to-r from-gray-900 to-black hover:from-black hover:to-gray-900 text-white'
                         }`}>
-                          {(item as any).cta || (item as any).buttonText || 'Escolher Plano'}
+                          {(item as any).cta || (item as any).buttonText || 'Começar Agora'}
                         </button>
                         
                         {(item as any).bonus && (

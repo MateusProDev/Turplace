@@ -867,7 +867,7 @@ export default function ProviderDashboard() {
     },
     { 
       id: 'plans', 
-      label: 'Planos', 
+      label: 'Taxas', 
       icon: CreditCard, 
       color: 'text-emerald-600', 
       gradient: 'from-emerald-500 to-emerald-600' 
