@@ -2,6 +2,48 @@ import { doc, getDoc, setDoc, updateDoc, collection, getDocs } from 'firebase/fi
 import { db } from './firebase';
 import type { LeadPageTemplate, UserLeadPage } from '../types/leadpage.js';
 
+// Funções auxiliares para detectar informações do usuário
+function detectBrowser(): string {
+  const ua = navigator.userAgent;
+  if (ua.includes('Chrome') && !ua.includes('Edg')) return 'Chrome';
+  if (ua.includes('Firefox')) return 'Firefox';
+  if (ua.includes('Safari') && !ua.includes('Chrome')) return 'Safari';
+  if (ua.includes('Edg')) return 'Edge';
+  if (ua.includes('Opera')) return 'Opera';
+  return 'Other';
+}
+
+function detectOS(): string {
+  const ua = navigator.userAgent;
+  if (ua.includes('Windows')) return 'Windows';
+  if (ua.includes('Mac')) return 'macOS';
+  if (ua.includes('Linux')) return 'Linux';
+  if (ua.includes('Android')) return 'Android';
+  if (ua.includes('iOS') || ua.includes('iPhone') || ua.includes('iPad')) return 'iOS';
+  return 'Other';
+}
+
+function getScreenResolution(): string {
+  return `${screen.width}x${screen.height}`;
+}
+
+async function getLocationInfo(): Promise<{ country?: string; city?: string }> {
+  try {
+    // Usar IP-API (gratuito) para obter localização aproximada
+    const response = await fetch('https://ipapi.co/json/');
+    if (response.ok) {
+      const data = await response.json();
+      return {
+        country: data.country_name,
+        city: data.city
+      };
+    }
+  } catch (error) {
+    console.warn('Não foi possível obter localização:', error);
+  }
+  return {};
+}
+
 // Função para obter template padrão
 export async function getDefaultTemplate(): Promise<LeadPageTemplate | null> {
   const templateRef = doc(db, 'templates', 'default-modern');
@@ -67,8 +109,22 @@ export interface LeadPageStats {
     converted: boolean;
     source?: string;
     device?: string;
+    browser?: string;
+    os?: string;
+    country?: string;
+    city?: string;
+    referrer?: string;
+    screenResolution?: string;
+    language?: string;
   }>;
   lastUpdated: number;
+  topSources: Record<string, number>;
+  topDevices: Record<string, number>;
+  topBrowsers: Record<string, number>;
+  topCountries: Record<string, number>;
+  topCities: Record<string, number>;
+  viewsByHour: Record<string, number>;
+  viewsByDay: Record<string, number>;
 }
 
 // Função para obter estatísticas da leadpage
@@ -86,6 +142,19 @@ export async function trackLeadPageView(userId: string, sessionId: string, sourc
   const statsRef = doc(db, 'users', userId, 'leadpage', 'stats');
   const now = Date.now();
 
+  // Coletar informações detalhadas
+  const browser = detectBrowser();
+  const os = detectOS();
+  const screenResolution = getScreenResolution();
+  const language = navigator.language;
+  const referrer = document.referrer;
+  const locationInfo = await getLocationInfo();
+
+  // Dados de tempo
+  const date = new Date(now);
+  const hourKey = `${date.getHours().toString().padStart(2, '0')}:00`;
+  const dayKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
+
   const existingStats = await getLeadPageStats(userId);
   if (!existingStats) {
     // Criar estatísticas iniciais
@@ -99,9 +168,23 @@ export async function trackLeadPageView(userId: string, sessionId: string, sourc
         startTime: now,
         converted: false,
         source,
-        device
+        device,
+        browser,
+        os,
+        country: locationInfo.country,
+        city: locationInfo.city,
+        referrer,
+        screenResolution,
+        language
       }],
-      lastUpdated: now
+      lastUpdated: now,
+      topSources: source ? { [source]: 1 } : {},
+      topDevices: device ? { [device]: 1 } : {},
+      topBrowsers: { [browser]: 1 },
+      topCountries: locationInfo.country ? { [locationInfo.country]: 1 } : {},
+      topCities: locationInfo.city ? { [locationInfo.city]: 1 } : {},
+      viewsByHour: { [hourKey]: 1 },
+      viewsByDay: { [dayKey]: 1 }
     };
     await setDoc(statsRef, initialStats);
   } else {
@@ -112,13 +195,55 @@ export async function trackLeadPageView(userId: string, sessionId: string, sourc
       totalViews: existingStats.totalViews + 1,
       uniqueViews: isNewSession ? existingStats.uniqueViews + 1 : existingStats.uniqueViews,
       sessions: isNewSession
-        ? [...existingStats.sessions, { id: sessionId, startTime: now, converted: false, source, device }]
+        ? [...existingStats.sessions, {
+            id: sessionId,
+            startTime: now,
+            converted: false,
+            source,
+            device,
+            browser,
+            os,
+            country: locationInfo.country,
+            city: locationInfo.city,
+            referrer,
+            screenResolution,
+            language
+          }]
         : existingStats.sessions.map(s =>
             s.id === sessionId
-              ? { ...s, startTime: now } // Atualizar timestamp se sessão já existe
+              ? { ...s, startTime: now }
               : s
           ),
-      lastUpdated: now
+      lastUpdated: now,
+      // Atualizar contadores agregados
+      topSources: {
+        ...existingStats.topSources,
+        [source || 'direct']: (existingStats.topSources[source || 'direct'] || 0) + 1
+      },
+      topDevices: {
+        ...existingStats.topDevices,
+        [device || 'unknown']: (existingStats.topDevices[device || 'unknown'] || 0) + 1
+      },
+      topBrowsers: {
+        ...existingStats.topBrowsers,
+        [browser]: (existingStats.topBrowsers[browser] || 0) + 1
+      },
+      topCountries: locationInfo.country ? {
+        ...existingStats.topCountries,
+        [locationInfo.country]: (existingStats.topCountries[locationInfo.country] || 0) + 1
+      } : existingStats.topCountries,
+      topCities: locationInfo.city ? {
+        ...existingStats.topCities,
+        [locationInfo.city]: (existingStats.topCities[locationInfo.city] || 0) + 1
+      } : existingStats.topCities,
+      viewsByHour: {
+        ...existingStats.viewsByHour,
+        [hourKey]: (existingStats.viewsByHour[hourKey] || 0) + 1
+      },
+      viewsByDay: {
+        ...existingStats.viewsByDay,
+        [dayKey]: (existingStats.viewsByDay[dayKey] || 0) + 1
+      }
     };
     await setDoc(statsRef, updatedStats);
   }
@@ -200,6 +325,13 @@ export function calculateLeadPageMetrics(stats: LeadPageStats) {
   const bouncedSessions = stats.sessions.filter(s => (s.duration || 0) < 10000).length;
   const bounceRate = stats.sessions.length > 0 ? (bouncedSessions / stats.sessions.length) * 100 : 0;
 
+  // Calcular top 5 de cada categoria
+  const getTop5 = (obj: Record<string, number>) =>
+    Object.entries(obj)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5)
+      .map(([key, value]) => ({ name: key, value }));
+
   return {
     conversionRate: Math.round(conversionRate * 10) / 10, // 1 casa decimal
     avgDuration: Math.round(avgDuration / 1000), // em segundos
@@ -207,6 +339,34 @@ export function calculateLeadPageMetrics(stats: LeadPageStats) {
     totalViews,
     uniqueViews: stats.uniqueViews,
     leads,
-    clicks
+    clicks,
+    // Dados detalhados
+    topSources: getTop5(stats.topSources || {}),
+    topDevices: getTop5(stats.topDevices || {}),
+    topBrowsers: getTop5(stats.topBrowsers || {}),
+    topCountries: getTop5(stats.topCountries || {}),
+    topCities: getTop5(stats.topCities || {}),
+    viewsByHour: stats.viewsByHour || {},
+    viewsByDay: stats.viewsByDay || {},
+    // Métricas adicionais
+    totalSessions: stats.sessions.length,
+    convertedSessions: stats.sessions.filter(s => s.converted).length,
+    avgSessionDuration: Math.round(avgDuration / 1000),
+    mostActiveHour: Object.entries(stats.viewsByHour || {}).sort(([,a], [,b]) => b - a)[0]?.[0] || 'N/A'
   };
+}
+
+// Função para gerar URL personalizada baseada no domínio do usuário
+export async function generateCustomDomainUrl(userId: string, path: string = ''): Promise<string> {
+  const userLeadPage = await getUserLeadPage(userId);
+
+  if (userLeadPage?.domain) {
+    // Se tem domínio personalizado, usar https://dominio-personalizado/path
+    const baseUrl = `https://${userLeadPage.domain}`;
+    return path ? `${baseUrl}/${path}` : baseUrl;
+  } else {
+    // Caso contrário, usar o domínio padrão da plataforma
+    const baseUrl = window?.location?.origin || 'https://marketplace.turvia.com.br';
+    return path ? `${baseUrl}/${path}` : baseUrl;
+  }
 }

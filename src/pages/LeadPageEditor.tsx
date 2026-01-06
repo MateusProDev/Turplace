@@ -240,6 +240,7 @@ const LeadPageEditor = () => {
   const [copied, setCopied] = useState(false);
   const [leadPageStats, setLeadPageStats] = useState<any>(null);
   const [loadingLeadStats, setLoadingLeadStats] = useState(false);
+  const [domainInstructionsExpanded, setDomainInstructionsExpanded] = useState(false);
 
   const toggleSectionExpand = (sectionId: string) => {
     const newExpanded = new Set(expandedSections);
@@ -259,6 +260,37 @@ const LeadPageEditor = () => {
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Erro ao copiar link:', err);
+    }
+  };
+
+  const handleSaveDomain = async () => {
+    if (!user || !userLeadPage) return;
+
+    const domain = userLeadPage.domain?.trim();
+    if (!domain) {
+      alert('Por favor, insira um domínio válido.');
+      return;
+    }
+
+    // Basic domain validation
+    const domainRegex = /^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$/;
+    if (!domainRegex.test(domain)) {
+      alert('Formato de domínio inválido. Use apenas letras, números e hífens.');
+      return;
+    }
+
+    try {
+      const updated: UserLeadPage = {
+        ...userLeadPage,
+        domain: domain
+      };
+
+      await saveUserLeadPage(user.uid, updated);
+      setUserLeadPage(updated);
+      alert('Domínio salvo com sucesso! Configure o CNAME do seu domínio para apontar para marketplace.turvia.com.br');
+    } catch (err) {
+      console.error('Erro ao salvar domínio:', err);
+      alert('Erro ao salvar domínio. Tente novamente.');
     }
   };
 
@@ -833,17 +865,118 @@ const LeadPageEditor = () => {
                         </div>
                       </div>
                       <button
-                        onClick={() => {
-                          // Handle domain save
-                        }}
+                        onClick={handleSaveDomain}
                         className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 transition whitespace-nowrap"
                       >
                         Salvar Domínio
                       </button>
                     </div>
                     <p className="text-xs text-gray-600 mt-3">
-                      ⓘ Configure o CNAME do seu domínio para apontar para <code className="bg-gray-100 px-1 rounded">marketplace.turvia.com.br</code>
+                      ⓘ Configure o CNAME do seu domínio para apontar para <code className="bg-gray-100 px-1 rounded">lucrazi.com.br</code>
                     </p>
+                  </div>
+
+                  {/* Accordion com orientações */}
+                  <div className="border border-gray-200 rounded-xl overflow-hidden">
+                    <button
+                      onClick={() => setDomainInstructionsExpanded(!domainInstructionsExpanded)}
+                      className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-1 bg-blue-100 rounded">
+                          <Globe className="w-4 h-4 text-blue-600" />
+                        </div>
+                        <span className="font-medium text-gray-900">Como configurar seu domínio personalizado</span>
+                      </div>
+                      <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${domainInstructionsExpanded ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {domainInstructionsExpanded && (
+                      <div className="p-4 bg-white border-t border-gray-200">
+                        <div className="space-y-4">
+                          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <div className="flex items-start gap-3">
+                              <CheckCircle className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <h4 className="font-medium text-green-800 mb-1">Resultado esperado</h4>
+                                <p className="text-sm text-green-700">
+                                  Após configurar corretamente, sua lead page será acessível através do seu domínio personalizado.
+                                  Por exemplo: se você configurar <code>meuservico.com.br</code>, sua lead page ficará disponível em
+                                  <code>https://meuservico.com.br</code>.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="space-y-3">
+                            <h4 className="font-medium text-gray-900">Passos para configuração:</h4>
+
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                              <h5 className="font-medium text-blue-800 mb-2">1. Acesse o painel do seu provedor de domínio</h5>
+                              <p className="text-sm text-blue-700 mb-2">
+                                Entre no site onde você registrou seu domínio (GoDaddy, Registro.br, HostGator, etc.).
+                              </p>
+                              <p className="text-xs text-blue-600">
+                                Geralmente é o mesmo lugar onde você comprou o domínio.
+                              </p>
+                            </div>
+
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                              <h5 className="font-medium text-blue-800 mb-2">2. Encontre as configurações de DNS</h5>
+                              <p className="text-sm text-blue-700 mb-2">
+                                Procure por opções como "DNS", "Zona DNS", "Gerenciar DNS" ou "Configurações Avançadas".
+                              </p>
+                              <p className="text-xs text-blue-600">
+                                Cada provedor organiza isso de forma diferente, mas geralmente está na seção de domínio.
+                              </p>
+                            </div>
+
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                              <h5 className="font-medium text-blue-800 mb-2">3. Adicione o registro CNAME</h5>
+                              <div className="bg-white rounded p-2 mb-2">
+                                <div className="grid grid-cols-3 gap-2 text-xs font-mono">
+                                  <div className="font-medium text-gray-700">Tipo</div>
+                                  <div className="font-medium text-gray-700">Nome/Host</div>
+                                  <div className="font-medium text-gray-700">Valor/Aponta para</div>
+
+                                  <div className="text-blue-600">CNAME</div>
+                                  <div className="text-blue-600">lead</div>
+                                  <div className="text-blue-600">lucrazi.com.br</div>
+                                </div>
+                              </div>
+                              <p className="text-xs text-blue-600 mb-2">
+                                <strong>Recomendado:</strong> Use "lead" como subdomínio para evitar conflitos DNS.
+                                Sua URL ficará: <code>https://lead.seudominio.com.br</code>
+                              </p>
+                              <p className="text-xs text-blue-600">
+                                <strong>Alternativa:</strong> Se preferir usar a raiz, configure "@" ou "www" apontando para "lucrazi.com.br".
+                                Não inclua "https://" no valor.
+                              </p>
+                            </div>
+
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                              <h5 className="font-medium text-blue-800 mb-2">4. Aguarde a propagação</h5>
+                              <p className="text-sm text-blue-700 mb-2">
+                                As mudanças de DNS podem levar até 48 horas para se propagarem globalmente.
+                              </p>
+                              <p className="text-xs text-blue-600">
+                                Você pode verificar o status usando ferramentas online como "DNS Checker" ou "What's My DNS".
+                              </p>
+                            </div>
+
+                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                              <h5 className="font-medium text-yellow-800 mb-2">⚠️ Dicas importantes</h5>
+                              <ul className="text-xs text-yellow-700 space-y-1">
+                                <li>• Se já existir um registro A ou CNAME para "@" ou "www", edite-o em vez de criar um novo</li>
+                                <li>• Não remova outros registros DNS que já existam</li>
+                                <li>• Se usar "www", certifique-se de que também funciona sem "www"</li>
+                                <li>• Teste a configuração antes de considerar completa</li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -901,19 +1034,21 @@ const LeadPageEditor = () => {
             {/* Stats Card */}
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
               <div className="p-6">
-                <h3 className="font-semibold text-gray-900 mb-4">Estatísticas</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <h3 className="font-semibold text-gray-900 mb-4">Estatísticas da Lead Page</h3>
+
+                {/* Métricas principais */}
+                <div className="grid grid-cols-2 gap-4 mb-6">
                   <div className="bg-blue-50 rounded-lg p-4 text-center">
                     <div className="text-2xl font-bold text-blue-600">
-                      {loadingLeadStats ? '...' : (leadPageStats?.views || 0)}
+                      {loadingLeadStats ? '...' : (leadPageStats?.totalViews || 0)}
                     </div>
-                    <div className="text-sm text-gray-600">Visualizações</div>
+                    <div className="text-sm text-gray-600">Visualizações Totais</div>
                   </div>
                   <div className="bg-green-50 rounded-lg p-4 text-center">
                     <div className="text-2xl font-bold text-green-600">
                       {loadingLeadStats ? '...' : (leadPageStats?.leads || 0)}
                     </div>
-                    <div className="text-sm text-gray-600">Leads</div>
+                    <div className="text-sm text-gray-600">Leads Gerados</div>
                   </div>
                   <div className="bg-purple-50 rounded-lg p-4 text-center">
                     <div className="text-2xl font-bold text-purple-600">
@@ -925,8 +1060,118 @@ const LeadPageEditor = () => {
                     <div className="text-2xl font-bold text-yellow-600">
                       {loadingLeadStats ? '...' : (leadPageStats?.clicks || 0)}
                     </div>
-                    <div className="text-sm text-gray-600">Cliques</div>
+                    <div className="text-sm text-gray-600">Cliques em Botões</div>
                   </div>
+                </div>
+
+                {/* Accordion com estatísticas detalhadas */}
+                <div className="border border-gray-200 rounded-xl overflow-hidden">
+                  <button
+                    onClick={() => setDomainInstructionsExpanded(!domainInstructionsExpanded)}
+                    className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="p-1 bg-blue-100 rounded">
+                        <Eye className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <span className="font-medium text-gray-900">Analytics Detalhados</span>
+                    </div>
+                    <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${domainInstructionsExpanded ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {domainInstructionsExpanded && (
+                    <div className="p-4 bg-white border-t border-gray-200">
+                      <div className="space-y-6">
+                        {/* Sessões e Engajamento */}
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="bg-indigo-50 rounded-lg p-3">
+                            <div className="text-lg font-bold text-indigo-600">
+                              {loadingLeadStats ? '...' : (leadPageStats?.totalSessions || 0)}
+                            </div>
+                            <div className="text-xs text-gray-600">Sessões Totais</div>
+                          </div>
+                          <div className="bg-orange-50 rounded-lg p-3">
+                            <div className="text-lg font-bold text-orange-600">
+                              {loadingLeadStats ? '...' : `${(leadPageStats?.bounceRate || 0).toFixed(1)}%`}
+                            </div>
+                            <div className="text-xs text-gray-600">Taxa de Rejeição</div>
+                          </div>
+                          <div className="bg-teal-50 rounded-lg p-3">
+                            <div className="text-lg font-bold text-teal-600">
+                              {loadingLeadStats ? '...' : `${leadPageStats?.avgSessionDuration || 0}s`}
+                            </div>
+                            <div className="text-xs text-gray-600">Tempo Médio</div>
+                          </div>
+                          <div className="bg-pink-50 rounded-lg p-3">
+                            <div className="text-lg font-bold text-pink-600">
+                              {loadingLeadStats ? '...' : (leadPageStats?.mostActiveHour || 'N/A')}
+                            </div>
+                            <div className="text-xs text-gray-600">Horário Mais Ativo</div>
+                          </div>
+                        </div>
+
+                        {/* Top Fontes */}
+                        {leadPageStats?.topSources && leadPageStats.topSources.length > 0 && (
+                          <div>
+                            <h4 className="font-medium text-gray-900 mb-2">Top Fontes de Tráfego</h4>
+                            <div className="space-y-1">
+                              {leadPageStats.topSources.map((source: {name: string, value: number}, idx: number) => (
+                                <div key={idx} className="flex justify-between items-center text-sm">
+                                  <span className="text-gray-600">{source.name}</span>
+                                  <span className="font-medium text-gray-900">{source.value}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Top Dispositivos */}
+                        {leadPageStats?.topDevices && leadPageStats.topDevices.length > 0 && (
+                          <div>
+                            <h4 className="font-medium text-gray-900 mb-2">Dispositivos Mais Usados</h4>
+                            <div className="space-y-1">
+                              {leadPageStats.topDevices.map((device: {name: string, value: number}, idx: number) => (
+                                <div key={idx} className="flex justify-between items-center text-sm">
+                                  <span className="text-gray-600">{device.name}</span>
+                                  <span className="font-medium text-gray-900">{device.value}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Top Navegadores */}
+                        {leadPageStats?.topBrowsers && leadPageStats.topBrowsers.length > 0 && (
+                          <div>
+                            <h4 className="font-medium text-gray-900 mb-2">Navegadores Mais Usados</h4>
+                            <div className="space-y-1">
+                              {leadPageStats.topBrowsers.map((browser: {name: string, value: number}, idx: number) => (
+                                <div key={idx} className="flex justify-between items-center text-sm">
+                                  <span className="text-gray-600">{browser.name}</span>
+                                  <span className="font-medium text-gray-900">{browser.value}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Top Países */}
+                        {leadPageStats?.topCountries && leadPageStats.topCountries.length > 0 && (
+                          <div>
+                            <h4 className="font-medium text-gray-900 mb-2">Países dos Visitantes</h4>
+                            <div className="space-y-1">
+                              {leadPageStats.topCountries.map((country: {name: string, value: number}, idx: number) => (
+                                <div key={idx} className="flex justify-between items-center text-sm">
+                                  <span className="text-gray-600">{country.name}</span>
+                                  <span className="font-medium text-gray-900">{country.value}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

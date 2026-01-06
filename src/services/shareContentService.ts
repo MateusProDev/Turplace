@@ -1,5 +1,7 @@
 // import ShareContent from '@sharecontent/sdk'; // Removed for security
 
+import { generateCustomDomainUrl } from '../utils/leadpage';
+
 class ShareContentService {
   constructor() {
     // All operations go through the API route for security
@@ -7,8 +9,8 @@ class ShareContentService {
 
   // setToken and setProjectId removed for security - all operations via API route
 
-  // Método para criar um link encurtado via API route
-  async createShortLink(url: string, title?: string, shortCode?: string) {
+  // Método para criar um link encurtado via API route (opcional - com fallback)
+  async createShortLink(url: string, title?: string, shortCode?: string, useFallback: boolean = true) {
     try {
       const response = await fetch('/api/sharecontent', {
         method: 'POST',
@@ -48,7 +50,17 @@ class ShareContentService {
         throw new Error(textBody || 'Resposta inválida do servidor ao criar link encurtado');
       }
     } catch (error) {
-      console.error('Erro ao criar link encurtado:', error);
+      console.warn('ShareContent não disponível, usando URL nativa:', error instanceof Error ? error.message : String(error));
+      if (useFallback) {
+        // Retornar objeto compatível com fallback
+        return {
+          short_url: url,
+          original_url: url,
+          title: title || 'Link',
+          short_code: shortCode || 'native',
+          note: 'Link nativo (ShareContent não disponível)'
+        };
+      }
       throw error;
     }
   }
@@ -153,6 +165,20 @@ class ShareContentService {
       }
     } catch (error) {
       console.error('Erro ao listar links:', error);
+      throw error;
+    }
+  }
+
+  // Método para criar link encurtado com domínio personalizado do usuário
+  async createCustomDomainShortLink(userId: string, path: string, title?: string, shortCode?: string) {
+    try {
+      // Gerar URL personalizada baseada no domínio do usuário
+      const customUrl = await generateCustomDomainUrl(userId, path);
+
+      // Criar link encurtado usando a URL personalizada
+      return await this.createShortLink(customUrl, title, shortCode);
+    } catch (error) {
+      console.error('Erro ao criar link com domínio personalizado:', error);
       throw error;
     }
   }

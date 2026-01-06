@@ -14,6 +14,7 @@ import {
 } from "firebase/firestore";
 import { db, auth } from "../utils/firebase";
 import ShareContentService from "../services/shareContentService";
+import { generateCustomDomainUrl } from "../utils/leadpage";
 import { 
   MapPin, 
   Tag, 
@@ -325,29 +326,52 @@ export default function ServiceDetail() {
     if (!service) return;
 
     try {
-      // Criar link encurtado com ShareContent
-      const shortLink = await shareContentService.createShortLink(
-        window.location.href,
-        service.title,
-        `servico-${service.slug || service.id}`
-      );
+      let shareUrl;
+
+      // Se temos o ownerId do provider, tentar criar link com domínio personalizado
+      if (service.ownerId) {
+        try {
+          // Primeiro tentar gerar URL personalizada nativa
+          shareUrl = await generateCustomDomainUrl(service.ownerId, `servico/${service.slug || service.id}`);
+        } catch (customDomainError) {
+          console.warn('Erro ao gerar URL personalizada, usando URL padrão:', customDomainError);
+          shareUrl = window.location.href;
+        }
+      } else {
+        // Fallback para URL padrão se não temos ownerId
+        shareUrl = window.location.href;
+      }
+
+      // Tentar criar link curto com ShareContent (opcional)
+      let shortLink;
+      try {
+        shortLink = await shareContentService.createShortLink(
+          shareUrl,
+          service.title,
+          `servico-${service.slug || service.id}`,
+          true // useFallback = true
+        );
+      } catch (shareContentError) {
+        console.warn('ShareContent não disponível, usando URL nativa:', shareContentError);
+        shortLink = { short_url: shareUrl };
+      }
 
       const shareData = {
         title: service.title,
         text: service.description?.substring(0, 100) + "...",
-        url: shortLink.short_url, // Usar o link encurtado
+        url: shortLink.short_url, // Usar o link encurtado ou nativo
       };
 
       if (navigator.share) {
         await navigator.share(shareData);
       } else {
         await navigator.clipboard.writeText(shortLink.short_url || window.location.href);
-        setSuccess("Link encurtado copiado para a área de transferência!");
+        setSuccess("Link copiado para a área de transferência!");
         setTimeout(() => setSuccess(null), 3000);
       }
     } catch (err) {
       console.error("Erro ao compartilhar:", err);
-      // Fallback para o link original se o ShareContent falhar
+      // Fallback para o link original se tudo falhar
       const shareData = {
         title: service.title,
         text: service.description?.substring(0, 100) + "...",
@@ -363,7 +387,7 @@ export default function ServiceDetail() {
           setTimeout(() => setSuccess(null), 3000);
         }
       } catch (fallbackErr) {
-        console.error("Erro no fallback de compartilhamento:", fallbackErr);
+        console.error("Erro no fallback:", fallbackErr);
       }
     }
   };

@@ -18,6 +18,37 @@ const LeadPage = () => {
   const [user, setUser] = useState<any>(null);
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
 
+  // Função para detectar e buscar usuário por domínio personalizado
+  const getUserByCustomDomain = async (hostname: string) => {
+    try {
+      // Buscar usuários que têm este domínio configurado
+      const domainQuery = query(collection(db, "users"), where("leadpage.domain", "==", hostname));
+      const domainSnapshot = await getDocs(domainQuery);
+      
+      if (!domainSnapshot.empty) {
+        const userDoc = domainSnapshot.docs[0];
+        return { uid: userDoc.id, ...userDoc.data() };
+      }
+      
+      // Tentar sem "www" se hostname começar com "www"
+      if (hostname.startsWith('www.')) {
+        const domainWithoutWww = hostname.substring(4);
+        const domainQueryNoWww = query(collection(db, "users"), where("leadpage.domain", "==", domainWithoutWww));
+        const domainSnapshotNoWww = await getDocs(domainQueryNoWww);
+        
+        if (!domainSnapshotNoWww.empty) {
+          const userDoc = domainSnapshotNoWww.docs[0];
+          return { uid: userDoc.id, ...userDoc.data() };
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Erro ao buscar usuário por domínio personalizado:', error);
+      return null;
+    }
+  };
+
   // Função para lidar com cliques em botões CTA
   const handleButtonClick = async (_e: React.MouseEvent, buttonLink: string) => {
     if (user) {
@@ -88,12 +119,23 @@ const LeadPage = () => {
 
   useEffect(() => {
     const loadData = async () => {
-      if (!actualSlug) return;
       try {
-        // Primeiro buscar o usuário pelo slug/UID
-        const foundUser = await getUserBySlugOrId(actualSlug);
+        let foundUser = null;
+
+        // Primeiro, verificar se é acesso via domínio personalizado
+        const hostname = window.location.hostname;
+        const isCustomDomain = hostname !== 'lucrazi.com.br' && hostname !== 'localhost' && !hostname.includes('vercel.app');
+
+        if (isCustomDomain && !actualSlug) {
+          // Acesso direto via domínio personalizado (sem slug na URL)
+          foundUser = await getUserByCustomDomain(hostname);
+        } else if (actualSlug) {
+          // Acesso via URL padrão com slug
+          foundUser = await getUserBySlugOrId(actualSlug);
+        }
+
         if (!foundUser) {
-          console.error('User not found for slug/id:', actualSlug);
+          console.error('Usuário não encontrado');
           setLoading(false);
           return;
         }
@@ -107,6 +149,13 @@ const LeadPage = () => {
         setTemplate(tmpl);
         setUserData(data);
       } catch (error) {
+        console.error('Erro ao carregar dados:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, [actualSlug]);
         console.error('Erro ao carregar dados:', error);
       } finally {
         setLoading(false);

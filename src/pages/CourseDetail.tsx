@@ -4,6 +4,7 @@ import { collection, query, where, getDocs, updateDoc, doc, increment } from 'fi
 import { db } from '../utils/firebase';
 import { generateSlug } from '../utils/slug';
 import ShareContentService from '../services/shareContentService';
+import { generateCustomDomainUrl } from '../utils/leadpage';
 import {
   ArrowLeft,
   Clock,
@@ -162,11 +163,34 @@ export default function CourseDetail() {
 
     try {
       const shareContentService = new ShareContentService();
-      const shortLink = await shareContentService.createShortLink(
-        window.location.href,
-        course.title,
-        `curso-${generateSlug(course.title)}`
-      );
+      let shareUrl;
+
+      // Se temos o instructorId, tentar gerar URL personalizada nativa
+      if (course.instructorId) {
+        try {
+          shareUrl = await generateCustomDomainUrl(course.instructorId, `curso/${generateSlug(course.title)}`);
+        } catch (customDomainError) {
+          console.warn('Erro ao gerar URL personalizada, usando URL padrão:', customDomainError);
+          shareUrl = window.location.href;
+        }
+      } else {
+        // Fallback para URL padrão se não temos instructorId
+        shareUrl = window.location.href;
+      }
+
+      // Tentar criar link curto com ShareContent (opcional)
+      let shortLink;
+      try {
+        shortLink = await shareContentService.createShortLink(
+          shareUrl,
+          course.title,
+          `curso-${generateSlug(course.title)}`,
+          true // useFallback = true
+        );
+      } catch (shareContentError) {
+        console.warn('ShareContent não disponível, usando URL nativa:', shareContentError);
+        shortLink = { short_url: shareUrl };
+      }
 
       const shareData = {
         title: course.title,
