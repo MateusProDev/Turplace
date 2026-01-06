@@ -27,6 +27,14 @@ interface CourseSection {
   order: number;
 }
 
+interface CourseModule {
+  id: string;
+  title: string;
+  description?: string;
+  sections: CourseSection[];
+  order: number;
+}
+
 interface Course {
   id: string;
   title: string;
@@ -35,7 +43,7 @@ interface Course {
   priceMonthly?: string;
   billingType?: 'one-time' | 'subscription';
   image?: string;
-  sections: CourseSection[];
+  modules: CourseModule[];
   status: 'draft' | 'published';
   createdAt: any;
   updatedAt: any;
@@ -268,7 +276,7 @@ export default function CourseDetail() {
                 </div>
                 <div className="flex items-center gap-1 text-gray-600">
                   <Clock size={16} />
-                  <span>{course.sections?.length || 0} aulas</span>
+                  <span>{course.modules?.reduce((total, module) => total + module.sections.length, 0) || 0} aulas</span>
                 </div>
               </div>
 
@@ -287,35 +295,53 @@ export default function CourseDetail() {
               </div>
             </div>
 
-            {/* Seções do Curso */}
+            {/* Módulos do Curso */}
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Conteúdo do Curso</h2>
 
-              <div className="space-y-4">
-                {course.sections?.map((section, index) => (
-                  <div
-                    key={section.id}
-                    className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition"
-                  >
-                    <div className="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold">
-                      {index + 1}
-                    </div>
-
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900">{section.title}</h3>
-                      {section.description && (
-                        <p className="text-sm text-gray-600 mt-1">{section.description}</p>
-                      )}
-                    </div>
-
-                    {section.duration && (
-                      <div className="flex items-center gap-1 text-sm text-gray-500">
-                        <Clock size={14} />
-                        {section.duration}
+              <div className="space-y-6">
+                {course.modules?.map((module, moduleIndex) => (
+                  <div key={module.id} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center font-semibold text-lg">
+                        {moduleIndex + 1}
                       </div>
-                    )}
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-900">{module.title}</h3>
+                        {module.description && (
+                          <p className="text-sm text-gray-600 mt-1">{module.description}</p>
+                        )}
+                      </div>
+                    </div>
 
-                    <Play className="text-blue-600" size={20} />
+                    <div className="space-y-3 ml-13">
+                      {module.sections.map((section, sectionIndex) => (
+                        <div
+                          key={section.id}
+                          className="flex items-center gap-4 p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition"
+                        >
+                          <div className="flex-shrink-0 w-6 h-6 bg-gray-400 text-white rounded-full flex items-center justify-center font-semibold text-xs">
+                            {moduleIndex + 1}.{sectionIndex + 1}
+                          </div>
+
+                          <div className="flex-1">
+                            <h4 className="font-medium text-gray-900">{section.title}</h4>
+                            {section.description && (
+                              <p className="text-sm text-gray-600 mt-1">{section.description}</p>
+                            )}
+                          </div>
+
+                          {section.duration && (
+                            <div className="flex items-center gap-1 text-sm text-gray-500">
+                              <Clock size={14} />
+                              {section.duration}
+                            </div>
+                          )}
+
+                          <Play className="text-blue-600" size={18} />
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -395,7 +421,7 @@ export default function CourseDetail() {
                   </li>
                   <li className="flex items-center gap-3">
                     <CheckCircle className="text-green-500" size={16} />
-                    <span className="text-sm">{course.sections?.length || 0} aulas em vídeo</span>
+                    <span className="text-sm">{course.modules?.reduce((total, module) => total + module.sections.length, 0) || 0} aulas em vídeo</span>
                   </li>
                   <li className="flex items-center gap-3">
                     <CheckCircle className="text-green-500" size={16} />

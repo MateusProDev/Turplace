@@ -70,22 +70,41 @@ export default async function handler(req, res) {
         }
       }
 
-      // Buscar conteúdo do curso se for um curso ou se tiver seções
+      // Buscar conteúdo do curso se for um curso ou se tiver módulos/seções
       let sections = null;
-      if (serviceData && serviceData.sections) {
-        // Transformar seções do formato Firestore para o formato esperado pelo frontend
-        sections = serviceData.sections.map(section => {
-          // Verificar diferentes possibilidades de campos de vídeo
-          const videoUrl = section.videoUrl || section.VideoUrl || section.video_url || section.url;
-          
-          return {
-            id: section.id || section.order?.toString() || Math.random().toString(),
-            title: section.title || '',
-            content: section.description || section.content || '',
-            type: videoUrl ? 'video' : 'text',
-            url: videoUrl || null
-          };
-        });
+      if (serviceData && (serviceData.modules || serviceData.sections)) {
+        if (serviceData.modules) {
+          // Novo formato com módulos
+          sections = [];
+          serviceData.modules.forEach(module => {
+            if (module.sections) {
+              module.sections.forEach(section => {
+                const videoUrl = section.videoUrl || section.VideoUrl || section.video_url || section.url;
+
+                sections.push({
+                  id: section.id || section.order?.toString() || Math.random().toString(),
+                  title: `${module.title} - ${section.title}`,
+                  content: section.description || section.content || '',
+                  type: videoUrl ? 'video' : 'text',
+                  url: videoUrl || null
+                });
+              });
+            }
+          });
+        } else if (serviceData.sections) {
+          // Formato antigo com seções diretas (para compatibilidade)
+          sections = serviceData.sections.map(section => {
+            const videoUrl = section.videoUrl || section.VideoUrl || section.video_url || section.url;
+
+            return {
+              id: section.id || section.order?.toString() || Math.random().toString(),
+              title: section.title || '',
+              content: section.description || section.content || '',
+              type: videoUrl ? 'video' : 'text',
+              url: videoUrl || null
+            };
+          });
+        }
       }
 
       const order = {
@@ -101,7 +120,7 @@ export default async function handler(req, res) {
         billingType: orderData.billingType || orderData.billing_type || 'one-time',
         customerEmail: orderData.customerEmail || orderData.customer_email || '',
         accessLink: orderData.accessLink || null,
-        contentType: sections ? 'course' : serviceData?.type || 'service',
+        contentType: (serviceData?.modules || serviceData?.sections) ? 'course' : serviceData?.type || 'service',
         sections: sections
       };
 

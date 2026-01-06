@@ -70,13 +70,21 @@ interface CourseSection {
   order: number;
 }
 
+interface CourseModule {
+  id: string;
+  title: string;
+  description?: string;
+  sections: CourseSection[];
+  order: number;
+}
+
 interface Course {
   id: string;
   title: string;
   description: string;
   price: number;
   image?: string;
-  sections: CourseSection[];
+  modules: CourseModule[];
   status: 'draft' | 'published';
   createdAt: any;
   updatedAt: any;
@@ -107,28 +115,74 @@ function CourseForm({ course, onSave, onCancel }: CourseFormProps) {
   const [image, setImage] = useState(course?.image || '');
   const [uploadingImage, setUploadingImage] = useState(false);
   const [status, setStatus] = useState<'draft' | 'published'>(course?.status || 'draft');
-  const [sections, setSections] = useState<CourseSection[]>(course?.sections || []);
+  const [modules, setModules] = useState<CourseModule[]>(course?.modules || []);
 
-  const addSection = () => {
-    const newSection: CourseSection = {
+  const addModule = () => {
+    if (modules.length >= 5) {
+      alert('Máximo de 5 módulos por curso');
+      return;
+    }
+    const newModule: CourseModule = {
       id: Date.now().toString(),
       title: '',
       description: '',
-      videoUrl: '',
-      duration: '',
-      order: sections.length
+      sections: [],
+      order: modules.length
     };
-    setSections([...sections, newSection]);
+    setModules([...modules, newModule]);
   };
 
-  const updateSection = (id: string, field: keyof CourseSection, value: string | number) => {
-    setSections(sections.map(section => 
-      section.id === id ? { ...section, [field]: value } : section
+  const updateModule = (moduleId: string, field: keyof CourseModule, value: string) => {
+    setModules(modules.map(module => 
+      module.id === moduleId ? { ...module, [field]: value } : module
     ));
   };
 
-  const removeSection = (id: string) => {
-    setSections(sections.filter(section => section.id !== id));
+  const removeModule = (moduleId: string) => {
+    setModules(modules.filter(module => module.id !== moduleId));
+  };
+
+  const addSectionToModule = (moduleId: string) => {
+    setModules(modules.map(module => {
+      if (module.id === moduleId) {
+        const newSection: CourseSection = {
+          id: Date.now().toString(),
+          title: '',
+          description: '',
+          videoUrl: '',
+          duration: '',
+          order: module.sections.length
+        };
+        return { ...module, sections: [...module.sections, newSection] };
+      }
+      return module;
+    }));
+  };
+
+  const updateSectionInModule = (moduleId: string, sectionId: string, field: keyof CourseSection, value: string | number) => {
+    setModules(modules.map(module => {
+      if (module.id === moduleId) {
+        return {
+          ...module,
+          sections: module.sections.map(section => 
+            section.id === sectionId ? { ...section, [field]: value } : section
+          )
+        };
+      }
+      return module;
+    }));
+  };
+
+  const removeSectionFromModule = (moduleId: string, sectionId: string) => {
+    setModules(modules.map(module => {
+      if (module.id === moduleId) {
+        return {
+          ...module,
+          sections: module.sections.filter(section => section.id !== sectionId)
+        };
+      }
+      return module;
+    }));
   };
 
   const handleImageUpload = async (file: File) => {
@@ -154,8 +208,15 @@ function CourseForm({ course, onSave, onCancel }: CourseFormProps) {
       return;
     }
 
-    if (sections.length === 0) {
-      alert('Adicione pelo menos uma seção ao curso');
+    if (modules.length === 0) {
+      alert('Adicione pelo menos um módulo ao curso');
+      return;
+    }
+
+    // Verificar se todos os módulos têm pelo menos uma seção
+    const modulesWithoutSections = modules.filter(module => module.sections.length === 0);
+    if (modulesWithoutSections.length > 0) {
+      alert('Todos os módulos devem ter pelo menos uma seção');
       return;
     }
 
@@ -165,7 +226,11 @@ function CourseForm({ course, onSave, onCancel }: CourseFormProps) {
       price: parseFloat(price) || 0,
       image: image.trim(),
       status,
-      sections: sections.map((section, index) => ({ ...section, order: index }))
+      modules: modules.map((module, moduleIndex) => ({
+        ...module,
+        order: moduleIndex,
+        sections: module.sections.map((section, sectionIndex) => ({ ...section, order: sectionIndex }))
+      }))
     };
 
     onSave(courseData);
@@ -279,43 +344,45 @@ function CourseForm({ course, onSave, onCancel }: CourseFormProps) {
         </div>
       </div>
 
-      {/* Seções do Curso */}
+      {/* Módulos do Curso */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Seções do Curso</h3>
+          <h3 className="text-lg font-semibold text-gray-900">Módulos do Curso</h3>
           <button
             type="button"
-            onClick={addSection}
+            onClick={addModule}
             className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
+            disabled={modules.length >= 5}
           >
             <Plus size={16} />
-            Adicionar Seção
+            Adicionar Módulo ({modules.length}/5)
           </button>
         </div>
 
-        <div className="space-y-4">
-          {sections.map((section, index) => (
-            <div key={section.id} className="border border-gray-200 rounded-lg p-4">
+        <div className="space-y-6">
+          {modules.map((module, moduleIndex) => (
+            <div key={module.id} className="border-2 border-gray-200 rounded-lg p-6 bg-gray-50">
               <div className="flex items-center justify-between mb-4">
-                <h4 className="font-medium text-gray-900">Seção {index + 1}</h4>
+                <h4 className="font-semibold text-gray-900 text-lg">Módulo {moduleIndex + 1}: {module.title || 'Sem título'}</h4>
                 <button
                   type="button"
-                  onClick={() => removeSection(section.id)}
-                  className="text-red-600 hover:text-red-800 transition-colors"
+                  onClick={() => removeModule(module.id)}
+                  className="text-red-600 hover:text-red-800 transition-colors p-1"
                 >
-                  <Trash2 size={16} />
+                  <Trash2 size={18} />
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              {/* Informações do Módulo */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Título da Seção *
+                    Título do Módulo *
                   </label>
                   <input
                     type="text"
-                    value={section.title}
-                    onChange={(e) => updateSection(section.id, 'title', e.target.value)}
+                    value={module.title}
+                    onChange={(e) => updateModule(module.id, 'title', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     placeholder="Ex: Introdução ao Tema"
                     required
@@ -324,56 +391,122 @@ function CourseForm({ course, onSave, onCancel }: CourseFormProps) {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Duração (opcional)
+                    Descrição (opcional)
                   </label>
                   <input
                     type="text"
-                    value={section.duration}
-                    onChange={(e) => updateSection(section.id, 'duration', e.target.value)}
+                    value={module.description}
+                    onChange={(e) => updateModule(module.id, 'description', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="Ex: 15 min"
+                    placeholder="Breve descrição do módulo..."
                   />
                 </div>
               </div>
 
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Descrição (opcional)
-                </label>
-                <textarea
-                  value={section.description}
-                  onChange={(e) => updateSection(section.id, 'description', e.target.value)}
-                  rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Breve descrição do conteúdo desta seção..."
-                />
-              </div>
+              {/* Seções do Módulo */}
+              <div className="border-t border-gray-200 pt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h5 className="font-medium text-gray-800">Seções do Módulo</h5>
+                  <button
+                    type="button"
+                    onClick={() => addSectionToModule(module.id)}
+                    className="flex items-center gap-2 bg-blue-600 text-white px-3 py-1 rounded text-sm font-medium hover:bg-blue-700 transition-colors"
+                  >
+                    <Plus size={14} />
+                    Adicionar Seção
+                  </button>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Link do Vídeo *
-                </label>
-                <input
-                  type="url"
-                  value={section.videoUrl}
-                  onChange={(e) => updateSection(section.id, 'videoUrl', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="https://www.youtube.com/watch?v=..."
-                  required
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  Cole o link do vídeo do YouTube, Vimeo ou outra plataforma
-                </p>
+                <div className="space-y-3">
+                  {module.sections.map((section, sectionIndex) => (
+                    <div key={section.id} className="border border-gray-300 rounded-lg p-4 bg-white">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="font-medium text-gray-700">Seção {moduleIndex + 1}.{sectionIndex + 1}: {section.title || 'Sem título'}</span>
+                        <button
+                          type="button"
+                          onClick={() => removeSectionFromModule(module.id, section.id)}
+                          className="text-red-600 hover:text-red-800 transition-colors"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                            Título da Seção *
+                          </label>
+                          <input
+                            type="text"
+                            value={section.title}
+                            onChange={(e) => updateSectionInModule(module.id, section.id, 'title', e.target.value)}
+                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Título da seção"
+                            required
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">
+                            Duração (opcional)
+                          </label>
+                          <input
+                            type="text"
+                            value={section.duration}
+                            onChange={(e) => updateSectionInModule(module.id, section.id, 'duration', e.target.value)}
+                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-transparent"
+                            placeholder="Ex: 15 min"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="mb-3">
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Descrição (opcional)
+                        </label>
+                        <textarea
+                          value={section.description}
+                          onChange={(e) => updateSectionInModule(module.id, section.id, 'description', e.target.value)}
+                          rows={2}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-transparent"
+                          placeholder="Breve descrição..."
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-gray-600 mb-1">
+                          Link do Vídeo *
+                        </label>
+                        <input
+                          type="url"
+                          value={section.videoUrl}
+                          onChange={(e) => updateSectionInModule(module.id, section.id, 'videoUrl', e.target.value)}
+                          className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-green-500 focus:border-transparent"
+                          placeholder="https://www.youtube.com/watch?v=..."
+                          required
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {module.sections.length === 0 && (
+                  <div className="text-center py-4 text-gray-500 bg-white rounded-lg border-2 border-dashed border-gray-300">
+                    <BookOpen className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Nenhuma seção neste módulo</p>
+                    <p className="text-xs">Adicione seções para organizar o conteúdo</p>
+                  </div>
+                )}
               </div>
             </div>
           ))}
         </div>
 
-        {sections.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            <BookOpen className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>Nenhuma seção adicionada ainda</p>
-            <p className="text-sm">Clique em "Adicionar Seção" para começar</p>
+        {modules.length === 0 && (
+          <div className="text-center py-12 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+            <BookOpen className="w-16 h-16 mx-auto mb-4 opacity-50" />
+            <p className="text-lg font-medium">Nenhum módulo adicionado ainda</p>
+            <p className="text-sm mt-1">Clique em "Adicionar Módulo" para começar a estruturar seu curso</p>
           </div>
         )}
       </div>
