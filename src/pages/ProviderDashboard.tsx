@@ -118,8 +118,8 @@ function CourseForm({ course, onSave, onCancel }: CourseFormProps) {
   const [modules, setModules] = useState<CourseModule[]>(course?.modules || []);
 
   const addModule = () => {
-    if (modules.length >= 5) {
-      alert('Máximo de 5 módulos por curso');
+    if (modules.length >= 50) {
+      alert('Máximo de 50 módulos por curso');
       return;
     }
     const newModule: CourseModule = {
@@ -352,10 +352,10 @@ function CourseForm({ course, onSave, onCancel }: CourseFormProps) {
             type="button"
             onClick={addModule}
             className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
-            disabled={modules.length >= 5}
+            disabled={modules.length >= 50}
           >
             <Plus size={16} />
-            Adicionar Módulo ({modules.length}/5)
+            Adicionar Módulo ({modules.length}/50)
           </button>
         </div>
 
