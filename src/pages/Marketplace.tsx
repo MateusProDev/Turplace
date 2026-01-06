@@ -606,7 +606,7 @@ export default function Marketplace() {
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {[...Array(8)].map((_, i) => (
                 <div key={i} className="bg-white rounded-2xl shadow-lg animate-pulse">
                   <div className="h-48 bg-gray-200 rounded-t-2xl"></div>
@@ -758,7 +758,7 @@ export default function Marketplace() {
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {[...Array(6)].map((_, i) => (
                 <div key={i} className="bg-white rounded-2xl shadow-lg border border-gray-100 animate-pulse">
                   <div className="h-48 bg-gray-200 rounded-t-2xl"></div>
@@ -789,7 +789,7 @@ export default function Marketplace() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {filteredCourses.map((course) => (
                 <Link
                   key={course.id}
@@ -926,7 +926,7 @@ export default function Marketplace() {
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {[...Array(6)].map((_, i) => (
                 <div key={i} className="bg-white rounded-2xl shadow-lg border border-gray-100 animate-pulse">
                   <div className="aspect-[3/4] bg-gray-200 rounded-t-2xl"></div>
@@ -957,7 +957,7 @@ export default function Marketplace() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {filteredEbooks.map((ebook) => (
                 <Link
                   key={ebook.id}

@@ -1683,7 +1683,7 @@ export default function ProviderDashboard() {
 
               {/* Services Grid */}
               {services.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                   {services.map((service) => {
                     const statusBadge = getStatusBadge(service.status);
                     const Icon = statusBadge.icon;
@@ -1815,7 +1815,7 @@ export default function ProviderDashboard() {
                     </button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                     {courses.map((course) => (
                       <div key={course.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
                         <div className="aspect-video bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center">
@@ -1901,7 +1901,7 @@ export default function ProviderDashboard() {
                     </button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                     {ebooks.map((ebook) => (
                       <div key={ebook.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
                         <div className="aspect-[3/4] bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center">
