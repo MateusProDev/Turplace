@@ -263,7 +263,7 @@ const LeadPageEditor = () => {
       // Find the published template
       const publishedTemplate = allTemplates.find(t => t.id === userLeadPage.publishedTemplateId);
       return {
-        template: publishedTemplate || template,
+        template: publishedTemplate || template || allTemplates[0],
         userLeadPage: {
           ...userLeadPage,
           templateId: userLeadPage.publishedTemplateId,
@@ -272,7 +272,7 @@ const LeadPageEditor = () => {
       };
     }
     // Draft mode - use current template and data
-    return { template, userLeadPage };
+    return { template: template || allTemplates[0], userLeadPage };
   };
 
   const handleShare = async () => {
@@ -1092,7 +1092,7 @@ const LeadPageEditor = () => {
                     <div className="[&>*]:!rounded-none [&_section]:!py-6 [&_section]:!px-6 [&_.container]:!px-0">
                       {(() => {
                         const { template: currentTemplate, userLeadPage: currentData } = getCurrentTemplateAndData();
-                        return currentTemplate.sections
+                        return currentTemplate ? currentTemplate.sections
                           .filter(section => {
                             const custom = currentData?.customData?.[section.id] || {};
                             const merged = { ...section, ...custom };
@@ -1102,7 +1102,7 @@ const LeadPageEditor = () => {
                             <div key={section.id}>
                               {renderPreviewSection(section, currentData, true)}
                             </div>
-                          ));
+                          )) : null;
                       })()}
                     </div>
                   </div>
@@ -1110,7 +1110,7 @@ const LeadPageEditor = () => {
 
                 {(() => {
                   const { template: currentTemplate, userLeadPage: currentData } = getCurrentTemplateAndData();
-                  return currentTemplate.sections.filter(section => {
+                  return currentTemplate && currentTemplate.sections.filter(section => {
                     const custom = currentData?.customData?.[section.id] || {};
                     const merged = { ...section, ...custom };
                     return merged.enabled !== false;
