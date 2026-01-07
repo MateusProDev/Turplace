@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { getUserLeadPage, getDefaultTemplate, trackLeadPageView, trackLeadPageSessionEnd, trackLeadPageClick, trackLeadPageLead } from '../utils/leadpage';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../utils/firebase';
 import type { LeadPageTemplate, UserLeadPage, LeadPageSection } from '../types/leadpage';
 
@@ -22,27 +22,63 @@ const LeadPage = () => {
   // Função para detectar e buscar usuário por domínio personalizado
   const getUserByCustomDomain = async (hostname: string) => {
     try {
-      // Buscar usuários que têm este domínio configurado
-      const domainQuery = query(collection(db, "users"), where("leadpage.domain", "==", hostname));
-      const domainSnapshot = await getDocs(domainQuery);
-      
-      if (!domainSnapshot.empty) {
-        const userDoc = domainSnapshot.docs[0];
-        return { uid: userDoc.id, ...userDoc.data() };
+      // Primeiro, buscar diretamente na coleção leadPages (nova estrutura)
+      const leadPagesRef = collection(db, "leadPages");
+      const leadPageQuery = query(leadPagesRef, where("domain", "==", hostname));
+      const leadPageSnapshot = await getDocs(leadPageQuery);
+
+      if (!leadPageSnapshot.empty) {
+        const leadPageDoc = leadPageSnapshot.docs[0];
+        const leadPageData = leadPageDoc.data();
+        const userId = leadPageDoc.id;
+
+        // Buscar dados do usuário
+        const userDoc = await getDoc(doc(db, "users", userId));
+        if (userDoc.exists()) {
+          return { uid: userId, ...userDoc.data() };
+        }
       }
-      
+
       // Tentar sem "www" se hostname começar com "www"
       if (hostname.startsWith('www.')) {
         const domainWithoutWww = hostname.substring(4);
-        const domainQueryNoWww = query(collection(db, "users"), where("leadpage.domain", "==", domainWithoutWww));
-        const domainSnapshotNoWww = await getDocs(domainQueryNoWww);
-        
-        if (!domainSnapshotNoWww.empty) {
-          const userDoc = domainSnapshotNoWww.docs[0];
-          return { uid: userDoc.id, ...userDoc.data() };
+        const leadPageQueryNoWww = query(leadPagesRef, where("domain", "==", domainWithoutWww));
+        const leadPageSnapshotNoWww = await getDocs(leadPageQueryNoWww);
+
+        if (!leadPageSnapshotNoWww.empty) {
+          const leadPageDoc = leadPageSnapshotNoWww.docs[0];
+          const leadPageData = leadPageDoc.data();
+          const userId = leadPageDoc.id;
+
+          // Buscar dados do usuário
+          const userDoc = await getDoc(doc(db, "users", userId));
+          if (userDoc.exists()) {
+            return { uid: userId, ...userDoc.data() };
+          }
         }
       }
-      
+
+      // Fallback: buscar na estrutura antiga (users/{userId}/leadpage/data)
+      console.log('Tentando buscar na estrutura antiga...');
+      const usersRef = collection(db, "users");
+      const usersSnapshot = await getDocs(usersRef);
+
+      for (const userDoc of usersSnapshot.docs) {
+        try {
+          const leadPageRef = doc(db, "users", userDoc.id, "leadpage", "data");
+          const leadPageSnap = await getDoc(leadPageRef);
+
+          if (leadPageSnap.exists()) {
+            const leadPageData = leadPageSnap.data();
+            if (leadPageData.domain === hostname) {
+              return { uid: userDoc.id, ...userDoc.data() };
+            }
+          }
+        } catch (error) {
+          // Ignorar erros individuais
+        }
+      }
+
       return null;
     } catch (error) {
       console.error('Erro ao buscar usuário por domínio personalizado:', error);
