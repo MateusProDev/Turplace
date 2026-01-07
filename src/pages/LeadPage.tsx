@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { getUserLeadPage, getDefaultTemplate, trackLeadPageView, trackLeadPageSessionEnd, trackLeadPageClick, trackLeadPageLead } from '../utils/leadpage';
+import { getUserLeadPage, getDefaultTemplate, getTemplate, trackLeadPageView, trackLeadPageSessionEnd, trackLeadPageClick, trackLeadPageLead } from '../utils/leadpage';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../utils/firebase';
 import type { LeadPageTemplate, UserLeadPage, LeadPageSection } from '../types/leadpage';
@@ -187,10 +187,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
         
         setUser(foundUser);
         
-        const [tmpl, data] = await Promise.all([
-          getDefaultTemplate(),
-          getUserLeadPage(foundUser.uid)
-        ]);
+        const data = await getUserLeadPage(foundUser.uid);
 
         // Use published data if available, otherwise use draft data
         const displayData = data?.publishedTemplateId ? {
@@ -198,6 +195,11 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
           templateId: data.publishedTemplateId,
           customData: data.publishedCustomData || {}
         } : data;
+
+        // Load the correct template based on displayData
+        const [tmpl] = await Promise.all([
+          displayData?.templateId ? getTemplate(displayData.templateId).catch(() => getDefaultTemplate()) : getDefaultTemplate()
+        ]);
 
         setTemplate(tmpl);
         setUserData(displayData);
