@@ -1,3 +1,4 @@
+import React, { useEffect } from 'react';
 import ProfileSettings from './pages/ProfileSettings';
 import LeadPageEditor from './pages/LeadPageEditor';
 import LeadPage from './pages/LeadPage';
@@ -31,6 +32,23 @@ import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 
 function App() {
+  // Detectar domínios personalizados e redirecionar
+  useEffect(() => {
+    const hostname = window.location.hostname;
+    const isCustomDomain = hostname !== 'lucrazi.com.br' &&
+                          hostname !== 'localhost' &&
+                          hostname !== '127.0.0.1' &&
+                          !hostname.includes('vercel.app') &&
+                          !hostname.includes('lucrazi.vercel.app');
+
+    if (isCustomDomain) {
+      // Verificar se já estamos na rota custom
+      if (!window.location.pathname.startsWith('/custom/')) {
+        window.location.href = `https://lucrazi.com.br/custom/${hostname}`;
+      }
+    }
+  }, []);
+
   return (
     <BrowserRouter>
       <Routes>
