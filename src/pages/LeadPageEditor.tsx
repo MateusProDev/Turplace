@@ -243,6 +243,10 @@ const LeadPageEditor = () => {
   const [loadingLeadStats, setLoadingLeadStats] = useState(false);
   const [domainInstructionsExpanded, setDomainInstructionsExpanded] = useState(false);
 
+  // Draft/Publish system
+  const [viewMode, setViewMode] = useState<'draft' | 'published'>('draft'); // What we're currently viewing
+  const [publishing, setPublishing] = useState(false);
+
   const toggleSectionExpand = (sectionId: string) => {
     const newExpanded = new Set(expandedSections);
     if (newExpanded.has(sectionId)) {
@@ -251,6 +255,24 @@ const LeadPageEditor = () => {
       newExpanded.add(sectionId);
     }
     setExpandedSections(newExpanded);
+  };
+
+  // Helper function to get the correct template and data based on view mode
+  const getCurrentTemplateAndData = () => {
+    if (viewMode === 'published' && userLeadPage?.publishedTemplateId) {
+      // Find the published template
+      const publishedTemplate = allTemplates.find(t => t.id === userLeadPage.publishedTemplateId);
+      return {
+        template: publishedTemplate || template,
+        userLeadPage: {
+          ...userLeadPage,
+          templateId: userLeadPage.publishedTemplateId,
+          customData: userLeadPage.publishedCustomData || {}
+        }
+      };
+    }
+    // Draft mode - use current template and data
+    return { template, userLeadPage };
   };
 
   const handleShare = async () => {
@@ -321,7 +343,8 @@ const LeadPageEditor = () => {
         const updated: UserLeadPage = {
           ...userLeadPage!,
           templateId: newTemplateId,
-          customData: {}
+          customData: {},
+          isPublished: false // Mark as having unpublished changes
         };
         setUserLeadPage(updated);
         await saveUserLeadPage(user.uid, updated);
@@ -330,6 +353,28 @@ const LeadPageEditor = () => {
     } catch (error) {
       console.error('Erro ao mudar template:', error);
       alert('Erro ao mudar template. Tente novamente.');
+    }
+  };
+
+  const handlePublish = async () => {
+    if (!user || !userLeadPage) return;
+
+    try {
+      setPublishing(true);
+      const published: UserLeadPage = {
+        ...userLeadPage,
+        publishedTemplateId: userLeadPage.templateId,
+        publishedCustomData: { ...userLeadPage.customData },
+        isPublished: true,
+        lastPublishedAt: new Date()
+      };
+      await saveUserLeadPage(user.uid, published);
+      setUserLeadPage(published);
+    } catch (error) {
+      console.error('Erro ao publicar:', error);
+      alert('Erro ao publicar mudanças. Tente novamente.');
+    } finally {
+      setPublishing(false);
     }
   };
 
@@ -427,10 +472,12 @@ const LeadPageEditor = () => {
   const handleSectionChange = async (sectionId: string, field: string, value: unknown) => {
     if (!user) return;
     const updated = { ...userLeadPage!.customData[sectionId], [field]: value };
-    setUserLeadPage(prev => prev ? {
-      ...prev,
-      customData: { ...prev.customData, [sectionId]: updated }
-    } : null);
+    const updatedUserLeadPage = {
+      ...userLeadPage!,
+      customData: { ...userLeadPage!.customData, [sectionId]: updated },
+      isPublished: false // Mark as having unpublished changes
+    };
+    setUserLeadPage(updatedUserLeadPage);
 
     try {
       setSaving(true);
@@ -542,7 +589,7 @@ const LeadPageEditor = () => {
                 </div>
               )}
               
-              {allTemplates.length > 1 && (
+              {allTemplates.length > 1 && viewMode === 'draft' && (
                 <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2">
                   <Palette className="w-4 h-4 text-gray-500" />
                   <select
@@ -557,6 +604,50 @@ const LeadPageEditor = () => {
                     ))}
                   </select>
                 </div>
+              )}
+
+              {/* Current Template Display for Published Mode */}
+              {viewMode === 'published' && userLeadPage?.publishedTemplateId && (
+                <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  <span className="text-sm font-medium text-green-800">
+                    Modelo Publicados: {allTemplates.find(t => t.id === userLeadPage.publishedTemplateId)?.name || 'Desconhecido'}
+                  </span>
+                </div>
+              )}
+
+              {/* View Mode Toggle */}
+              <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2">
+                <Eye className="w-4 h-4 text-gray-500" />
+                <select
+                  value={viewMode}
+                  onChange={(e) => setViewMode(e.target.value as 'draft' | 'published')}
+                  className="text-sm font-medium text-gray-900 bg-transparent border-none focus:ring-0 focus:outline-none"
+                >
+                  <option value="draft">Rascunho</option>
+                  <option value="published">Publicado</option>
+                </select>
+              </div>
+
+              {/* Publish Button */}
+              {userLeadPage && !userLeadPage.isPublished && (
+                <button
+                  onClick={handlePublish}
+                  disabled={publishing}
+                  className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {publishing ? (
+                    <>
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                      <span>Publicando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4" />
+                      <span>Publicar</span>
+                    </>
+                  )}
+                </button>
               )}
 
               <button
@@ -984,7 +1075,14 @@ const LeadPageEditor = () => {
               <div className="p-6 border-b border-gray-100">
                 <div className="flex items-center gap-2">
                   <Eye className="w-5 h-5 text-gray-700" />
-                  <h3 className="font-semibold text-gray-900">Pré-visualização Mobile</h3>
+                  <h3 className="font-semibold text-gray-900">
+                    Pré-visualização Mobile {viewMode === 'draft' ? '(Rascunho)' : '(Publicado)'}
+                  </h3>
+                  {viewMode === 'published' && (
+                    <span className="ml-2 px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                      Ao Vivo
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -992,36 +1090,42 @@ const LeadPageEditor = () => {
                 <div className="bg-gray-100 rounded-2xl p-4 mx-auto max-w-lg">
                   <div className="bg-white rounded-xl overflow-hidden shadow-lg min-h-[600px] max-h-[700px] overflow-y-auto">
                     <div className="[&>*]:!rounded-none [&_section]:!py-6 [&_section]:!px-6 [&_.container]:!px-0">
-                      {template.sections
-                        .filter(section => {
-                          const custom = userLeadPage?.customData?.[section.id] || {};
-                          const merged = { ...section, ...custom };
-                          return merged.enabled !== false;
-                        })
-                        .map(section => (
-                          <div key={section.id}>
-                            {renderPreviewSection(section, userLeadPage, true)}
-                          </div>
-                        ))}
+                      {(() => {
+                        const { template: currentTemplate, userLeadPage: currentData } = getCurrentTemplateAndData();
+                        return currentTemplate.sections
+                          .filter(section => {
+                            const custom = currentData?.customData?.[section.id] || {};
+                            const merged = { ...section, ...custom };
+                            return merged.enabled !== false;
+                          })
+                          .map(section => (
+                            <div key={section.id}>
+                              {renderPreviewSection(section, currentData, true)}
+                            </div>
+                          ));
+                      })()}
                     </div>
                   </div>
                 </div>
 
-                {template.sections.filter(section => {
-                  const custom = userLeadPage?.customData?.[section.id] || {};
-                  const merged = { ...section, ...custom };
-                  return merged.enabled !== false;
-                }).length === 0 && (
-                  <div className="bg-gray-50 rounded-xl p-8 text-center">
-                    <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <Eye className="w-6 h-6 text-gray-400" />
+                {(() => {
+                  const { template: currentTemplate, userLeadPage: currentData } = getCurrentTemplateAndData();
+                  return currentTemplate.sections.filter(section => {
+                    const custom = currentData?.customData?.[section.id] || {};
+                    const merged = { ...section, ...custom };
+                    return merged.enabled !== false;
+                  }).length === 0 && (
+                    <div className="bg-gray-50 rounded-xl p-8 text-center">
+                      <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Eye className="w-6 h-6 text-gray-400" />
+                      </div>
+                      <p className="text-gray-600 font-medium">Nenhuma seção ativa</p>
+                      <p className="text-gray-500 text-sm mt-1">
+                        Ative algumas seções no editor para visualizá-las aqui
+                      </p>
                     </div>
-                    <p className="text-gray-600 font-medium">Nenhuma seção ativa</p>
-                    <p className="text-gray-500 text-sm mt-1">
-                      Ative algumas seções no editor para visualizá-las aqui
-                    </p>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             </div>
 

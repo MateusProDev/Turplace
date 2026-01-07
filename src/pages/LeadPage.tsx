@@ -191,8 +191,16 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
           getDefaultTemplate(),
           getUserLeadPage(foundUser.uid)
         ]);
+
+        // Use published data if available, otherwise use draft data
+        const displayData = data?.publishedTemplateId ? {
+          ...data,
+          templateId: data.publishedTemplateId,
+          customData: data.publishedCustomData || {}
+        } : data;
+
         setTemplate(tmpl);
-        setUserData(data);
+        setUserData(displayData);
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
       } finally {

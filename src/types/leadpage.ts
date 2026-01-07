@@ -42,4 +42,10 @@ export interface UserLeadPage {
   templateId: string;
   customData: { [sectionId: string]: Partial<LeadPageSection> };
   domain?: string; // for custom domains
+
+  // Draft/Publish system
+  publishedTemplateId?: string; // Template ID that is currently published
+  publishedCustomData?: { [sectionId: string]: Partial<LeadPageSection> }; // Custom data that is currently published
+  isPublished?: boolean; // Whether there are unpublished changes
+  lastPublishedAt?: Date; // When it was last published
 }
