@@ -42,7 +42,7 @@ const getFieldPlaceholder = (field: string): string => {
   }
 };
 
-const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPage | null, isMobilePreview: boolean = false) => {
+const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPage | null) => {
   const custom = userLeadPage?.customData?.[section.id] || {};
   const merged = { ...section, ...custom };
   if (merged.enabled === false) return null; // Only hide if explicitly set to false
@@ -58,7 +58,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
                 <div className="absolute inset-0 bg-black bg-opacity-40"></div>
               </div>
             )}
-            <div className={`relative z-10 container mx-auto ${isMobilePreview ? '' : 'px-4'} py-8`}>
+            <div className="relative z-10 container mx-auto px-4 py-8">
               <div className="max-w-4xl mx-auto text-center">
                 {merged.subtitle && (
                   <p className="text-base md:text-lg mb-2 text-blue-200 font-light">{merged.subtitle}</p>
@@ -67,7 +67,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
                 <p className="text-base md:text-lg mb-4 max-w-3xl mx-auto text-blue-100">{merged.content}</p>
 
                 {merged.stats && (
-                  <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-3'} gap-4 mb-6`}>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     {merged.stats.map((stat: string, idx: number) => (
                       <div key={idx} className="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-3 border border-white border-opacity-20">
                         <div className="text-xl md:text-2xl font-bold text-white">{stat.split(' ')[0]}</div>
@@ -94,7 +94,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
       }
       return (
         <section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-12">
-          <div className={`container mx-auto text-center ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className="container mx-auto text-center px-4">
             <h1 className="text-2xl md:text-3xl font-bold mb-3">{merged.title}</h1>
             <p className="text-base mb-4 max-w-2xl mx-auto">{merged.content}</p>
             {merged.image && <img src={merged.image} alt="Hero" className="mx-auto mb-4 rounded-lg shadow-lg max-w-xs" />}
@@ -108,9 +108,9 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'about':
       return (
         <section className="py-16">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-12 text-gray-900">{merged.title}</h2>
-            <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-3'} gap-8`}>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {merged.items?.map((item: unknown, idx: number) => (
                 <div key={idx} className="text-center">
                   <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
@@ -133,12 +133,12 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
       if ((merged.items?.[0] as any)?.video) {
         return (
           <section className="py-12 bg-gray-50">
-            <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+            <div className="container mx-auto px-4">
               <div className="text-center mb-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">{merged.title}</h2>
                 {merged.subtitle && <p className="text-lg text-gray-600">{merged.subtitle}</p>}
               </div>
-              <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-3'} gap-6`}>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {merged.items?.map((item: unknown, idx: number) => (
                   <div key={idx} className="bg-white rounded-lg shadow-md p-4">
                     <div className="flex items-center mb-3">
@@ -163,7 +163,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
       }
       return (
         <section className="py-12 bg-gray-50">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className="container mx-auto px-4">
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">{merged.title}</h2>
               {merged.subtitle && <p className="text-lg text-gray-600">{merged.subtitle}</p>}
@@ -195,9 +195,9 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'benefits':
       return (
         <section className="py-16 bg-gray-50">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className="container mx-auto px-4">
             <h2 className="text-3xl font-bold text-center mb-12 text-gray-900">{merged.title}</h2>
-            <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-3'} gap-8`}>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {merged.items?.map((item: unknown, idx: number) => (
                 <div key={idx} className="text-center">
                   <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
@@ -213,7 +213,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'cta':
       return (
         <section className="py-16 bg-blue-600 text-white">
-          <div className={`container mx-auto text-center ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className="container mx-auto text-center px-4">
             <h2 className="text-3xl font-bold mb-4">{merged.title}</h2>
             <p className="text-lg mb-8 max-w-2xl mx-auto">{merged.content}</p>
             <a href={merged.buttonLink} className="bg-yellow-500 hover:bg-yellow-400 text-black px-8 py-3 rounded-lg font-bold text-lg transition-all transform hover:scale-105 shadow-2xl inline-block">
@@ -232,7 +232,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
               backgroundSize: '100px 100px'
             }}></div>
           )}
-          <div className={`relative z-10 container mx-auto ${isMobilePreview ? '' : 'px-4'} py-8`}>
+          <div className="relative z-10 container mx-auto px-4 py-8">
             <div className="max-w-4xl mx-auto text-center">
               {merged.subtitle && (
                 <p className="text-sm mb-2 text-gray-400 font-mono uppercase tracking-wider">{merged.subtitle}</p>
@@ -256,7 +256,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'documentary':
       return (
         <section className="py-16 bg-gray-900 text-white">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
               <h2 className="text-2xl font-bold mb-8 text-center text-white">{merged.title}</h2>
               {merged.subject && (
@@ -288,10 +288,10 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'montage':
       return (
         <section className="py-16 bg-gradient-to-r from-purple-900 to-blue-900 text-white">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className="container mx-auto px-4">
             <div className="max-w-6xl mx-auto">
               <h2 className="text-3xl font-bold text-center mb-12">{merged.title}</h2>
-              <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-3'} gap-6`}>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {merged.clips?.map((clip: any, idx: number) => (
                   <div key={idx} className="bg-black bg-opacity-50 rounded-lg p-4 border border-white border-opacity-20">
                     <div className="text-center">
@@ -313,7 +313,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'manuscript':
       return (
         <section className="py-16 bg-yellow-50">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto">
               <div className="bg-white rounded-lg shadow-2xl p-8 border-4 border-yellow-800" style={{
                 backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23f59e0b' fill-opacity='0.1'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E")`,
@@ -337,10 +337,10 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'alchemical':
       return (
         <section className="py-16 bg-gradient-to-b from-purple-900 via-indigo-900 to-black text-white">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className="container mx-auto px-4">
             <div className="max-w-6xl mx-auto text-center">
               <h2 className="text-4xl font-bold mb-8 text-yellow-400" style={{ fontFamily: 'serif' }}>{merged.title}</h2>
-              <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-3'} gap-8 mb-12`}>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
                 {merged.elements?.map((element: any, idx: number) => (
                   <div key={idx} className="bg-gray-800 bg-opacity-50 rounded-lg p-6 border border-yellow-500 border-opacity-50">
                     <div className="text-4xl mb-4">{element.symbol}</div>
@@ -361,10 +361,10 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'bestiary':
       return (
         <section className="py-16 bg-gradient-to-r from-green-900 to-teal-900 text-white">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className="container mx-auto px-4">
             <div className="max-w-6xl mx-auto">
               <h2 className="text-3xl font-bold text-center mb-12">{merged.title}</h2>
-              <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-2'} gap-8`}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {merged.creatures?.map((creature: any, idx: number) => (
                   <div key={idx} className="bg-black bg-opacity-50 rounded-lg p-6 border border-green-500 border-opacity-50">
                     <div className="flex items-center mb-4">
@@ -394,7 +394,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
             <div className="absolute top-32 right-20 w-24 h-24 bg-yellow-400 rounded-full opacity-10 animate-pulse" style={{ animationDelay: '1s' }}></div>
             <div className="absolute bottom-20 left-1/4 w-20 h-20 bg-pink-400 rounded-full opacity-10 animate-pulse" style={{ animationDelay: '2s' }}></div>
           </div>
-          <div className={`relative z-10 container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className={`relative z-10 container mx-auto px-4`}>
             <div className="max-w-4xl mx-auto text-center">
               <h2 className="text-4xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-pink-400">{merged.title}</h2>
               <p className="text-xl mb-8 text-gray-200">{merged.content}</p>
@@ -415,7 +415,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'lucid':
       return (
         <section className="py-16 bg-black text-white">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className={`container mx-auto px-4`}>
             <div className="max-w-4xl mx-auto">
               <div className="text-center mb-12">
                 <h2 className="text-4xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">{merged.title}</h2>
@@ -441,7 +441,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'quest':
       return (
         <section className="py-16 bg-gradient-to-r from-orange-900 to-red-900 text-white">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className={`container mx-auto px-4`}>
             <div className="max-w-6xl mx-auto">
               <h2 className="text-4xl font-bold text-center mb-12">{merged.title}</h2>
               <div className="bg-black bg-opacity-50 rounded-lg p-8 border-2 border-yellow-500 mb-8">
@@ -470,7 +470,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'horological':
       return (
         <section className="py-16 bg-gradient-to-b from-gray-900 to-black text-white">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className={`container mx-auto px-4`}>
             <div className="max-w-4xl mx-auto text-center">
               <h2 className="text-4xl font-bold mb-8 text-gray-300" style={{ fontFamily: 'serif' }}>{merged.title}</h2>
               <div className="bg-gray-800 rounded-full w-64 h-64 mx-auto mb-8 flex items-center justify-center border-4 border-gray-600">
@@ -497,10 +497,10 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'mechanical':
       return (
         <section className="py-16 bg-gradient-to-r from-gray-800 to-gray-900 text-white">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className={`container mx-auto px-4`}>
             <div className="max-w-6xl mx-auto">
               <h2 className="text-4xl font-bold text-center mb-12 text-gray-300">{merged.title}</h2>
-              <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-2'} gap-8 mb-12`}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
                 {merged.mechanisms?.map((mechanism: any, idx: number) => (
                   <div key={idx} className="bg-gray-700 rounded-lg p-6 border border-gray-600">
                     <div className="flex items-center mb-4">
@@ -529,7 +529,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'complication':
       return (
         <section className="py-16 bg-gradient-to-r from-red-900 to-orange-900 text-white">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className={`container mx-auto px-4`}>
             <div className="max-w-4xl mx-auto">
               <h2 className="text-3xl font-bold text-center mb-8 text-yellow-400">{merged.title}</h2>
               <div className="bg-black bg-opacity-50 rounded-lg p-8 border-2 border-red-500 mb-8">
@@ -560,14 +560,14 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'revolutionary':
       return (
         <section className="py-16 bg-red-900 text-white">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className={`container mx-auto px-4`}>
             <div className="max-w-6xl mx-auto">
               <h2 className="text-4xl font-bold text-center mb-8 text-yellow-400" style={{ fontFamily: 'serif' }}>{merged.title}</h2>
               <div className="bg-black bg-opacity-70 rounded-lg p-8 border-4 border-red-600 mb-8">
                 <div className="text-center mb-6">
                   <p className="text-xl text-red-300 italic" style={{ fontFamily: 'serif' }}>{merged.manifesto}</p>
                 </div>
-                <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-2'} gap-6`}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {merged.revolutionaryElements?.map((element: any, idx: number) => (
                     <div key={idx} className="text-center">
                       <div className="text-4xl mb-3">{element.icon}</div>
@@ -585,7 +585,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'demands':
       return (
         <section className="py-16 bg-gradient-to-r from-red-800 to-red-900 text-white">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className={`container mx-auto px-4`}>
             <div className="max-w-4xl mx-auto">
               <h2 className="text-3xl font-bold text-center mb-8 text-yellow-400">{merged.title}</h2>
               <div className="bg-black bg-opacity-50 rounded-lg p-8 border-2 border-yellow-500">
@@ -610,13 +610,13 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'propaganda':
       return (
         <section className="py-16 bg-gradient-to-r from-red-700 to-red-800 text-white">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className={`container mx-auto px-4`}>
             <div className="max-w-6xl mx-auto">
               <div className="text-center mb-12">
                 <h2 className="text-4xl font-bold mb-4 text-yellow-400">{merged.title}</h2>
                 <p className="text-xl text-gray-200">{merged.slogan}</p>
               </div>
-              <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-3'} gap-8`}>
+              <div className={`grid grid-cols-1 md:grid-cols-3 gap-8`}>
                 {merged.propagandaElements?.map((element: any, idx: number) => (
                   <div key={idx} className="bg-black bg-opacity-70 rounded-lg p-6 border-2 border-yellow-500 text-center">
                     <div className="text-5xl mb-4">{element.icon}</div>
@@ -643,7 +643,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
           <div className="absolute top-20 left-20 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
           <div className="absolute top-40 right-20 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse" style={{ animationDelay: '2s' }}></div>
           <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse" style={{ animationDelay: '4s' }}></div>
-          <div className={`relative z-10 container mx-auto ${isMobilePreview ? '' : 'px-4'} py-20`}>
+          <div className={`relative z-10 container mx-auto px-4 py-20`}>
             <div className="max-w-4xl mx-auto text-center">
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-black mb-6 leading-tight bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent">
                 {merged.title}
@@ -667,12 +667,12 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'features-modern':
       return (
         <section className="py-20 bg-white">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className={`container mx-auto px-4`}>
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{merged.title}</h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">{merged.subtitle}</p>
             </div>
-            <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-3'} gap-8`}>
+            <div className={`grid grid-cols-1 md:grid-cols-3 gap-8`}>
               {merged.features?.map((feature: any, idx: number) => (
                 <div key={idx} className="group bg-gradient-to-br from-slate-50 to-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-200 hover:border-blue-200">
                   <div className="text-4xl mb-4 text-blue-600 group-hover:scale-110 transition-transform duration-300">
@@ -690,12 +690,12 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'pricing-modern':
       return (
         <section className="py-20 bg-gradient-to-br from-slate-50 to-blue-50">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className={`container mx-auto px-4`}>
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{merged.title}</h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">{merged.subtitle}</p>
             </div>
-            <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-3'} gap-8 max-w-6xl mx-auto`}>
+            <div className={`grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto`}>
               {merged.plans?.map((plan: any, idx: number) => (
                 <div key={idx} className={`relative bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border-2 ${plan.popular ? 'border-blue-500 scale-105' : 'border-slate-200'}`}>
                   {plan.popular && (
@@ -734,7 +734,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
             <div className="absolute top-10 left-10 w-32 h-32 bg-white rounded-full opacity-5 animate-pulse"></div>
             <div className="absolute bottom-10 right-10 w-24 h-24 bg-white rounded-full opacity-5 animate-pulse" style={{ animationDelay: '1s' }}></div>
           </div>
-          <div className={`relative z-10 container mx-auto text-center ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className={`relative z-10 container mx-auto text-center px-4`}>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">{merged.title}</h2>
             <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto text-blue-100">{merged.subtitle}</p>
             <a href={merged.buttonLink} className="bg-white text-blue-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-blue-50 transition-all transform hover:scale-105 shadow-2xl inline-block">
@@ -748,7 +748,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
       return (
         <section className="min-h-screen flex items-center bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-amber-100/20 via-orange-100/20 to-yellow-100/20"></div>
-          <div className={`relative z-10 container mx-auto ${isMobilePreview ? '' : 'px-4'} py-20`}>
+          <div className={`relative z-10 container mx-auto px-4 py-20`}>
             <div className="max-w-4xl mx-auto text-center">
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-black mb-6 leading-tight text-gray-900">
                 {merged.title}
@@ -772,12 +772,12 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'products-showcase':
       return (
         <section className="py-20 bg-white">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className={`container mx-auto px-4`}>
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{merged.title}</h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">{merged.subtitle}</p>
             </div>
-            <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-3'} gap-8`}>
+            <div className={`grid grid-cols-1 md:grid-cols-3 gap-8`}>
               {merged.products?.map((product: any, idx: number) => (
                 <div key={idx} className="group bg-white p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-200 hover:border-amber-200">
                   <div className="aspect-square mb-4 rounded-xl overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
@@ -806,12 +806,12 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'testimonials-luxury':
       return (
         <section className="py-20 bg-gradient-to-br from-amber-50 to-orange-50">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className={`container mx-auto px-4`}>
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{merged.title}</h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">{merged.subtitle}</p>
             </div>
-            <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-2'} gap-8 max-w-4xl mx-auto`}>
+            <div className={`grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto`}>
               {merged.testimonials?.map((testimonial: any, idx: number) => (
                 <div key={idx} className="bg-white p-8 rounded-2xl shadow-lg border border-amber-100">
                   <div className="flex items-center mb-4">
@@ -833,7 +833,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
       return (
         <section className="py-20 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-800 text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-black bg-opacity-10"></div>
-          <div className={`relative z-10 container mx-auto text-center ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className={`relative z-10 container mx-auto text-center px-4`}>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">{merged.title}</h2>
             <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto text-amber-100">{merged.subtitle}</p>
             <a href={merged.buttonLink} className="bg-white text-amber-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-amber-50 transition-all transform hover:scale-105 shadow-2xl inline-block">
@@ -849,7 +849,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
           <div className="absolute inset-0 bg-black bg-opacity-30"></div>
           <div className="absolute top-20 right-20 w-96 h-96 bg-emerald-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
           <div className="absolute bottom-20 left-20 w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '3s' }}></div>
-          <div className={`relative z-10 container mx-auto ${isMobilePreview ? '' : 'px-4'} py-20`}>
+          <div className={`relative z-10 container mx-auto px-4 py-20`}>
             <div className="max-w-4xl mx-auto text-center">
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-black mb-6 leading-tight bg-gradient-to-r from-white via-emerald-100 to-cyan-100 bg-clip-text text-transparent">
                 {merged.title}
@@ -873,12 +873,12 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'mission-vision':
       return (
         <section className="py-20 bg-white">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className={`container mx-auto px-4`}>
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{merged.title}</h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">{merged.subtitle}</p>
             </div>
-            <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-2'} gap-12 max-w-6xl mx-auto`}>
+            <div className={`grid grid-cols-1 md:grid-cols-2 gap-12 max-w-6xl mx-auto`}>
               <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-8 rounded-2xl border border-emerald-200">
                 <h3 className="text-2xl font-bold text-emerald-800 mb-4">Missão</h3>
                 <p className="text-gray-700 leading-relaxed">{merged.mission}</p>
@@ -905,12 +905,12 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'team-showcase':
       return (
         <section className="py-20 bg-gradient-to-br from-slate-50 to-gray-50">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className={`container mx-auto px-4`}>
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{merged.title}</h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">{merged.subtitle}</p>
             </div>
-            <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-2'} gap-8 max-w-4xl mx-auto`}>
+            <div className={`grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto`}>
               {merged.team?.map((member: any, idx: number) => (
                 <div key={idx} className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-200">
                   <div className="flex items-center mb-6">
@@ -932,7 +932,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
       return (
         <section className="py-20 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-800 text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-black bg-opacity-10"></div>
-          <div className={`relative z-10 container mx-auto text-center ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className={`relative z-10 container mx-auto text-center px-4`}>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">{merged.title}</h2>
             <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto text-emerald-100">{merged.subtitle}</p>
             <a href={merged.buttonLink} className="bg-white text-emerald-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-emerald-50 transition-all transform hover:scale-105 shadow-2xl inline-block">
@@ -949,7 +949,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
           <div className="absolute top-20 left-20 w-72 h-72 bg-violet-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
           <div className="absolute top-40 right-20 w-72 h-72 bg-fuchsia-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse" style={{ animationDelay: '2s' }}></div>
           <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse" style={{ animationDelay: '4s' }}></div>
-          <div className={`relative z-10 container mx-auto ${isMobilePreview ? '' : 'px-4'} py-20`}>
+          <div className={`relative z-10 container mx-auto px-4 py-20`}>
             <div className="max-w-4xl mx-auto text-center">
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-black mb-6 leading-tight bg-gradient-to-r from-white via-violet-100 to-fuchsia-100 bg-clip-text text-transparent">
                 {merged.title}
@@ -973,12 +973,12 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'portfolio-showcase':
       return (
         <section className="py-20 bg-white">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className={`container mx-auto px-4`}>
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{merged.title}</h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">{merged.subtitle}</p>
             </div>
-            <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-2'} gap-8`}>
+            <div className={`grid grid-cols-1 md:grid-cols-2 gap-8`}>
               {merged.projects?.map((project: any, idx: number) => (
                 <div key={idx} className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-200 overflow-hidden">
                   <div className="aspect-video bg-gradient-to-br from-violet-100 to-fuchsia-100 flex items-center justify-center">
@@ -1003,12 +1003,12 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'services-creative':
       return (
         <section className="py-20 bg-gradient-to-br from-slate-50 to-violet-50">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className={`container mx-auto px-4`}>
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{merged.title}</h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">{merged.subtitle}</p>
             </div>
-            <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-3'} gap-8`}>
+            <div className={`grid grid-cols-1 md:grid-cols-3 gap-8`}>
               {merged.services?.map((service: any, idx: number) => (
                 <div key={idx} className="group bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-200 hover:border-violet-200">
                   <div className="text-4xl mb-4 text-violet-600 group-hover:scale-110 transition-transform duration-300">
@@ -1027,7 +1027,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
       return (
         <section className="py-20 bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-800 text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-black bg-opacity-10"></div>
-          <div className={`relative z-10 container mx-auto text-center ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className={`relative z-10 container mx-auto text-center px-4`}>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">{merged.title}</h2>
             <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto text-violet-100">{merged.subtitle}</p>
             <a href={merged.buttonLink} className="bg-white text-violet-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-violet-50 transition-all transform hover:scale-105 shadow-2xl inline-block">
@@ -1041,7 +1041,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
       return (
         <section className="min-h-screen flex items-center bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-rose-100/20 via-pink-100/20 to-purple-100/20"></div>
-          <div className={`relative z-10 container mx-auto ${isMobilePreview ? '' : 'px-4'} py-20`}>
+          <div className={`relative z-10 container mx-auto px-4 py-20`}>
             <div className="max-w-4xl mx-auto text-center">
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-black mb-6 leading-tight text-gray-900">
                 {merged.title}
@@ -1065,12 +1065,12 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'services-wellness':
       return (
         <section className="py-20 bg-white">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className={`container mx-auto px-4`}>
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{merged.title}</h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">{merged.subtitle}</p>
             </div>
-            <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-3'} gap-8`}>
+            <div className={`grid grid-cols-1 md:grid-cols-3 gap-8`}>
               {merged.services?.map((service: any, idx: number) => (
                 <div key={idx} className="group bg-gradient-to-br from-rose-50 to-pink-50 p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-rose-200 hover:border-rose-300">
                   <div className="text-4xl mb-4 text-rose-600 group-hover:scale-110 transition-transform duration-300">
@@ -1088,12 +1088,12 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'testimonials-wellness':
       return (
         <section className="py-20 bg-gradient-to-br from-rose-50 to-pink-50">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className={`container mx-auto px-4`}>
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{merged.title}</h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">{merged.subtitle}</p>
             </div>
-            <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-2'} gap-8 max-w-4xl mx-auto`}>
+            <div className={`grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto`}>
               {merged.testimonials?.map((testimonial: any, idx: number) => (
                 <div key={idx} className="bg-white p-8 rounded-2xl shadow-lg border border-rose-100">
                   <div className="flex items-center mb-4">
@@ -1115,7 +1115,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
       return (
         <section className="py-20 bg-gradient-to-r from-rose-600 via-pink-600 to-rose-800 text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-black bg-opacity-10"></div>
-          <div className={`relative z-10 container mx-auto text-center ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className={`relative z-10 container mx-auto text-center px-4`}>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">{merged.title}</h2>
             <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto text-rose-100">{merged.subtitle}</p>
             <a href={merged.buttonLink} className="bg-white text-rose-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-rose-50 transition-all transform hover:scale-105 shadow-2xl inline-block">
@@ -1131,7 +1131,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
           <div className="absolute inset-0 bg-black bg-opacity-40"></div>
           <div className="absolute top-20 right-20 w-96 h-96 bg-emerald-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse"></div>
           <div className="absolute bottom-20 left-20 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse" style={{ animationDelay: '3s' }}></div>
-          <div className={`relative z-10 container mx-auto ${isMobilePreview ? '' : 'px-4'} py-20`}>
+          <div className={`relative z-10 container mx-auto px-4 py-20`}>
             <div className="max-w-4xl mx-auto text-center">
               <h1 className="text-4xl md:text-6xl lg:text-7xl font-black mb-6 leading-tight bg-gradient-to-r from-white via-emerald-100 to-blue-100 bg-clip-text text-transparent">
                 {merged.title}
@@ -1155,12 +1155,12 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'investment-options':
       return (
         <section className="py-20 bg-white">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className={`container mx-auto px-4`}>
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{merged.title}</h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">{merged.subtitle}</p>
             </div>
-            <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-3'} gap-8`}>
+            <div className={`grid grid-cols-1 md:grid-cols-3 gap-8`}>
               {merged.options?.map((option: any, idx: number) => (
                 <div key={idx} className="group bg-gradient-to-br from-slate-50 to-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-200 hover:border-emerald-200">
                   <div className="text-center mb-6">
@@ -1192,12 +1192,12 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
     case 'success-stories':
       return (
         <section className="py-20 bg-gradient-to-br from-slate-50 to-emerald-50">
-          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className={`container mx-auto px-4`}>
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{merged.title}</h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">{merged.subtitle}</p>
             </div>
-            <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-2'} gap-8 max-w-4xl mx-auto`}>
+            <div className={`grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto`}>
               {merged.stories?.map((story: any, idx: number) => (
                 <div key={idx} className="bg-white p-8 rounded-2xl shadow-lg border border-emerald-100">
                   <div className="flex items-center mb-4">
@@ -1219,7 +1219,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
       return (
         <section className="py-20 bg-gradient-to-r from-emerald-600 via-blue-600 to-emerald-800 text-white relative overflow-hidden">
           <div className="absolute inset-0 bg-black bg-opacity-10"></div>
-          <div className={`relative z-10 container mx-auto text-center ${isMobilePreview ? '' : 'px-4'}`}>
+          <div className={`relative z-10 container mx-auto text-center px-4`}>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">{merged.title}</h2>
             <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto text-emerald-100">{merged.subtitle}</p>
             <a href={merged.buttonLink} className="bg-white text-emerald-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-emerald-50 transition-all transform hover:scale-105 shadow-2xl inline-block">
@@ -2106,7 +2106,7 @@ const LeadPageEditor = () => {
                           })
                           .map(section => (
                             <div key={section.id}>
-                              {renderPreviewSection(section, currentData, true)}
+                              {renderPreviewSection(section, currentData)}
                             </div>
                           )) : null;
                       })()}
