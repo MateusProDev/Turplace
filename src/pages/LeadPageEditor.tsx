@@ -21,7 +21,8 @@ import {
   AlignLeft,
   Layout,
   Share,
-  Globe
+  Globe,
+  ExternalLink
 } from 'lucide-react';
 import { uploadToCloudinary } from '../utils/cloudinary';
 
@@ -1292,6 +1293,23 @@ const LeadPageEditor = () => {
     }
   };
 
+  const handleOpenInBrowser = async () => {
+    if (!user || !userData) return;
+
+    try {
+      // Generate the URL for the lead page
+      const baseUrl = window.location.origin;
+      const slug = userData.slug || user.uid;
+      const leadPageUrl = `${baseUrl}/${slug}`;
+
+      // Open in new tab/window
+      window.open(leadPageUrl, '_blank');
+    } catch (error) {
+      console.error('Erro ao abrir no navegador:', error);
+      alert('Erro ao abrir a página no navegador. Tente novamente.');
+    }
+  };
+
   const handleSaveDomain = async () => {
     if (!user || !userLeadPage) return;
 
@@ -2089,6 +2107,13 @@ const LeadPageEditor = () => {
                       Ao Vivo
                     </span>
                   )}
+                  <button
+                    onClick={() => handleOpenInBrowser()}
+                    className="ml-auto flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 text-sm font-medium rounded-lg hover:bg-blue-100 transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Ver no Navegador
+                  </button>
                 </div>
               </div>
 
