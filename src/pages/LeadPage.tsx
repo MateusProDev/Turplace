@@ -317,7 +317,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
 
                   {/* Stats Grid - Empilhado em mobile */}
                   {merged.stats && (
-                    <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-4 md:gap-8 mb-8 md:mb-12`}>
+                    <div className={`grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 mb-8 md:mb-12`}>
                       {merged.stats.map((stat: string, idx: number) => (
                         <div 
                           key={idx} 
@@ -525,7 +525,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
                 </div>
                 
                 {/* Grid empilhado em mobile (1 coluna), 2-3 colunas em desktop */}
-                <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-6 md:gap-8`}>
+                <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8`}>
                   {(merged as any).items?.map((item: unknown, idx: number) => (
                     <div 
                       key={idx} 
@@ -645,7 +645,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
                 </div>
                 
                 {/* Testimonials Grid - 1 coluna mobile, 2-3 desktop */}
-                <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-6 md:gap-8 max-w-6xl mx-auto`}>
+                <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto`}>
                   {(merged as any).items?.map((item: unknown, idx: number) => (
                     <div 
                       key={idx} 
@@ -895,7 +895,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
                 <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
               </div>
-              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-6 md:gap-8`}>
+              <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8`}>
                 {merged.features?.map((feature: any, idx: number) => (
                   <div key={idx} className="group bg-gradient-to-br from-slate-50 to-white p-6 md:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-200 hover:border-blue-200">
                     <div className="text-3xl md:text-4xl mb-3 md:mb-4 text-blue-600 group-hover:scale-110 transition-transform duration-300">
@@ -918,7 +918,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
                 <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
               </div>
-              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-6 md:gap-8 max-w-6xl mx-auto`}>
+              <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto`}>
                 {merged.plans?.map((plan: any, idx: number) => (
                   <div key={idx} className={`relative bg-white p-6 md:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border-2 ${plan.popular ? 'border-blue-500 scale-105' : 'border-slate-200'}`}>
                     {plan.popular && (
@@ -1003,7 +1003,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
                 <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
               </div>
-              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-6 md:gap-8`}>
+              <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8`}>
                 {merged.products?.map((product: any, idx: number) => (
                   <div key={idx} className="group bg-white p-4 md:p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-200 hover:border-amber-200">
                     <div className="aspect-square mb-3 md:mb-4 rounded-xl overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
@@ -1037,7 +1037,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
                 <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
               </div>
-              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-6 md:gap-8 max-w-4xl mx-auto`}>
+              <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-4xl mx-auto`}>
                 {merged.testimonials?.map((testimonial: any, idx: number) => (
                   <div key={idx} className="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-amber-100">
                     <div className="flex items-center mb-3 md:mb-4">
@@ -1105,7 +1105,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
                 <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
               </div>
-              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-8 md:gap-12 max-w-6xl mx-auto`}>
+              <div className={`grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 max-w-6xl mx-auto`}>
                 <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-6 md:p-8 rounded-2xl border border-emerald-200">
                   <h3 className="text-xl md:text-2xl font-bold text-emerald-800 mb-3 md:mb-4">Missão</h3>
                   <p className="text-sm md:text-base text-gray-700 leading-relaxed">{merged.mission}</p>
@@ -1137,7 +1137,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
                 <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
               </div>
-              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-6 md:gap-8 max-w-4xl mx-auto`}>
+              <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-4xl mx-auto`}>
                 {merged.team?.map((member: any, idx: number) => (
                   <div key={idx} className="bg-white p-6 md:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-200">
                     <div className="flex items-center mb-4 md:mb-6">
@@ -1206,7 +1206,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
                 <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
               </div>
-              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-6 md:gap-8`}>
+              <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8`}>
                 {merged.projects?.map((project: any, idx: number) => (
                   <div key={idx} className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-200 overflow-hidden">
                     <div className="aspect-video bg-gradient-to-br from-violet-100 to-fuchsia-100 flex items-center justify-center">
@@ -1236,7 +1236,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
                 <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
               </div>
-              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-6 md:gap-8`}>
+              <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8`}>
                 {merged.services?.map((service: any, idx: number) => (
                   <div key={idx} className="group bg-white p-6 md:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-200 hover:border-violet-200">
                     <div className="text-3xl md:text-4xl mb-3 md:mb-4 text-violet-600 group-hover:scale-110 transition-transform duration-300">
@@ -1298,7 +1298,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
                 <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
               </div>
-              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-6 md:gap-8`}>
+              <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8`}>
                 {merged.services?.map((service: any, idx: number) => (
                   <div key={idx} className="group bg-gradient-to-br from-rose-50 to-pink-50 p-6 md:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-rose-200 hover:border-rose-300">
                     <div className="text-3xl md:text-4xl mb-3 md:mb-4 text-rose-600 group-hover:scale-110 transition-transform duration-300">
@@ -1321,7 +1321,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
                 <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
               </div>
-              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-6 md:gap-8 max-w-4xl mx-auto`}>
+              <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-4xl mx-auto`}>
                 {merged.testimonials?.map((testimonial: any, idx: number) => (
                   <div key={idx} className="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-rose-100">
                     <div className="flex items-center mb-3 md:mb-4">
@@ -1389,7 +1389,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
                 <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
               </div>
-              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-6 md:gap-8`}>
+              <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8`}>
                 {merged.options?.map((option: any, idx: number) => (
                   <div key={idx} className="group bg-gradient-to-br from-slate-50 to-white p-6 md:p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-200 hover:border-emerald-200">
                     <div className="text-center mb-4 md:mb-6">
@@ -1426,7 +1426,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
                 <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
                 <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
               </div>
-              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-6 md:gap-8 max-w-4xl mx-auto`}>
+              <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-4xl mx-auto`}>
                 {merged.stories?.map((story: any, idx: number) => (
                   <div key={idx} className="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-emerald-100">
                     <div className="flex items-center mb-3 md:mb-4">
