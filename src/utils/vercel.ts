@@ -13,9 +13,9 @@ export interface VercelDomainConfig {
  */
 export async function addVercelDomain(domain: string): Promise<boolean> {
   try {
-    // Tentar primeiro variável do Vercel (produção), depois local
-    const accessToken = process.env.VERCEL_ACCESS_TOKEN || import.meta.env.VITE_VERCEL_ACCESS_TOKEN;
-    const teamId = process.env.VERCEL_TEAM_ID || import.meta.env.VERCEL_TEAM_ID;
+    // Usar apenas variáveis do Vite (disponíveis tanto local quanto no Vercel)
+    const accessToken = import.meta.env.VITE_VERCEL_ACCESS_TOKEN;
+    const teamId = import.meta.env.VERCEL_TEAM_ID;
 
     if (!accessToken) {
       console.warn('VITE_VERCEL_ACCESS_TOKEN não configurado');
@@ -77,9 +77,9 @@ export async function addVercelDomain(domain: string): Promise<boolean> {
  */
 export async function removeVercelDomain(domain: string): Promise<boolean> {
   try {
-    // Tentar primeiro variável do Vercel (produção), depois local
-    const accessToken = process.env.VERCEL_ACCESS_TOKEN || import.meta.env.VITE_VERCEL_ACCESS_TOKEN;
-    const teamId = process.env.VERCEL_TEAM_ID || import.meta.env.VERCEL_TEAM_ID;
+    // Usar apenas variáveis do Vite (disponíveis tanto local quanto no Vercel)
+    const accessToken = import.meta.env.VITE_VERCEL_ACCESS_TOKEN;
+    const teamId = import.meta.env.VERCEL_TEAM_ID;
 
     if (!accessToken) {
       console.warn('VITE_VERCEL_ACCESS_TOKEN não configurado');
@@ -119,9 +119,9 @@ export async function removeVercelDomain(domain: string): Promise<boolean> {
  */
 export async function checkVercelDomain(domain: string): Promise<boolean> {
   try {
-    // Tentar primeiro variável do Vercel (produção), depois local
-    const accessToken = process.env.VERCEL_ACCESS_TOKEN || import.meta.env.VITE_VERCEL_ACCESS_TOKEN;
-    const teamId = process.env.VERCEL_TEAM_ID || import.meta.env.VERCEL_TEAM_ID;
+    // Usar apenas variáveis do Vite (disponíveis tanto local quanto no Vercel)
+    const accessToken = import.meta.env.VITE_VERCEL_ACCESS_TOKEN;
+    const teamId = import.meta.env.VERCEL_TEAM_ID;
 
     if (!accessToken) {
       return false;

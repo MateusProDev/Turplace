@@ -5,7 +5,7 @@
 Para que a funcionalidade de domínios personalizados funcione corretamente, você precisa configurar as seguintes variáveis de ambiente no painel do Vercel:
 
 ### Produção (Environment Variables)
-- `VERCEL_ACCESS_TOKEN`: Token de acesso pessoal do Vercel (para API)
+- `VITE_VERCEL_ACCESS_TOKEN`: Token de acesso pessoal do Vercel (para API)
 - `VERCEL_TEAM_ID`: ID do time do Vercel (opcional, se usar time)
 
 ### Desenvolvimento (Environment Variables)
