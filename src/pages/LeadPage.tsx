@@ -29,7 +29,6 @@ const LeadPage = () => {
 
       if (!leadPageSnapshot.empty) {
         const leadPageDoc = leadPageSnapshot.docs[0];
-        const leadPageData = leadPageDoc.data();
         const userId = leadPageDoc.id;
 
         // Buscar dados do usuário
@@ -47,7 +46,6 @@ const LeadPage = () => {
 
         if (!leadPageSnapshotNoWww.empty) {
           const leadPageDoc = leadPageSnapshotNoWww.docs[0];
-          const leadPageData = leadPageDoc.data();
           const userId = leadPageDoc.id;
 
           // Buscar dados do usuário
