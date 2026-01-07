@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import ProfileSettings from './pages/ProfileSettings';
 import LeadPageEditor from './pages/LeadPageEditor';
 import LeadPage from './pages/LeadPage';
