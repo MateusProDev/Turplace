@@ -196,6 +196,15 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
           customData: data.publishedCustomData || {}
         } : data;
 
+        console.log('LeadPage Debug:', {
+          domain,
+          hasPublishedData: !!data?.publishedTemplateId,
+          publishedTemplateId: data?.publishedTemplateId,
+          draftTemplateId: data?.templateId,
+          displayTemplateId: displayData?.templateId,
+          isUsingPublished: !!data?.publishedTemplateId
+        });
+
         // Load the correct template based on displayData
         const [tmpl] = await Promise.all([
           displayData?.templateId ? getTemplate(displayData.templateId).catch(() => getDefaultTemplate()) : getDefaultTemplate()
