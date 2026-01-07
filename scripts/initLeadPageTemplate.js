@@ -5,589 +5,404 @@ import initFirestore from '../api/_lib/firebaseAdmin.cjs';
 
 const db = initFirestore();
 
-const defaultTemplate = {
-  id: 'default-modern',
-  name: 'Leadpage Moderna - Design Contemporâneo',
+// TEMPLATE 1: ONE-PAGE MINIMALISTA
+const onePageMinimalTemplate = {
+  id: 'one-page-minimal',
+  name: 'One-Page Minimalista - Foco Total na Conversão',
   sections: [
     {
-      id: 'hero-destination',
+      id: 'hero-minimal',
       type: 'hero',
-      title: 'Transforme sua Visão em Realidade',
-      subtitle: 'Soluções inovadoras para o seu negócio',
-      content: 'Mais de 10.000 clientes já confiaram em nós para alcançar seus objetivos. Sua transformação começa aqui.',
-      image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=1920&h=1080&fit=crop&crop=center',
-      buttonText: 'Começar Agora',
-      buttonLink: '#services',
-      stats: ['10K+ Clientes', '500+ Projetos', '4.9★ Avaliação'],
-      enabled: true
-    },
-    {
-      id: 'featured-experiences',
-      type: 'benefits',
-      title: 'Nossas Soluções',
-      subtitle: 'Serviços completos e personalizados para seu negócio',
-      items: [
-        {
-          title: 'Consultoria Estratégica',
-          description: 'Análise completa e planejamento personalizado para seu crescimento',
-          image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=400&fit=crop&crop=center',
-          price: 'A partir de R$ 500'
-        },
-        {
-          title: 'Desenvolvimento Digital',
-          description: 'Soluções tecnológicas modernas e escaláveis',
-          image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=400&fit=crop&crop=center',
-          price: 'A partir de R$ 2.000'
-        },
-        {
-          title: 'Marketing Digital',
-          description: 'Estratégias comprovadas para aumentar sua presença online',
-          image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=400&fit=crop&crop=center',
-          price: 'A partir de R$ 800'
-        }
-      ],
-      enabled: true
-    },
-    {
-      id: 'experience-timeline',
-      type: 'benefits',
-      title: 'Como Funciona Sua Viagem',
-      subtitle: 'Planejamento completo do início ao fim',
-      items: [
-        {
-          title: '01. Consulta Personalizada',
-          description: 'Entendemos seus sonhos e orçamento'
-        },
-        {
-          title: '02. Roteiro Exclusivo',
-          description: 'Criamos itinerários únicos para você'
-        },
-        {
-          title: '03. Reserva Garantida',
-          description: 'Hospedagem e passeios confirmados'
-        },
-        {
-          title: '04. Acompanhamento Total',
-          description: 'Suporte 24/7 durante toda viagem'
-        }
-      ],
-      enabled: true
-    },
-    {
-      id: 'testimonials-carousel',
-      type: 'social-proof',
-      title: 'O Que Nossos Viajantes Dizem',
-      subtitle: 'Histórias reais de experiências incríveis',
-      items: [
-        {
-          name: 'Ana Carolina',
-          location: 'São Paulo, SP',
-          rating: 5,
-          text: '"A viagem dos meus sonhos! Cada detalhe foi perfeito, desde o hotel até as experiências locais."',
-          image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face'
-        },
-        {
-          name: 'Roberto Santos',
-          location: 'Rio de Janeiro, RJ',
-          rating: 5,
-          text: '"Profissionalismo e atenção aos detalhes. Recomendo para todos que querem viver momentos únicos."',
-          image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face'
-        },
-        {
-          name: 'Marina Costa',
-          location: 'Belo Horizonte, MG',
-          rating: 5,
-          text: '"Superou todas as expectativas! Cada destino foi mais incrível que o outro."',
-          image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face'
-        }
-      ],
-      enabled: true
-    },
-    {
-      id: 'pricing-cards',
-      type: 'benefits',
-      title: 'Pacotes Especiais',
-      subtitle: 'Escolha o pacote ideal para sua viagem',
-      items: [
-        {
-          title: 'Essentials',
-          price: 'R$ 2.500',
-          features: ['Hospedagem 5 estrelas', 'Café da manhã', 'Transfer aeroporto', 'Guia turístico'],
-          popular: false
-        },
-        {
-          title: 'Premium',
-          price: 'R$ 4.200',
-          features: ['Tudo do Essentials', 'Experiências exclusivas', 'Restaurantes gourmets', 'Fotografia profissional'],
-          popular: true
-        },
-        {
-          title: 'Luxury',
-          price: 'R$ 7.500',
-          features: ['Tudo do Premium', 'Jato particular', 'Chef pessoal', 'Concierge 24/7'],
-          popular: false
-        }
-      ],
-      enabled: true
-    },
-    {
-      id: 'newsletter-cta',
-      type: 'cta',
-      title: 'Pronto para Sua Aventura?',
-      subtitle: 'Receba dicas exclusivas e ofertas especiais',
-      content: 'Seja o primeiro a saber sobre novos destinos e promoções imperdíveis.',
-      buttonText: 'Receber Ofertas',
+      title: 'Uma Única Página. Resultados Máximos.',
+      subtitle: 'Simples. Poderoso. Eficaz.',
+      content: 'Tudo que você precisa saber em uma página. Sem distrações, apenas conversão.',
+      buttonText: 'COMEÇAR AGORA',
       buttonLink: '#contact',
-      backgroundImage: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=600&fit=crop&crop=center',
+      backgroundColor: '#ffffff',
       enabled: true
     },
     {
-      id: 'contact-form',
-      type: 'contact',
-      title: 'Vamos Planejar Sua Viagem',
-      subtitle: 'Entre em contato e transforme seus sonhos em realidade',
-      content: 'contato@viagens.com\n(11) 99999-9999\nRua das Viagens, 123 - São Paulo/SP',
-      formFields: ['name', 'email', 'phone', 'destination', 'message'],
+      id: 'single-cta',
+      type: 'cta',
+      title: 'Pronto para Transformar?',
+      content: 'Clique abaixo e dê o primeiro passo para o sucesso.',
+      buttonText: 'GARANTIR MINHA VAGA',
+      buttonLink: '#contact',
+      backgroundColor: '#000000',
       enabled: true
     }
   ]
 };
 
-const infoproductTemplate = {
-  id: 'clean-leadpage',
-  name: 'Leadpage Clean - Design Minimalista',
+// TEMPLATE 2: STORY-DRIVEN (NARRATIVA)
+const storyDrivenTemplate = {
+  id: 'story-driven',
+  name: 'Story-Driven - Narrativa Sequencial',
   sections: [
     {
-      id: 'hero-course',
+      id: 'story-hero',
       type: 'hero',
-      title: 'Simples. Eficaz. Resultados.',
-      subtitle: 'Soluções claras para problemas complexos',
-      content: 'Foco no essencial. Resultados comprovados. Sua satisfação é nossa prioridade.',
-      image: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1920&h=1080&fit=crop&crop=center',
-      buttonText: 'COMEÇAR',
-      buttonLink: '#benefits',
+      title: 'Era Uma Vez...',
+      subtitle: 'Uma História de Transformação',
+      content: 'Todo mundo tem uma história. Esta é a sua chance de escrever um novo capítulo.',
+      buttonText: 'Continuar Lendo',
+      buttonLink: '#chapter1',
+      backgroundImage: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=1920&h=1080&fit=crop&crop=center',
       enabled: true
     },
     {
-      id: 'course-overview',
+      id: 'chapter-problem',
       type: 'about',
-      title: 'Por Que Escolher Nossa Solução',
-      content: 'Simplicidade não significa superficialidade. Nossa abordagem clean combina elegância e eficiência para entregar exatamente o que você precisa.',
+      title: 'Capítulo 1: O Desafio',
+      content: 'Você já se sentiu preso na rotina? Trabalhando duro mas sem ver progresso real? Esta é a história de milhares de pessoas que decidiram mudar.',
+      backgroundColor: '#1a1a1a',
       enabled: true
     },
     {
-      id: 'benefits-infoproduct',
+      id: 'chapter-discovery',
       type: 'benefits',
-      title: 'Por Que Escolher Este Curso',
-      subtitle: 'Benefícios exclusivos que só você terá',
+      title: 'Capítulo 2: A Descoberta',
+      subtitle: 'A virada que mudou tudo',
       items: [
         {
-          title: 'Liberdade de Tempo',
-          description: 'Trabalhe apenas 2h por dia e viva a vida que sempre sonhou',
-          icon: 'time'
+          title: 'O Momento "Eureka"',
+          description: 'Quando você percebe que existe um caminho diferente'
         },
         {
-          title: 'Escalabilidade',
-          description: 'Venda para milhares sem precisar produzir mais',
-          icon: 'scale'
+          title: 'A Primeira Ação',
+          description: 'O pequeno passo que iniciou a transformação'
         },
         {
-          title: 'Autoridade',
-          description: 'Se torne referência no seu nicho de mercado',
-          icon: 'authority'
+          title: 'Os Primeiros Resultados',
+          description: 'A validação de que estava no caminho certo'
         }
       ],
+      backgroundColor: '#2a2a2a',
       enabled: true
     },
     {
-      id: 'course-modules',
-      type: 'benefits',
-      title: 'Conteúdo Completo do Curso',
-      subtitle: '12 módulos com tudo que você precisa para ter sucesso',
-      items: [
-        {
-          title: 'Módulo 1: Mindset do Empreendedor Digital',
-          description: 'Como pensar como um milionário'
-        },
-        {
-          title: 'Módulo 2: Descobrindo Seu Nicho',
-          description: 'Encontre mercados com alta demanda e baixa concorrência'
-        },
-        {
-          title: 'Módulo 3: Criando Seu Primeiro Produto',
-          description: 'Do zero ao lançamento em 7 dias'
-        },
-        {
-          title: 'Módulo 4: Estratégias de Precificação',
-          description: 'Quanto cobrar para maximizar lucros'
-        },
-        {
-          title: 'Módulo 5: Funil de Vendas Completo',
-          description: 'Capture, converta e fidelize clientes'
-        },
-        {
-          title: 'Módulo 6: Tráfego Pago Profissional',
-          description: 'Facebook Ads que convertem'
-        }
-      ],
-      enabled: true
-    },
-    {
-      id: 'social-proof-video',
+      id: 'chapter-transformation',
       type: 'social-proof',
-      title: 'Histórias Reais de Sucesso',
-      subtitle: 'Veja o que meus alunos conquistaram',
+      title: 'Capítulo 3: A Transformação',
+      subtitle: 'Histórias reais de pessoas que mudaram',
       items: [
         {
-          name: 'Carlos Mendes',
-          location: 'São Paulo, SP',
-          result: 'R$ 47.000 no primeiro mês',
-          text: '"De funcionário para empresário digital. Minha vida mudou completamente!"',
-          image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face'
+          name: 'João Silva',
+          text: '"Pensei que era impossível, mas aqui estou, vivendo meus sonhos"',
+          result: 'De R$ 3.000 para R$ 15.000/mês'
         },
         {
-          name: 'Ana Paula',
-          location: 'Rio de Janeiro, RJ',
-          result: 'R$ 23.000 em 15 dias',
-          text: '"Nunca imaginei que seria possível viver só de infoprodutos"',
-          image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face'
-        },
-        {
-          name: 'Roberto Silva',
-          location: 'Belo Horizonte, MG',
-          result: 'Liberdade financeira conquistada',
-          text: '"Agora trabalho quando quero e ganho mais que antes"',
-          image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
+          name: 'Maria Santos',
+          text: '"A mudança que eu tanto queria finalmente aconteceu"',
+          result: 'Liberdade financeira conquistada'
         }
       ],
+      backgroundColor: '#3a3a3a',
       enabled: true
     },
     {
-      id: 'pricing-comparison',
-      type: 'benefits',
-      title: 'Escolha Seu Caminho para o Sucesso',
-      subtitle: 'Investimento que retorna em menos de 30 dias',
-      items: [
-        {
-          title: 'Apenas Teoria',
-          price: 'R$ 497',
-          period: 'único',
-          features: ['12 módulos em vídeo', 'Acesso vitalício', 'Certificado'],
-          popular: false,
-          cta: 'Comprar Agora'
-        },
-        {
-          title: 'Teoria + Prática',
-          price: 'R$ 997',
-          period: 'único',
-          features: ['Tudo do plano anterior', 'Mentoria individual', 'Revisão de produtos', 'Suporte prioritário'],
-          popular: true,
-          cta: 'GARANTIR VAGA',
-          bonus: 'BÔNUS: Template profissional'
-        },
-        {
-          title: 'VIP - Tudo Incluído',
-          price: 'R$ 1.997',
-          period: 'único',
-          features: ['Tudo dos planos anteriores', 'Criação do seu produto', 'Configuração de vendas', 'Tráfego inicial'],
-          popular: false,
-          cta: 'TORNAR-SE VIP'
-        }
-      ],
-      enabled: true
-    },
-    {
-      id: 'guarantee-banner',
+      id: 'story-climax',
       type: 'cta',
-      title: 'Garantia Incondicional',
-      subtitle: 'Sua satisfação é nossa prioridade',
-      content: 'Se em 30 dias você não estiver satisfeito, devolvemos 100% do seu investimento. Sem perguntas, sem burocracias.',
-      buttonText: 'COMEÇAR AGORA',
+      title: 'Capítulo Final: Sua Vez',
+      subtitle: 'Escreva seu próprio final feliz',
+      content: 'A história não para aqui. Ela continua com você.',
+      buttonText: 'COMEÇAR MINHA HISTÓRIA',
+      buttonLink: '#contact',
+      backgroundImage: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=600&fit=crop&crop=center',
+      enabled: true
+    }
+  ]
+};
+
+// TEMPLATE 3: DARK MODE PREMIUM
+const darkModePremiumTemplate = {
+  id: 'dark-premium',
+  name: 'Dark Mode Premium - Luxo e Sofisticação',
+  sections: [
+    {
+      id: 'hero-dark-luxury',
+      type: 'hero',
+      title: 'EXCLUSIVIDADE QUE FAZ A DIFERENÇA',
+      subtitle: 'Para quem sabe o valor do premium',
+      content: 'Não é para todos. É para aqueles que exigem o melhor.',
+      buttonText: 'ENTRAR PARA O CLUBE',
       buttonLink: '#pricing',
+      backgroundColor: '#000000',
+      stats: ['Membros Exclusivos', 'Resultados Comprovados', 'Suporte VIP'],
+      enabled: true
+    },
+    {
+      id: 'luxury-benefits',
+      type: 'benefits',
+      title: 'Por Que o Premium Vale a Pena',
+      subtitle: 'Benefícios que só o topo oferece',
+      items: [
+        {
+          title: 'Acesso Exclusivo',
+          description: 'Conteúdo e oportunidades disponíveis apenas para membros premium',
+          icon: 'crown'
+        },
+        {
+          title: 'Suporte Personalizado',
+          description: 'Atendimento individual com especialistas dedicados',
+          icon: 'star'
+        },
+        {
+          title: 'Resultados Acelerados',
+          description: 'Métodos otimizados que entregam resultados 3x mais rápido',
+          icon: 'rocket'
+        }
+      ],
+      backgroundColor: '#111111',
+      enabled: true
+    },
+    {
+      id: 'premium-pricing',
+      type: 'benefits',
+      title: 'Investimento Premium',
+      subtitle: 'Para quem entende que qualidade tem preço',
+      items: [
+        {
+          title: 'VIP Exclusive',
+          price: 'R$ 9.997',
+          features: ['Acesso vitalício', 'Suporte 24/7', 'Consultorias mensais', 'Grupo exclusivo'],
+          popular: true,
+          cta: 'GARANTIR ACESSO VIP'
+        }
+      ],
+      backgroundColor: '#0a0a0a',
+      enabled: true
+    },
+    {
+      id: 'dark-cta-final',
+      type: 'cta',
+      title: 'Junte-se aos Exclusivos',
+      content: 'Vagas limitadas para manter a qualidade do grupo.',
+      buttonText: 'SOLICITAR CONVITE',
+      buttonLink: '#contact',
+      backgroundColor: '#000000',
+      enabled: true
+    }
+  ]
+};
+
+// TEMPLATE 4: VISUAL STORYTELLING
+const visualStorytellingTemplate = {
+  id: 'visual-storytelling',
+  name: 'Visual Storytelling - Imagens que Contam Histórias',
+  sections: [
+    {
+      id: 'hero-visual',
+      type: 'hero',
+      title: 'VEJA PARA ACREDITAR',
+      subtitle: 'Resultados que falam por si',
+      content: 'Antes e depois. Números que impressionam. Histórias que inspiram.',
+      buttonText: 'VER RESULTADOS',
+      buttonLink: '#results',
+      backgroundImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1920&h=1080&fit=crop&crop=center',
+      enabled: true
+    },
+    {
+      id: 'before-after',
+      type: 'benefits',
+      title: 'A Transformação Visual',
+      subtitle: 'Veja a diferença que fazemos',
+      items: [
+        {
+          title: 'Antes: Luta Diária',
+          description: 'Trabalhando 12h por dia sem ver progresso',
+          image: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?w=600&h=400&fit=crop&crop=center'
+        },
+        {
+          title: 'Durante: Método Aplicado',
+          description: 'Implementando estratégias comprovadas',
+          image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=400&fit=crop&crop=center'
+        },
+        {
+          title: 'Depois: Sucesso Conquistado',
+          description: 'Vida transformada, objetivos alcançados',
+          image: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=600&h=400&fit=crop&crop=center'
+        }
+      ],
+      enabled: true
+    },
+    {
+      id: 'results-gallery',
+      type: 'social-proof',
+      title: 'Galeria de Sucessos',
+      subtitle: 'Resultados reais de alunos reais',
+      items: [
+        {
+          name: 'Carlos M.',
+          result: 'R$ 50K/mês',
+          text: 'De zero para empresário de sucesso',
+          image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face'
+        },
+        {
+          name: 'Ana P.',
+          result: 'Liberdade Total',
+          text: 'Agora trabalho quando quero',
+          image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop&crop=face'
+        }
+      ],
+      enabled: true
+    },
+    {
+      id: 'visual-cta',
+      type: 'cta',
+      title: 'Sua Vez de Brilhar',
+      content: 'Entre para a galeria de sucessos.',
+      buttonText: 'COMEÇAR MINHA TRANSFORMAÇÃO',
+      buttonLink: '#contact',
+      backgroundImage: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=600&fit=crop&crop=center',
+      enabled: true
+    }
+  ]
+};
+
+// TEMPLATE 5: INTERACTIVE QUIZ
+const interactiveQuizTemplate = {
+  id: 'interactive-quiz',
+  name: 'Interactive Quiz - Engajamento Total',
+  sections: [
+    {
+      id: 'quiz-hero',
+      type: 'hero',
+      title: 'DESCUBRA SEU POTENCIAL REAL',
+      subtitle: 'Um quiz rápido que revela tudo',
+      content: 'Responda 5 perguntas e descubra exatamente o que você precisa para alcançar seus objetivos.',
+      buttonText: 'INICIAR QUIZ AGORA',
+      buttonLink: '#quiz-start',
+      backgroundColor: '#6366f1',
+      enabled: true
+    },
+    {
+      id: 'quiz-question-1',
+      type: 'benefits',
+      title: 'Pergunta 1: Qual é seu maior desafio hoje?',
+      subtitle: 'Selecione a opção que mais se identifica',
+      items: [
+        {
+          title: 'Falta de tempo',
+          description: 'Trabalho demais, não tenho energia para mais nada'
+        },
+        {
+          title: 'Falta de conhecimento',
+          description: 'Sei que preciso aprender, mas não sei por onde começar'
+        },
+        {
+          title: 'Falta de foco',
+          description: 'Começo várias coisas, mas não termino nenhuma'
+        },
+        {
+          title: 'Falta de resultados',
+          description: 'Trabalho duro, mas os resultados não vêm'
+        }
+      ],
+      backgroundColor: '#f8fafc',
+      enabled: true
+    },
+    {
+      id: 'quiz-results',
+      type: 'about',
+      title: 'Seus Resultados Personalizados',
+      content: 'Baseado nas suas respostas, criamos um plano específico para você. Está pronto para ver o que preparamos?',
       backgroundColor: '#10b981',
       enabled: true
     },
     {
-      id: 'faq-section',
+      id: 'personalized-offer',
       type: 'benefits',
-      title: 'Perguntas Frequentes',
-      subtitle: 'Tire suas dúvidas antes de começar',
+      title: 'Seu Plano Personalizado',
+      subtitle: 'Feito especialmente para você',
       items: [
         {
-          title: 'Preciso de experiência prévia?',
-          description: 'Não! O curso é para iniciantes completos.'
+          title: 'Seu Desafio Específico',
+          description: 'Identificamos exatamente o que te impede de avançar'
         },
         {
-          title: 'Quanto tempo leva para ter resultados?',
-          description: 'Primeiros resultados em 30 dias, sucesso completo em 90 dias.'
+          title: 'Solução Personalizada',
+          description: 'O método certo para seu perfil específico'
         },
         {
-          title: 'E se eu não conseguir criar meu produto?',
-          description: 'Temos mentoria individual e templates prontos.'
-        },
-        {
-          title: 'Posso vender os produtos que criar?',
-          description: 'Sim! Você terá todos os direitos sobre seus produtos.'
+          title: 'Resultado Esperado',
+          description: 'Quanto tempo para ver mudanças significativas'
         }
       ],
+      backgroundColor: '#ffffff',
       enabled: true
     },
     {
-      id: 'final-cta',
+      id: 'quiz-cta',
       type: 'cta',
-      title: 'Não Deixe Essa Oportunidade Escapar',
-      subtitle: 'Vagas limitadas - Próxima turma só em 2026',
-      content: 'Clique no botão abaixo e garanta sua vaga antes que acabe.',
-      buttonText: 'GARANTIR MINHA VAGA AGORA',
-      buttonLink: '#pricing',
-      backgroundImage: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1920&h=600&fit=crop&crop=center',
-      urgencyText: '⏰ Últimas 23 vagas disponíveis',
+      title: 'Pronto para Começar?',
+      content: 'Seu plano personalizado está esperando. Vamos transformar teoria em prática.',
+      buttonText: 'GARANTIR MEU PLANO',
+      buttonLink: '#contact',
+      backgroundColor: '#6366f1',
       enabled: true
     }
   ]
 };
 
-const digitalServicesTemplate = {
-  id: 'commercial-leadpage',
-  name: 'Leadpage Comercial - Foco em Conversão',
+// TEMPLATE 6: MINIMALIST GRID
+const minimalistGridTemplate = {
+  id: 'minimalist-grid',
+  name: 'Minimalist Grid - Design Arquitetônico',
   sections: [
     {
-      id: 'hero-performance',
+      id: 'grid-hero',
       type: 'hero',
-      title: 'INVESTIMENTO QUE RETORNA EM 30 DIAS',
-      subtitle: 'GARANTIDO',
-      content: 'Não perca mais tempo. Nossa solução comprovada gera resultados imediatos. Mais de R$ 50 milhões em vendas geradas para nossos clientes.',
-      image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1920&h=1080&fit=crop&crop=center',
-      buttonText: 'GARANTIR MINHA VAGA AGORA',
-      buttonLink: '#pricing',
-      urgencyText: 'Apenas 5 vagas restantes!',
-      stats: ['R$ 50M+ Vendas', '500+ Clientes', '98% Satisfação'],
+      title: 'MENOS É MAIS',
+      subtitle: 'Simplicidade que funciona',
+      content: 'Removemos tudo que não era essencial. Ficou apenas o que converte.',
+      buttonText: 'EXPLORAR',
+      buttonLink: '#grid',
+      backgroundColor: '#ffffff',
       enabled: true
     },
     {
-      id: 'service-showcase',
-      type: 'about',
-      title: 'Por Que Escolher Nossos Serviços',
-      content: 'Somos especialistas em marketing digital há mais de 8 anos. Nossa abordagem data-driven garante que cada real investido gere retorno máximo.',
-      image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=600&fit=crop&crop=center',
-      enabled: true
-    },
-    {
-      id: 'marketing-services',
+      id: 'feature-grid',
       type: 'benefits',
-      title: 'Serviços Especializados',
-      subtitle: 'Soluções completas para seu negócio digital',
+      title: 'Sistema Modular',
+      subtitle: 'Cada peça tem seu lugar',
       items: [
         {
-          title: 'Google Ads & SEO',
-          description: 'Posicione sua marca no topo das buscas e gere leads qualificados',
-          features: ['Otimização técnica', 'Conteúdo estratégico', 'Relatórios mensais']
+          title: 'Clareza',
+          description: 'Mensagem direta, sem ruídos'
         },
         {
-          title: 'Social Media Marketing',
-          description: 'Construa comunidades engajadas nas redes sociais',
-          features: ['Gestão de conteúdo', 'Anúncios direcionados', 'Analytics avançado']
+          title: 'Foco',
+          description: 'Atenção total no objetivo principal'
         },
         {
-          title: 'Funil de Vendas',
-          description: 'Transforme visitantes em clientes fiéis',
-          features: ['Landing pages', 'Email marketing', 'CRM integrado']
+          title: 'Eficiência',
+          description: 'Resultados com menos esforço'
+        },
+        {
+          title: 'Escalabilidade',
+          description: 'Cresce sem perder a essência'
+        },
+        {
+          title: 'Sustentabilidade',
+          description: 'Método que dura para sempre'
+        },
+        {
+          title: 'Confiabilidade',
+          description: 'Sempre funciona, sempre converte'
         }
       ],
+      backgroundColor: '#f8fafc',
       enabled: true
     },
     {
-      id: 'advanced-services',
-      type: 'benefits',
-      title: 'Serviços Avançados',
-      subtitle: 'Soluções premium para resultados extraordinários',
-      items: [
-        {
-          title: 'Facebook & Instagram Ads',
-          description: 'Campanhas visuais que geram engajamento e conversões',
-          features: ['Configuração profissional', 'Públicos customizados', 'Remarketing avançado', 'A/B testing contínuo']
-        },
-        {
-          title: 'Google Ads Performance',
-          description: 'Anúncios de busca que convertem visitantes em clientes',
-          features: ['Otimização de CPC', 'Landing pages otimizadas', 'Remarketing inteligente', 'Relatórios detalhados']
-        },
-        {
-          title: 'TikTok & YouTube Ads',
-          description: 'Alcance gerações mais jovens com conteúdo viral',
-          features: ['Estratégias de engajamento', 'Conteúdo otimizado', 'Targeting preciso', 'Analytics completo']
-        },
-        {
-          title: 'Consultoria Estratégica',
-          description: 'Acompanhamento mensal para maximizar resultados',
-          features: ['Análise de concorrência', 'Otimização contínua', 'Suporte prioritário', 'Relatórios semanais']
-        }
-      ],
-      enabled: true
-    },
-    {
-      id: 'roi-calculator',
-      type: 'benefits',
-      title: 'Calcule Seu Potencial de Lucro',
-      subtitle: 'Veja quanto você pode faturar com tráfego pago profissional',
-      calculator: {
-        investment: 5000,
-        cpc: 2.50,
-        conversion: 3.5,
-        ticket: 497,
-        results: {
-          clicks: 2000,
-          leads: 70,
-          sales: 24,
-          revenue: 11928,
-          profit: 6928,
-          roi: 2.4
-        }
-      },
-      enabled: true
-    },
-    {
-      id: 'case-studies',
-      type: 'social-proof',
-      title: 'Cases de Sucesso Reais',
-      subtitle: 'Resultados comprovados em diferentes nichos',
-      items: [
-        {
-          company: 'E-commerce de Suplementos',
-          niche: 'Saúde & Fitness',
-          before: 'R$ 15.000/mês em vendas',
-          after: 'R$ 87.000/mês (+480%)',
-          investment: 'R$ 8.000/mês',
-          results: ['ROI: 4.2x', 'Custo por venda: R$ 47', '70% margem de lucro'],
-          image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&h=400&fit=crop&crop=center'
-        },
-        {
-          company: 'Escola de Inglês Online',
-          niche: 'Educação',
-          before: '50 alunos/mês',
-          after: '280 alunos/mês (+460%)',
-          investment: 'R$ 6.000/mês',
-          results: ['ROI: 5.8x', 'Custo por aluno: R$ 32', 'LTV: R$ 1.200'],
-          image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=600&h=400&fit=crop&crop=center'
-        },
-        {
-          company: 'Consultoria Jurídica',
-          niche: 'Jurídico',
-          before: '8 clientes/mês',
-          after: '42 clientes/mês (+425%)',
-          investment: 'R$ 4.500/mês',
-          results: ['ROI: 3.9x', 'Ticket médio: R$ 850', 'Margem: 65%'],
-          image: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=600&h=400&fit=crop&crop=center'
-        }
-      ],
-      enabled: true
-    },
-    {
-      id: 'pricing-packages',
-      type: 'benefits',
-      title: 'Escolha o Pacote Ideal Para Seu Negócio',
-      subtitle: 'Investimento que se paga sozinho em 30 dias',
-      items: [
-        {
-          title: 'Starter',
-          subtitle: 'Para pequenos negócios',
-          price: 'R$ 2.997',
-          period: 'mês',
-          features: [
-            '1 rede social (Facebook/Instagram)',
-            'Até R$ 5.000 em investimento mensal',
-            'Relatórios semanais',
-            'Suporte por email'
-          ],
-          popular: false,
-          cta: 'COMEÇAR AGORA'
-        },
-        {
-          title: 'Professional',
-          subtitle: 'Resultado comprovado',
-          price: 'R$ 4.997',
-          period: 'mês',
-          features: [
-            '2 redes sociais completas',
-            'Até R$ 15.000 em investimento mensal',
-            'Relatórios diários + reunião semanal',
-            'Suporte prioritário + WhatsApp',
-            'A/B testing avançado'
-          ],
-          popular: true,
-          cta: 'GARANTIR RESULTADOS',
-          bonus: 'Primeiro mês com desconto'
-        },
-        {
-          title: 'Enterprise',
-          subtitle: 'Soluções completas',
-          price: 'R$ 9.997',
-          period: 'mês',
-          features: [
-            'Todas as plataformas digitais',
-            'Até R$ 50.000 em investimento mensal',
-            'Relatórios em tempo real',
-            'Consultoria estratégica mensal',
-            'Time dedicado + gerente de conta',
-            'Criação de landing pages'
-          ],
-          popular: false,
-          cta: 'FALAR COM ESPECIALISTA'
-        }
-      ],
-      enabled: true
-    },
-    {
-      id: 'guarantee-trust',
+      id: 'minimal-cta',
       type: 'cta',
-      title: 'Garantia de Resultados',
-      subtitle: 'Se não gerar ROI mínimo de 3x, trabalhamos de graça até conseguir',
-      content: 'Não trabalhamos com "talvez" ou "pode ser". Garantimos resultados ou seu dinheiro de volta.',
-      buttonText: 'GARANTIR RESULTADOS',
-      buttonLink: '#pricing',
-      backgroundColor: '#059669',
-      enabled: true
-    },
-    {
-      id: 'faq-professional',
-      type: 'benefits',
-      title: 'Perguntas Técnicas Frequentes',
-      subtitle: 'Respostas diretas para dúvidas comuns',
-      items: [
-        {
-          title: 'Quanto tempo leva para ver resultados?',
-          description: 'Primeiros resultados em 7-14 dias. ROI consistente em 30 dias.'
-        },
-        {
-          title: 'E se meu nicho for muito competitivo?',
-          description: 'Temos estratégias específicas para mercados saturados.'
-        },
-        {
-          title: 'Posso pausar as campanhas quando quiser?',
-          description: 'Total controle. Pause/resume a qualquer momento sem custos extras.'
-        },
-        {
-          title: 'Como sei se estou tendo retorno?',
-          description: 'Relatórios diários com métricas claras e ROI em tempo real.'
-        },
-        {
-          title: 'Trabalham com produtos físicos?',
-          description: 'Sim! Temos expertise em e-commerce e produtos físicos.'
-        }
-      ],
-      enabled: true
-    },
-    {
-      id: 'final-cta-urgency',
-      type: 'cta',
-      title: 'Últimas Vagas para Dezembro',
-      subtitle: 'Apenas 3 projetos disponíveis este mês',
-      content: 'Não perca a oportunidade de ter uma máquina de vendas funcionando 24/7.',
-      buttonText: 'GARANTIR MINHA VAGA AGORA',
-      buttonLink: '#pricing',
-      backgroundImage: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1920&h=600&fit=crop&crop=center',
-      urgencyText: '⏰ Apenas 3 projetos disponíveis',
-      countdown: '2025-12-31T23:59:59',
+      title: 'Simples Assim',
+      content: 'Não complicamos. Apenas resultados.',
+      buttonText: 'COMEÇAR SIMPLES',
+      buttonLink: '#contact',
+      backgroundColor: '#000000',
       enabled: true
     }
   ]
@@ -595,9 +410,12 @@ const digitalServicesTemplate = {
 
 export async function initDefaultTemplate() {
   const templates = [
-    { id: 'default-modern', data: defaultTemplate },
-    { id: 'clean-leadpage', data: infoproductTemplate },
-    { id: 'commercial-leadpage', data: digitalServicesTemplate }
+    { id: 'one-page-minimal', data: onePageMinimalTemplate },
+    { id: 'story-driven', data: storyDrivenTemplate },
+    { id: 'dark-premium', data: darkModePremiumTemplate },
+    { id: 'visual-storytelling', data: visualStorytellingTemplate },
+    { id: 'interactive-quiz', data: interactiveQuizTemplate },
+    { id: 'minimalist-grid', data: minimalistGridTemplate }
   ];
 
   for (const template of templates) {
