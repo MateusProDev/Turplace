@@ -857,6 +857,602 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
           </section>
         );
 
+      // MODERN 2025 SECTIONS
+      case 'hero-modern':
+        return (
+          <section className="min-h-screen flex items-center bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white relative overflow-hidden">
+            <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+            <div className="absolute top-20 left-20 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+            <div className="absolute top-40 right-20 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse" style={{ animationDelay: '2s' }}></div>
+            <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse" style={{ animationDelay: '4s' }}></div>
+            <div className="relative z-10 container mx-auto px-4 py-20">
+              <div className="max-w-4xl mx-auto text-center">
+                <h1 className="text-4xl md:text-6xl lg:text-7xl font-black mb-6 leading-tight bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent">
+                  {merged.title}
+                </h1>
+                <p className="text-lg md:text-xl mb-4 text-blue-200 font-light max-w-2xl mx-auto">
+                  {merged.subtitle}
+                </p>
+                <p className="text-base md:text-lg mb-8 text-slate-300 max-w-3xl mx-auto leading-relaxed">
+                  {merged.content}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                  <a href={merged.buttonLink} className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-full font-bold text-lg transition-all transform hover:scale-105 shadow-2xl hover:shadow-blue-500/25">
+                    {merged.buttonText}
+                  </a>
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'features-modern':
+        return (
+          <section className="py-20 bg-white">
+            <div className="container mx-auto px-4">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{merged.title}</h2>
+                <p className="text-lg text-gray-600 max-w-2xl mx-auto">{merged.subtitle}</p>
+              </div>
+              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-8`}>
+                {merged.features?.map((feature: any, idx: number) => (
+                  <div key={idx} className="group bg-gradient-to-br from-slate-50 to-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-200 hover:border-blue-200">
+                    <div className="text-4xl mb-4 text-blue-600 group-hover:scale-110 transition-transform duration-300">
+                      {feature.icon}
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
+                    <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'pricing-modern':
+        return (
+          <section className="py-20 bg-gradient-to-br from-slate-50 to-blue-50">
+            <div className="container mx-auto px-4">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{merged.title}</h2>
+                <p className="text-lg text-gray-600 max-w-2xl mx-auto">{merged.subtitle}</p>
+              </div>
+              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-8 max-w-6xl mx-auto`}>
+                {merged.plans?.map((plan: any, idx: number) => (
+                  <div key={idx} className={`relative bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border-2 ${plan.popular ? 'border-blue-500 scale-105' : 'border-slate-200'}`}>
+                    {plan.popular && (
+                      <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-1 rounded-full text-sm font-bold">
+                        MAIS POPULAR
+                      </div>
+                    )}
+                    <div className="text-center mb-6">
+                      <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
+                      <div className="text-4xl font-black text-blue-600 mb-1">{plan.price}</div>
+                      <div className="text-gray-500">{plan.period}</div>
+                    </div>
+                    <ul className="space-y-3 mb-8">
+                      {plan.features?.map((feature: string, featureIdx: number) => (
+                        <li key={featureIdx} className="flex items-center text-gray-700">
+                          <svg className="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    <a href="#signup" className={`w-full py-3 px-6 rounded-xl font-bold text-center block transition-all duration-300 ${plan.popular ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-blue-500/25' : 'bg-slate-100 text-gray-900 hover:bg-slate-200'}`}>
+                      {plan.buttonText}
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'cta-modern':
+        return (
+          <section className="py-20 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-800 text-white relative overflow-hidden">
+            <div className="absolute inset-0 bg-black bg-opacity-10"></div>
+            <div className="absolute top-0 left-0 w-full h-full">
+              <div className="absolute top-10 left-10 w-32 h-32 bg-white rounded-full opacity-5 animate-pulse"></div>
+              <div className="absolute bottom-10 right-10 w-24 h-24 bg-white rounded-full opacity-5 animate-pulse" style={{ animationDelay: '1s' }}></div>
+            </div>
+            <div className="relative z-10 container mx-auto text-center px-4">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">{merged.title}</h2>
+              <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto text-blue-100">{merged.subtitle}</p>
+              <a href={merged.buttonLink} className="bg-white text-blue-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-blue-50 transition-all transform hover:scale-105 shadow-2xl inline-block">
+                {merged.buttonText}
+              </a>
+            </div>
+          </section>
+        );
+
+      case 'hero-luxury':
+        return (
+          <section className="min-h-screen flex items-center bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-100/20 via-orange-100/20 to-yellow-100/20"></div>
+            <div className="relative z-10 container mx-auto px-4 py-20">
+              <div className="max-w-4xl mx-auto text-center">
+                <h1 className="text-4xl md:text-6xl lg:text-7xl font-black mb-6 leading-tight text-gray-900">
+                  {merged.title}
+                </h1>
+                <p className="text-lg md:text-xl mb-4 text-amber-700 font-medium max-w-2xl mx-auto">
+                  {merged.subtitle}
+                </p>
+                <p className="text-base md:text-lg mb-8 text-gray-700 max-w-3xl mx-auto leading-relaxed">
+                  {merged.content}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                  <a href={merged.buttonLink} className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white px-8 py-4 rounded-full font-bold text-lg transition-all transform hover:scale-105 shadow-2xl hover:shadow-amber-500/25">
+                    {merged.buttonText}
+                  </a>
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'products-showcase':
+        return (
+          <section className="py-20 bg-white">
+            <div className="container mx-auto px-4">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{merged.title}</h2>
+                <p className="text-lg text-gray-600 max-w-2xl mx-auto">{merged.subtitle}</p>
+              </div>
+              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-8`}>
+                {merged.products?.map((product: any, idx: number) => (
+                  <div key={idx} className="group bg-white p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-200 hover:border-amber-200">
+                    <div className="aspect-square mb-4 rounded-xl overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
+                      <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">{product.name}</h3>
+                    <p className="text-gray-600 text-sm mb-3">{product.description}</p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col">
+                        <span className="text-lg font-bold text-amber-600">{product.price}</span>
+                        {product.originalPrice && (
+                          <span className="text-sm text-gray-500 line-through">{product.originalPrice}</span>
+                        )}
+                      </div>
+                      <button className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg font-medium transition-colors">
+                        Comprar
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'testimonials-luxury':
+        return (
+          <section className="py-20 bg-gradient-to-br from-amber-50 to-orange-50">
+            <div className="container mx-auto px-4">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{merged.title}</h2>
+                <p className="text-lg text-gray-600 max-w-2xl mx-auto">{merged.subtitle}</p>
+              </div>
+              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-8 max-w-4xl mx-auto`}>
+                {merged.testimonials?.map((testimonial: any, idx: number) => (
+                  <div key={idx} className="bg-white p-8 rounded-2xl shadow-lg border border-amber-100">
+                    <div className="flex items-center mb-4">
+                      <img src={testimonial.avatar} alt={testimonial.name} className="w-12 h-12 rounded-full mr-4 border-2 border-amber-200" />
+                      <div>
+                        <h4 className="font-bold text-gray-900">{testimonial.name}</h4>
+                        <p className="text-sm text-amber-600">{testimonial.role}</p>
+                      </div>
+                    </div>
+                    <p className="text-gray-700 italic leading-relaxed">"{testimonial.content}"</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'cta-luxury':
+        return (
+          <section className="py-20 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-800 text-white relative overflow-hidden">
+            <div className="absolute inset-0 bg-black bg-opacity-10"></div>
+            <div className="relative z-10 container mx-auto text-center px-4">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">{merged.title}</h2>
+              <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto text-amber-100">{merged.subtitle}</p>
+              <a href={merged.buttonLink} className="bg-white text-amber-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-amber-50 transition-all transform hover:scale-105 shadow-2xl inline-block">
+                {merged.buttonText}
+              </a>
+            </div>
+          </section>
+        );
+
+      case 'hero-disruptive':
+        return (
+          <section className="min-h-screen flex items-center bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-900 text-white relative overflow-hidden">
+            <div className="absolute inset-0 bg-black bg-opacity-30"></div>
+            <div className="absolute top-20 right-20 w-96 h-96 bg-emerald-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+            <div className="absolute bottom-20 left-20 w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '3s' }}></div>
+            <div className="relative z-10 container mx-auto px-4 py-20">
+              <div className="max-w-4xl mx-auto text-center">
+                <h1 className="text-4xl md:text-6xl lg:text-7xl font-black mb-6 leading-tight bg-gradient-to-r from-white via-emerald-100 to-cyan-100 bg-clip-text text-transparent">
+                  {merged.title}
+                </h1>
+                <p className="text-lg md:text-xl mb-4 text-emerald-200 font-light max-w-2xl mx-auto">
+                  {merged.subtitle}
+                </p>
+                <p className="text-base md:text-lg mb-8 text-slate-300 max-w-3xl mx-auto leading-relaxed">
+                  {merged.content}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                  <a href={merged.buttonLink} className="bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white px-8 py-4 rounded-full font-bold text-lg transition-all transform hover:scale-105 shadow-2xl hover:shadow-emerald-500/25">
+                    {merged.buttonText}
+                  </a>
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'mission-vision':
+        return (
+          <section className="py-20 bg-white">
+            <div className="container mx-auto px-4">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{merged.title}</h2>
+                <p className="text-lg text-gray-600 max-w-2xl mx-auto">{merged.subtitle}</p>
+              </div>
+              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-12 max-w-6xl mx-auto`}>
+                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-8 rounded-2xl border border-emerald-200">
+                  <h3 className="text-2xl font-bold text-emerald-800 mb-4">Missão</h3>
+                  <p className="text-gray-700 leading-relaxed">{merged.mission}</p>
+                </div>
+                <div className="bg-gradient-to-br from-cyan-50 to-blue-50 p-8 rounded-2xl border border-cyan-200">
+                  <h3 className="text-2xl font-bold text-cyan-800 mb-4">Visão</h3>
+                  <p className="text-gray-700 leading-relaxed">{merged.vision}</p>
+                </div>
+              </div>
+              <div className="mt-12 text-center">
+                <h3 className="text-xl font-bold text-gray-900 mb-6">Nossos Valores</h3>
+                <div className="flex flex-wrap justify-center gap-4">
+                  {merged.values?.map((value: string, idx: number) => (
+                    <span key={idx} className="bg-gradient-to-r from-emerald-600 to-cyan-600 text-white px-4 py-2 rounded-full font-medium">
+                      {value}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'team-showcase':
+        return (
+          <section className="py-20 bg-gradient-to-br from-slate-50 to-gray-50">
+            <div className="container mx-auto px-4">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{merged.title}</h2>
+                <p className="text-lg text-gray-600 max-w-2xl mx-auto">{merged.subtitle}</p>
+              </div>
+              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-8 max-w-4xl mx-auto`}>
+                {merged.team?.map((member: any, idx: number) => (
+                  <div key={idx} className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-200">
+                    <div className="flex items-center mb-6">
+                      <img src={member.avatar} alt={member.name} className="w-16 h-16 rounded-full mr-4 border-2 border-emerald-200" />
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900">{member.name}</h3>
+                        <p className="text-emerald-600 font-medium">{member.role}</p>
+                      </div>
+                    </div>
+                    <p className="text-gray-700 leading-relaxed">{member.bio}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'cta-disruptive':
+        return (
+          <section className="py-20 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-800 text-white relative overflow-hidden">
+            <div className="absolute inset-0 bg-black bg-opacity-10"></div>
+            <div className="relative z-10 container mx-auto text-center px-4">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">{merged.title}</h2>
+              <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto text-emerald-100">{merged.subtitle}</p>
+              <a href={merged.buttonLink} className="bg-white text-emerald-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-emerald-50 transition-all transform hover:scale-105 shadow-2xl inline-block">
+                {merged.buttonText}
+              </a>
+            </div>
+          </section>
+        );
+
+      case 'hero-creative':
+        return (
+          <section className="min-h-screen flex items-center bg-gradient-to-br from-violet-900 via-purple-900 to-fuchsia-900 text-white relative overflow-hidden">
+            <div className="absolute inset-0 bg-black bg-opacity-20"></div>
+            <div className="absolute top-20 left-20 w-72 h-72 bg-violet-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+            <div className="absolute top-40 right-20 w-72 h-72 bg-fuchsia-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse" style={{ animationDelay: '2s' }}></div>
+            <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse" style={{ animationDelay: '4s' }}></div>
+            <div className="relative z-10 container mx-auto px-4 py-20">
+              <div className="max-w-4xl mx-auto text-center">
+                <h1 className="text-4xl md:text-6xl lg:text-7xl font-black mb-6 leading-tight bg-gradient-to-r from-white via-violet-100 to-fuchsia-100 bg-clip-text text-transparent">
+                  {merged.title}
+                </h1>
+                <p className="text-lg md:text-xl mb-4 text-violet-200 font-light max-w-2xl mx-auto">
+                  {merged.subtitle}
+                </p>
+                <p className="text-base md:text-lg mb-8 text-slate-300 max-w-3xl mx-auto leading-relaxed">
+                  {merged.content}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                  <a href={merged.buttonLink} className="bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white px-8 py-4 rounded-full font-bold text-lg transition-all transform hover:scale-105 shadow-2xl hover:shadow-violet-500/25">
+                    {merged.buttonText}
+                  </a>
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'portfolio-showcase':
+        return (
+          <section className="py-20 bg-white">
+            <div className="container mx-auto px-4">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{merged.title}</h2>
+                <p className="text-lg text-gray-600 max-w-2xl mx-auto">{merged.subtitle}</p>
+              </div>
+              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-8`}>
+                {merged.projects?.map((project: any, idx: number) => (
+                  <div key={idx} className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-200 overflow-hidden">
+                    <div className="aspect-video bg-gradient-to-br from-violet-100 to-fuchsia-100 flex items-center justify-center">
+                      <img src={project.image} alt={project.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    </div>
+                    <div className="p-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="bg-violet-100 text-violet-800 px-3 py-1 rounded-full text-sm font-medium">
+                          {project.category}
+                        </span>
+                      </div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">{project.title}</h3>
+                      <p className="text-gray-600 leading-relaxed">{project.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'services-creative':
+        return (
+          <section className="py-20 bg-gradient-to-br from-slate-50 to-violet-50">
+            <div className="container mx-auto px-4">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{merged.title}</h2>
+                <p className="text-lg text-gray-600 max-w-2xl mx-auto">{merged.subtitle}</p>
+              </div>
+              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-8`}>
+                {merged.services?.map((service: any, idx: number) => (
+                  <div key={idx} className="group bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-200 hover:border-violet-200">
+                    <div className="text-4xl mb-4 text-violet-600 group-hover:scale-110 transition-transform duration-300">
+                      {service.icon}
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">{service.title}</h3>
+                    <p className="text-gray-600 leading-relaxed">{service.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'cta-creative':
+        return (
+          <section className="py-20 bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-800 text-white relative overflow-hidden">
+            <div className="absolute inset-0 bg-black bg-opacity-10"></div>
+            <div className="relative z-10 container mx-auto text-center px-4">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">{merged.title}</h2>
+              <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto text-violet-100">{merged.subtitle}</p>
+              <a href={merged.buttonLink} className="bg-white text-violet-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-violet-50 transition-all transform hover:scale-105 shadow-2xl inline-block">
+                {merged.buttonText}
+              </a>
+            </div>
+          </section>
+        );
+
+      case 'hero-wellness':
+        return (
+          <section className="min-h-screen flex items-center bg-gradient-to-br from-rose-50 via-pink-50 to-purple-50 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-rose-100/20 via-pink-100/20 to-purple-100/20"></div>
+            <div className="relative z-10 container mx-auto px-4 py-20">
+              <div className="max-w-4xl mx-auto text-center">
+                <h1 className="text-4xl md:text-6xl lg:text-7xl font-black mb-6 leading-tight text-gray-900">
+                  {merged.title}
+                </h1>
+                <p className="text-lg md:text-xl mb-4 text-rose-700 font-medium max-w-2xl mx-auto">
+                  {merged.subtitle}
+                </p>
+                <p className="text-base md:text-lg mb-8 text-gray-700 max-w-3xl mx-auto leading-relaxed">
+                  {merged.content}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                  <a href={merged.buttonLink} className="bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white px-8 py-4 rounded-full font-bold text-lg transition-all transform hover:scale-105 shadow-2xl hover:shadow-rose-500/25">
+                    {merged.buttonText}
+                  </a>
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'services-wellness':
+        return (
+          <section className="py-20 bg-white">
+            <div className="container mx-auto px-4">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{merged.title}</h2>
+                <p className="text-lg text-gray-600 max-w-2xl mx-auto">{merged.subtitle}</p>
+              </div>
+              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-8`}>
+                {merged.services?.map((service: any, idx: number) => (
+                  <div key={idx} className="group bg-gradient-to-br from-rose-50 to-pink-50 p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-rose-200 hover:border-rose-300">
+                    <div className="text-4xl mb-4 text-rose-600 group-hover:scale-110 transition-transform duration-300">
+                      {service.icon}
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">{service.title}</h3>
+                    <p className="text-gray-600 leading-relaxed">{service.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'testimonials-wellness':
+        return (
+          <section className="py-20 bg-gradient-to-br from-rose-50 to-pink-50">
+            <div className="container mx-auto px-4">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{merged.title}</h2>
+                <p className="text-lg text-gray-600 max-w-2xl mx-auto">{merged.subtitle}</p>
+              </div>
+              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-8 max-w-4xl mx-auto`}>
+                {merged.testimonials?.map((testimonial: any, idx: number) => (
+                  <div key={idx} className="bg-white p-8 rounded-2xl shadow-lg border border-rose-100">
+                    <div className="flex items-center mb-4">
+                      <img src={testimonial.avatar} alt={testimonial.name} className="w-12 h-12 rounded-full mr-4 border-2 border-rose-200" />
+                      <div>
+                        <h4 className="font-bold text-gray-900">{testimonial.name}</h4>
+                        <p className="text-sm text-rose-600 font-medium">{testimonial.transformation}</p>
+                      </div>
+                    </div>
+                    <p className="text-gray-700 italic leading-relaxed">"{testimonial.content}"</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'cta-wellness':
+        return (
+          <section className="py-20 bg-gradient-to-r from-rose-600 via-pink-600 to-rose-800 text-white relative overflow-hidden">
+            <div className="absolute inset-0 bg-black bg-opacity-10"></div>
+            <div className="relative z-10 container mx-auto text-center px-4">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">{merged.title}</h2>
+              <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto text-rose-100">{merged.subtitle}</p>
+              <a href={merged.buttonLink} className="bg-white text-rose-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-rose-50 transition-all transform hover:scale-105 shadow-2xl inline-block">
+                {merged.buttonText}
+              </a>
+            </div>
+          </section>
+        );
+
+      case 'hero-financial':
+        return (
+          <section className="min-h-screen flex items-center bg-gradient-to-br from-slate-900 via-gray-900 to-zinc-900 text-white relative overflow-hidden">
+            <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+            <div className="absolute top-20 right-20 w-96 h-96 bg-emerald-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse"></div>
+            <div className="absolute bottom-20 left-20 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse" style={{ animationDelay: '3s' }}></div>
+            <div className="relative z-10 container mx-auto px-4 py-20">
+              <div className="max-w-4xl mx-auto text-center">
+                <h1 className="text-4xl md:text-6xl lg:text-7xl font-black mb-6 leading-tight bg-gradient-to-r from-white via-emerald-100 to-blue-100 bg-clip-text text-transparent">
+                  {merged.title}
+                </h1>
+                <p className="text-lg md:text-xl mb-4 text-emerald-200 font-light max-w-2xl mx-auto">
+                  {merged.subtitle}
+                </p>
+                <p className="text-base md:text-lg mb-8 text-slate-300 max-w-3xl mx-auto leading-relaxed">
+                  {merged.content}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                  <a href={merged.buttonLink} className="bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 text-white px-8 py-4 rounded-full font-bold text-lg transition-all transform hover:scale-105 shadow-2xl hover:shadow-emerald-500/25">
+                    {merged.buttonText}
+                  </a>
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'investment-options':
+        return (
+          <section className="py-20 bg-white">
+            <div className="container mx-auto px-4">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{merged.title}</h2>
+                <p className="text-lg text-gray-600 max-w-2xl mx-auto">{merged.subtitle}</p>
+              </div>
+              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-8`}>
+                {merged.options?.map((option: any, idx: number) => (
+                  <div key={idx} className="group bg-gradient-to-br from-slate-50 to-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-200 hover:border-emerald-200">
+                    <div className="text-center mb-6">
+                      <div className="text-4xl mb-4 text-emerald-600 group-hover:scale-110 transition-transform duration-300">
+                        {option.icon}
+                      </div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">{option.type}</h3>
+                      <p className="text-gray-600 text-sm mb-4">{option.description}</p>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-500">Risco:</span>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${option.risk === 'Baixo' ? 'bg-green-100 text-green-800' : option.risk === 'Médio-Alto' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
+                            {option.risk}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-500">Retorno:</span>
+                          <span className="text-emerald-600 font-semibold">{option.return}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'success-stories':
+        return (
+          <section className="py-20 bg-gradient-to-br from-slate-50 to-emerald-50">
+            <div className="container mx-auto px-4">
+              <div className="text-center mb-16">
+                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">{merged.title}</h2>
+                <p className="text-lg text-gray-600 max-w-2xl mx-auto">{merged.subtitle}</p>
+              </div>
+              <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-8 max-w-4xl mx-auto`}>
+                {merged.stories?.map((story: any, idx: number) => (
+                  <div key={idx} className="bg-white p-8 rounded-2xl shadow-lg border border-emerald-100">
+                    <div className="flex items-center mb-4">
+                      <img src={story.avatar} alt={story.name} className="w-12 h-12 rounded-full mr-4 border-2 border-emerald-200" />
+                      <div>
+                        <h4 className="font-bold text-gray-900">{story.name}</h4>
+                        <p className="text-sm text-emerald-600 font-medium">{story.achievement}</p>
+                      </div>
+                    </div>
+                    <p className="text-gray-700 italic leading-relaxed">"{story.content}"</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+
+      case 'cta-financial':
+        return (
+          <section className="py-20 bg-gradient-to-r from-emerald-600 via-blue-600 to-emerald-800 text-white relative overflow-hidden">
+            <div className="absolute inset-0 bg-black bg-opacity-10"></div>
+            <div className="relative z-10 container mx-auto text-center px-4">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">{merged.title}</h2>
+              <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto text-emerald-100">{merged.subtitle}</p>
+              <a href={merged.buttonLink} className="bg-white text-emerald-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-emerald-50 transition-all transform hover:scale-105 shadow-2xl inline-block">
+                {merged.buttonText}
+              </a>
+            </div>
+          </section>
+        );
+
       default:
         return null;
     }
