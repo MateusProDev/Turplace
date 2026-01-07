@@ -5,9 +5,16 @@ import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firesto
 import { db } from '../utils/firebase';
 import type { LeadPageTemplate, UserLeadPage, LeadPageSection } from '../types/leadpage';
 
-const LeadPage = () => {
+interface LeadPageProps {
+  customDomain?: string;
+}
+
+const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
   const { userSlug } = useParams<{ userSlug: string }>();
-  const { domain } = useParams<{ domain: string }>();
+  const { domain: routeDomain } = useParams<{ domain: string }>();
+
+  // Usar customDomain se fornecido, senão usar o da rota
+  const domain = customDomain || routeDomain;
   
   // Se o userSlug começa com "lead/", extrair o slug real (para compatibilidade com URLs antigas)
   const actualSlug = userSlug?.startsWith('lead/') ? userSlug.substring(5) : userSlug;

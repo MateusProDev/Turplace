@@ -31,28 +31,40 @@ import ActionHandler from './pages/auth/action';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 
-function App() {
-  // Detectar domínios personalizados e redirecionar
+// Componente que decide o que renderizar na rota raiz
+function HomePage() {
+  const [isCustomDomain, setIsCustomDomain] = useState(false);
+  const [customDomain, setCustomDomain] = useState('');
+
   useEffect(() => {
     const hostname = window.location.hostname;
-    const isCustomDomain = hostname !== 'lucrazi.com.br' &&
-                          hostname !== 'localhost' &&
-                          hostname !== '127.0.0.1' &&
-                          !hostname.includes('vercel.app') &&
-                          !hostname.includes('lucrazi.vercel.app');
+    const customDomainCheck = hostname !== 'lucrazi.com.br' &&
+                             hostname !== 'localhost' &&
+                             hostname !== '127.0.0.1' &&
+                             !hostname.includes('vercel.app') &&
+                             !hostname.includes('lucrazi.vercel.app');
 
-    if (isCustomDomain) {
-      // Verificar se já estamos na rota custom
-      if (!window.location.pathname.startsWith('/custom/')) {
-        window.location.href = `https://lucrazi.com.br/custom/${hostname}`;
-      }
+    if (customDomainCheck) {
+      setIsCustomDomain(true);
+      setCustomDomain(hostname);
     }
   }, []);
+
+  if (isCustomDomain) {
+    // Renderizar LeadPage diretamente para domínios personalizados
+    return <LeadPage key={customDomain} customDomain={customDomain} />;
+  }
+
+  // Renderizar página inicial normal
+  return <Landing />;
+}
+
+function App() {
 
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Landing />} />
+        <Route path="/" element={<HomePage />} />
         <Route path="/marketplace" element={<Marketplace />} />
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/profile" element={<Navigate to="/profile/settings" replace />} />
