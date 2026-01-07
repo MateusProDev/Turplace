@@ -90,6 +90,14 @@ export default defineConfig([
 3. Rode `npm run dev` para iniciar o frontend.
 4. Faça deploy no Vercel para produção.
 
+## Segurança e Configuração de Produção
+
+⚠️ **IMPORTANTE**: Antes de fazer deploy em produção, configure as variáveis de ambiente do Vercel para funcionalidades de domínio personalizado.
+
+Consulte [VERCEL_SECURITY_SETUP.md](VERCEL_SECURITY_SETUP.md) para instruções completas sobre:
+- Configuração segura de tokens de API
+- Variáveis de ambiente necessárias
+- Boas práticas de segurança
 
 MVP pronto para validação!
 
