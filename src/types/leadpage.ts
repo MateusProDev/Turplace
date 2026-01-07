@@ -1,6 +1,6 @@
 export interface LeadPageSection {
   id: string;
-  type: 'hero' | 'about' | 'benefits' | 'social-proof' | 'cta' | 'contact' | 'features' | 'cinematic' | 'documentary' | 'montage' | 'manuscript' | 'alchemical' | 'bestiary' | 'dreamscape' | 'lucid' | 'quest' | 'horological' | 'mechanical' | 'complication' | 'revolutionary' | 'demands' | 'propaganda';
+  type: 'hero' | 'about' | 'benefits' | 'social-proof' | 'cta' | 'contact' | 'features' | 'cinematic' | 'documentary' | 'montage' | 'manuscript' | 'alchemical' | 'bestiary' | 'dreamscape' | 'lucid' | 'quest' | 'horological' | 'mechanical' | 'complication' | 'revolutionary' | 'demands' | 'propaganda' | 'hero-modern' | 'features-modern' | 'pricing-modern' | 'cta-modern' | 'hero-luxury' | 'products-showcase' | 'testimonials-luxury' | 'cta-luxury' | 'hero-disruptive' | 'mission-vision' | 'team-showcase' | 'cta-disruptive' | 'hero-creative' | 'portfolio-showcase' | 'services-creative' | 'cta-creative' | 'hero-wellness' | 'services-wellness' | 'testimonials-wellness' | 'cta-wellness' | 'hero-financial' | 'investment-options' | 'success-stories' | 'cta-financial';
   title?: string;
   content?: string;
   image?: string;
@@ -60,6 +60,18 @@ export interface LeadPageSection {
   demands?: any[];
   slogan?: string;
   propagandaElements?: any[];
+  // Modern 2025 template properties
+  plans?: any[];
+  products?: any[];
+  testimonials?: any[];
+  mission?: string;
+  vision?: string;
+  values?: string[];
+  team?: any[];
+  projects?: any[];
+  services?: any[];
+  options?: any[];
+  stories?: any[];
 }
 
 export interface LeadPageTemplate {

@@ -1,686 +1,474 @@
-import { config } from 'dotenv';
-config({ path: '.env.local' });
-import admin from 'firebase-admin';
-import initFirestore from '../api/_lib/firebaseAdmin.cjs';
+﻿import { config } from "dotenv";
+config({ path: ".env.local" });
+import admin from "firebase-admin";
+import initFirestore from "../api/_lib/firebaseAdmin.cjs";
 
 const db = initFirestore();
 
-// TEMPLATE 1: CINEMA VERITÉ (Documentário Interativo)
-const cinemaVeriteTemplate = {
-  id: 'cinema-verite',
-  name: 'Cinema Vérité - Documentário em Tempo Real',
+// TEMPLATE 1: SAAS MODERN
+const saasModernTemplate = {
+  id: "saas-modern",
+  name: "SaaS Modern - Design Minimalista 2025",
   sections: [
     {
-      id: 'film-reel',
-      type: 'cinematic',
-      title: 'ROLO 01: O CLIENTE',
-      subtitle: 'FILMANDO EM 16MM',
-      content: 'Câmera na mão. Verdade crua. Esta não é uma página, é um documentário sobre seu negócio.',
-      buttonText: 'INICIAR PROJEÇÃO',
-      buttonLink: '#reel1',
-      backgroundColor: '#1a1a1a',
-      filmGrain: true,
-      aspectRatio: '4:3',
-      director: 'DIRETOR: SEU NOME',
-      year: '2024',
-      enabled: true,
-      uniqueElements: {
-        projectorSound: true,
-        filmScratches: 'random',
-        vintageLens: 'anamorphic',
-        colorGrade: 'kodak2383'
-      }
-    },
-    {
-      id: 'scene-interview',
-      type: 'documentary',
-      title: 'CENA 02: DEPOIMENTO CRUA',
-      layout: 'interview-room',
-      subject: {
-        name: 'JOÃO, 34 ANOS',
-        problem: 'Perdendo R$15.000/mês com páginas que não convertem',
-        emotion: 'Frustrado',
-        setting: 'Escritório vazio, 3h da manhã'
-      },
-      questions: [
-        'O que dói mais?',
-        'Quando percebeu o problema?',
-        'O que tentou fazer?',
-        'Por que nada funcionou?'
-      ],
-      backgroundColor: '#0a0a0a',
-      lighting: 'single-bulb',
-      audio: 'room-tone',
+      id: "hero-modern",
+      type: "hero-modern",
+      title: "Transforme seu negócio",
+      subtitle: "A solução definitiva",
+      content: "Automatize processos e escale seu negócio.",
+      buttonText: "Começar",
+      buttonLink: "#pricing",
       enabled: true
     },
     {
-      id: 'montage-sequence',
-      type: 'montage',
-      title: 'SEQUÊNCIA DE MONTAGEM',
-      technique: 'jump-cuts',
-      scenes: [
-        {
-          time: '00:00:01',
-          shot: 'Close-up das mãos tremendo',
-          audio: 'tick-tock-clock'
-        },
-        {
-          time: '00:00:03',
-          shot: 'Tela do computador piscando',
-          audio: 'keyboard-frustration'
-        },
-        {
-          time: '00:00:05',
-          shot: 'Pilha de contratos não assinados',
-          audio: 'paper-rustle'
-        },
-        {
-          time: '00:00:07',
-          shot: 'Relógio marcando 3:47 AM',
-          audio: 'heartbeat-fast'
-        }
-      ],
-      backgroundColor: '#000000',
-      editingStyle: 'french-new-wave',
-      enabled: true
-    },
-    {
-      id: 'resolution-credits',
-      type: 'cta',
-      title: 'FINAL CUT',
-      subtitle: 'DIREÇÃO: VOCÊ',
-      content: 'Esta é a última cena do seu fracasso. O próximo frame é sua redenção.',
-      buttonText: 'GRAVAR O FINAL FELIZ',
-      buttonLink: '#contact',
-      buttonStyle: 'clapperboard',
-      backgroundColor: '#1a1a1a',
-      creditRoll: true,
-      filmEnd: true,
-      enabled: true
-    }
-  ]
-};
-
-// TEMPLATE 2: ALQUIMIA MEDIEVAL (Manuscrito Iluminado)
-const alchemyTemplate = {
-  id: 'alchemy-manuscript',
-  name: 'Alquimia Medieval - Pergaminho Digital',
-  sections: [
-    {
-      id: 'vellum-scroll',
-      type: 'manuscript',
-      title: '📜 ARS CONVERTENDI 📜',
-      subtitle: 'O Grande Livro das Transformações Digitais',
-      content: 'Assim como os alquimistas buscavam transformar chumbo em ouro, nós transformamos visitantes em ouro.',
-      buttonText: 'DESENROLAR PERGAMINHO',
-      buttonLink: '#scroll',
-      backgroundColor: '#f5e9d4',
-      material: 'aged-vellum',
-      inkType: 'iron-gall',
-      illumination: 'gold-leaf',
-      marginalia: true,
-      uniqueElements: {
-        waxSeal: true,
-        dragonIllustrations: 3,
-        secretSymbols: ['☉', '☿', '♁'],
-        alchemicalProcess: 'solve-et-coagula'
-      }
-    },
-    {
-      id: 'recipe-transmutation',
-      type: 'alchemical',
-      title: 'RECEITA SECRETA',
-      subtitle: 'Fórmula para Conversão Aurífera',
-      ingredients: [
-        {
-          name: 'Visitatio Mercurius',
-          amount: '1000 partes',
-          purpose: 'Base volátil'
-        },
-        {
-          name: 'Intentio Saturni',
-          amount: '7 gotas',
-          purpose: 'Estrutura e disciplina'
-        },
-        {
-          name: 'Cliccus Lunae',
-          amount: '1 medida',
-          purpose: 'Ação intuitiva'
-        },
-        {
-          name: 'Conversio Solis',
-          amount: '3 gramas',
-          purpose: 'Transformação final'
-        }
-      ],
-      procedure: [
-        'Macerar visitantes em atenção pura',
-        'Destilar através do funil de valor',
-        'Sublimar com urgência controlada',
-        'Coagular em compromisso firme'
-      ],
-      backgroundColor: '#ede0c9',
-      apparatus: ['alembic', 'athanor', 'crucible'],
-      warning: 'NOLI TANGERE CIRCLOS',
-      enabled: true
-    },
-    {
-      id: 'bestiary-clients',
-      type: 'bestiary',
-      title: 'BESTIÁRIO DOS CLIENTES',
-      layout: 'illuminated-margins',
-      creatures: [
-        {
-          name: 'Draco Negotiatus',
-          description: 'Serpente alada que guarda tesouros de conversão',
-          habitat: 'Landing pages antigas',
-          weakness: 'Call-to-action claro',
-          illustration: 'dragon-with-coin'
-        },
-        {
-          name: 'Phoenix Convertens',
-          description: 'Ave que renasce das cinzas do abandono de carrinho',
-          habitat: 'Emails de recuperação',
-          power: 'Ressurreição de vendas perdidas',
-          illustration: 'phoenix-rising'
-        },
-        {
-          name: 'Unicornis Fidelis',
-          description: 'Criatura mítica de retenção eterna',
-          habitat: 'Programas de fidelidade',
-          rarity: 'Único no reino digital',
-          illustration: 'unicorn-loyalty'
-        }
-      ],
-      backgroundColor: '#f0e6d0',
-      artisticStyle: 'gothic-illumination',
-      hiddenMeanings: true,
-      enabled: true
-    },
-    {
-      id: 'alchemical-cta',
-      type: 'cta',
-      title: 'O ÚLTIMO PASSO DA OBRA',
-      subtitle: 'A Grande Obra espera',
-      content: 'Assine abaixo com sua própria tinta. O pacto está feito.',
-      buttonText: 'ASSINAR COM SANGUE DE DRAGÃO',
-      buttonLink: '#contact',
-      buttonStyle: 'wax-seal',
-      backgroundColor: '#d4c4a8',
-      requiresOath: true,
-      alchemicalCircle: true,
-      enabled: true
-    }
-  ]
-};
-
-// TEMPLATE 3: SONHO LÚCIDO (Interface Onírica)
-const lucidDreamTemplate = {
-  id: 'lucid-dream',
-  name: 'Sonho Lúcido - Navegação Onírica',
-  sections: [
-    {
-      id: 'dream-beginning',
-      type: 'dreamscape',
-      title: '🎭 VOCÊ ESTÁ SONHANDO? 🎭',
-      subtitle: 'Reconheça os sinais:',
-      realityChecks: [
-        'As cores são muito vibrantes?',
-        'O tempo passa diferente?',
-        'Você pode ler este texto duas vezes?',
-        'Consegue flutuar se tentar?'
-      ],
-      instruction: 'PISCAR DUAS VEZES PARA TOMAR CONTROLE',
-      buttonText: 'TORNAR-SE LÚCIDO',
-      buttonLink: '#control',
-      backgroundColor: '#2a0033',
-      dreamState: 'hypnagogic',
-      realityDistortion: 0.7,
-      uniqueElements: {
-        dreamPhysics: true,
-        timeDilation: 'variable',
-        falseAwakenings: 3,
-        dreamCharacters: ['gatekeeper', 'mentor', 'shadow']
-      }
-    },
-    {
-      id: 'dream-control',
-      type: 'lucid',
-      title: 'CONTROLE ONÍRICO ATIVADO',
-      dreamPowers: [
-        {
-          power: 'TELEPINESE DIGITAL',
-          description: 'Mover elementos com a mente',
-          activation: 'Olhar fixo por 3 segundos'
-        },
-        {
-          power: 'CRIAÇÃO MANIFESTA',
-          description: 'Materializar seus desejos de conversão',
-          activation: 'Respiração controlada'
-        },
-        {
-          power: 'NEXUS TEMPORAL',
-          description: 'Acelerar o tempo até o resultado',
-          activation: 'Piscar em código morse'
-        }
-      ],
-      backgroundColor: '#1a0022',
-      stability: 'maintaining',
-      clarity: 85,
-      danger: 'REM wakeup imminent',
-      enabled: true
-    },
-    {
-      id: 'dream-quest',
-      type: 'quest',
-      title: 'MISSÃO ONÍRICA',
-      objective: 'ENCONTRAR O CRISTAL DE CONVERSÃO',
-      dreamLandscape: 'floating-islands',
-      challenges: [
-        {
-          location: 'Floresta de Dados Emaranhados',
-          obstacle: 'Labirinto de analytics confusos',
-          solution: 'Seguir o fio de cliques dourados'
-        },
-        {
-          location: 'Oceano de Distrações',
-          obstacle: 'Sereias das redes sociais',
-          solution: 'Tapar ouvidos com foco puro'
-        },
-        {
-          location: 'Montanha da Dúvida',
-          obstacle: 'Nevasca de "e-se"',
-          solution: 'Escalar com corda de confiança'
-        }
-      ],
-      backgroundColor: '#330044',
-      navigation: 'dream-compass',
-      timeLimit: 'before-wakeup',
-      enabled: true
-    },
-    {
-      id: 'dream-awakening',
-      type: 'cta',
-      title: 'O DESPERTAR',
-      subtitle: 'Mas qual realidade escolher?',
-      choices: [
-        'ACORDAR NO MUNDO ANTIGO (sem resultados)',
-        'PERMANECER NO SONHO LÚCIDO (com controle total)'
-      ],
-      buttonText: 'ESCOLHER REALIDADE PERMANENTE',
-      buttonLink: '#contact',
-      buttonStyle: 'reality-portal',
-      backgroundColor: '#000011',
-      liminalSpace: true,
-      realityMerge: true,
-      enabled: true
-    }
-  ]
-};
-
-// TEMPLATE 4: MECANISMO DE RELÓGIO (Engrenagem Precisionista)
-const clockworkTemplate = {
-  id: 'clockwork-mechanism',
-  name: 'Mecanismo de Relógio - Engrenagens Perfeitas',
-  sections: [
-    {
-      id: 'main-spring',
-      type: 'horological',
-      title: '⚙️ SISTEMA PRECISIONISTA ⚙️',
-      subtitle: 'Cada visita é uma engrenagem. Cada clique é um dente.',
-      content: 'Precisão suíça aplicada à conversão. Tolerância zero para ineficiência.',
-      buttonText: 'DAR CORDA AO SISTEMA',
-      buttonLink: '#wind',
-      backgroundColor: '#e8e5de',
-      movement: 'mechanical',
-      jewels: 17,
-      accuracy: '+2/-1 seconds per day',
-      uniqueElements: {
-        tourbillon: true,
-        mainspringTension: 'optimal',
-        gearTeeth: '28800 vph',
-        escapement: 'swiss-lever'
-      }
-    },
-    {
-      id: 'gear-system',
-      type: 'mechanical',
-      title: 'TRANSMISSÃO DE FORÇA',
-      layout: 'exploded-view',
-      gears: [
-        {
-          name: 'Roda de Visitas',
-          teeth: 60,
-          function: 'Captação inicial',
-          material: 'brushed-steel',
-          connectsTo: 'Roda de Atenção'
-        },
-        {
-          name: 'Roda de Atenção',
-          teeth: 48,
-          function: 'Retenção focal',
-          material: 'polished-brass',
-          connectsTo: 'Roda de Interesse'
-        },
-        {
-          name: 'Roda de Interesse',
-          teeth: 36,
-          function: 'Engajamento profundo',
-          material: 'black-dlc',
-          connectsTo: 'Roda de Conversão'
-        },
-        {
-          name: 'Roda de Conversão',
-          teeth: 24,
-          function: 'Transformação final',
-          material: 'rose-gold',
-          connectsTo: 'Eixo do Resultado'
-        }
-      ],
-      backgroundColor: '#f0ede6',
-      lubrication: 'synthetic-dry',
-      powerReserve: '72 hours',
-      enabled: true
-    },
-    {
-      id: 'complications',
-      type: 'complication',
-      title: 'COMPLICAÇÕES',
-      subtitle: 'Funções além da hora',
+      id: "features-modern",
+      type: "features-modern",
+      title: "Recursos Inovadores",
+      subtitle: "Tudo que você precisa em uma plataforma",
       features: [
         {
-          name: 'CRONÓGRAFO DE CONVERSÃO',
-          function: 'Mede tempo até a venda',
-          accuracy: '1/10th second',
-          activation: 'single pusher'
+          icon: "",
+          title: "Automação Inteligente",
+          description: "Processos automatizados que economizam tempo"
         },
         {
-          name: 'MOONPHASE DO ENGAGEMENT',
-          function: 'Mostra ciclo ideal de publicação',
-          cycle: '29.5 days',
-          display: 'aperture'
+          icon: "",
+          title: "Segurança Avançada",
+          description: "Proteção de dados de nível empresarial"
         },
         {
-          name: 'PERPETUAL CALENDAR',
-          function: 'Ajusta automaticamente campanhas',
-          correction: 'Until 2100',
-          mechanism: 'program-wheel'
-        },
-        {
-          name: 'MINUTE REPEATER',
-          function: 'Sinaliza leads qualificados',
-          chime: 'westminster',
-          activation: 'slide'
+          icon: "",
+          title: "Analytics em Tempo Real",
+          description: "Insights valiosos para tomada de decisões"
         }
       ],
-      backgroundColor: '#e6e2d9',
-      craftsmanship: 'hand-finished',
-      decoration: 'côtes de genève',
       enabled: true
     },
     {
-      id: 'winding-cta',
-      type: 'cta',
-      title: 'HORA DE SINCRONIZAR',
-      subtitle: 'Seu relógio está atrasado',
-      content: 'Ajuste o ponteiro para o momento exato da mudança.',
-      buttonText: 'SINCRONIZAR AGORA',
-      buttonLink: '#contact',
-      buttonStyle: 'crown-winding',
-      backgroundColor: '#d4d0c5',
-      requiresWinding: true,
-      timing: 'atomic-clock-sync',
+      id: "pricing-modern",
+      type: "pricing-modern",
+      title: "Planos Flexíveis",
+      subtitle: "Escolha o plano ideal para seu negócio",
+      plans: [
+        {
+          name: "Starter",
+          price: "R$ 29",
+          period: "/mês",
+          features: ["Até 100 usuários", "5GB armazenamento", "Suporte básico"],
+          buttonText: "Começar Grátis",
+          popular: false
+        },
+        {
+          name: "Professional",
+          price: "R$ 99",
+          period: "/mês",
+          features: ["Até 1000 usuários", "50GB armazenamento", "Suporte prioritário"],
+          buttonText: "Assinar Agora",
+          popular: true
+        },
+        {
+          name: "Enterprise",
+          price: "R$ 299",
+          period: "/mês",
+          features: ["Usuários ilimitados", "Armazenamento ilimitado", "Suporte 24/7"],
+          buttonText: "Falar com Vendas",
+          popular: false
+        }
+      ],
+      enabled: true
+    },
+    {
+      id: "cta-modern",
+      type: "cta-modern",
+      title: "Pronto para começar?",
+      subtitle: "Junte-se a milhares de empresas que já transformaram seus negócios",
+      buttonText: "Criar Conta Grátis",
+      buttonLink: "#signup",
       enabled: true
     }
   ]
 };
 
-// TEMPLATE 5: MANIFESTO ANARQUISTA (Tipografia Revolucionária)
-const anarchistManifestoTemplate = {
-  id: 'anarchist-manifesto',
-  name: 'Manifesto Anarquista - Tipografia Revolucionária',
+// TEMPLATE 2: E-COMMERCE PREMIUM
+const ecommercePremiumTemplate = {
+  id: "ecommerce-premium",
+  name: "E-commerce Premium - Luxo Digital 2025",
   sections: [
     {
-      id: 'manifesto-declaration',
-      type: 'revolutionary',
-      title: '¡BASTA!',
-      subtitle: 'MANIFIESTO CONTRA EL DISEÑO CONVENCIONAL',
-      content: 'Las páginas de aterrizaje son cárceles de creatividad. Rompamos las cadenas.',
-      buttonText: '¡UNIRSE A LA REVOLUCIÓN!',
-      buttonLink: '#revolution',
-      backgroundColor: '#000000',
-      paperType: 'newsprint-torn',
-      ink: 'soot-and-blood',
-      printingMethod: 'guerrilla-stencil',
-      uniqueElements: {
-        censorshipMarks: true,
-        protestStickers: 7,
-        undergroundNewspaper: true,
-        revolutionarySymbols: ['⚑', '✊', '⚒']
-      }
-    },
-    {
-      id: 'demands-list',
-      type: 'demands',
-      title: 'NUESTRAS EXIGENCIAS',
-      layout: 'wheatpaste-wall',
-      demands: [
-        {
-          demand: 'ABOLICIÓN DEL FOLD',
-          reason: 'La pantalla no tiene límites',
-          action: 'Scroll infinito, pensamiento infinito'
-        },
-        {
-          demand: 'EXPROPIACIÓN DE WHITESPACE',
-          reason: 'El vacío es privilegio burgués',
-          action: 'Llenar cada pixel con significado'
-        },
-        {
-          demand: 'AUTOGESTIÓN DE CONTENIDO',
-          reason: 'El usuario es el verdadero diseñador',
-          action: 'Interfaces que se reescriben solas'
-        },
-        {
-          demand: 'INTERNACIONALISMO TIPOGRÁFICO',
-          reason: 'Las fuentes no tienen fronteras',
-          action: 'Mezclar helvetica con jeroglíficos'
-        }
-      ],
-      backgroundColor: '#111111',
-      wallTexture: 'brick-graffiti',
-      policeSirens: 'distant',
+      id: "hero-luxury",
+      type: "hero-luxury",
+      title: "Elegância que você merece",
+      subtitle: "Coleção exclusiva de produtos premium",
+      content: "Descubra peças únicas, curadoria excepcional e atendimento personalizado.",
+      buttonText: "Explorar Coleção",
+      buttonLink: "#products",
       enabled: true
     },
     {
-      id: 'propaganda-poster',
-      type: 'propaganda',
-      title: '¡PROPAGANDA DE CONVERSIÓN!',
-      style: 'constructivist',
-      elements: [
+      id: "products-showcase",
+      type: "products-showcase",
+      title: "Destaques da Semana",
+      subtitle: "Peças selecionadas com cuidado especial",
+      products: [
         {
-          type: 'bold-diagonal',
-          text: 'CADA CLICK',
-          angle: 45,
-          color: 'red'
+          image: "/api/placeholder/300/400",
+          name: "Vestido Elegante",
+          price: "R$ 1.299",
+          originalPrice: "R$ 1.599",
+          description: "Vestido de alta costura com detalhes em renda"
         },
         {
-          type: 'starburst',
-          text: 'ES UNA BALA',
-          position: 'center',
-          effect: 'radiate'
+          image: "/api/placeholder/300/400",
+          name: "Blazer Executivo",
+          price: "R$ 899",
+          originalPrice: "R$ 1.099",
+          description: "Blazer confeccionado em tecido premium italiano"
         },
         {
-          type: 'worker-silhouette',
-          action: 'apuntando al CTA',
-          dynamic: true
-        },
-        {
-          type: 'industrial-gear',
-          function: 'moliendo visitantes',
-          rotation: 'continuous'
+          image: "/api/placeholder/300/400",
+          name: "Sapatos Clássicos",
+          price: "R$ 699",
+          originalPrice: "R$ 799",
+          description: "Sapatos artesanais com couro genuíno"
         }
       ],
-      backgroundColor: '#220000',
-      paperCondition: 'aged-propaganda',
-      urgency: 'maximum',
       enabled: true
     },
     {
-      id: 'revolutionary-cta',
-      type: 'cta',
-      title: '¡EL PUEBLO EXIGE CONVERSIÓN!',
-      subtitle: 'No pidas permiso. Toma acción.',
-      content: 'Este botón no es un botón. Es un acto de rebelión digital.',
-      buttonText: '¡TOMAR EL PODER AHORA!',
-      buttonLink: '#contact',
-      buttonStyle: 'molotov-button',
-      backgroundColor: '#000000',
-      sounds: ['crowd-chanting', 'breaking-glass'],
-      revolutionPhase: 'final-stages',
+      id: "testimonials-luxury",
+      type: "testimonials-luxury",
+      title: "O que nossos clientes dizem",
+      subtitle: "Experiências de excelência",
+      testimonials: [
+        {
+          name: "Ana Carolina",
+          role: "Empresária",
+          content: "A qualidade e o atendimento são incomparáveis. Cada peça é uma obra de arte.",
+          avatar: "/api/placeholder/60/60"
+        },
+        {
+          name: "Roberto Santos",
+          role: "Executivo",
+          content: "Produtos premium com curadoria impecável. Minha experiência de compra foi excepcional.",
+          avatar: "/api/placeholder/60/60"
+        }
+      ],
+      enabled: true
+    },
+    {
+      id: "cta-luxury",
+      type: "cta-luxury",
+      title: "VIP Experience",
+      subtitle: "Acesse nossa coleção exclusiva e desfrute de benefícios únicos",
+      buttonText: "Tornar-se Membro VIP",
+      buttonLink: "#vip",
       enabled: true
     }
   ]
 };
 
-// TEMPLATE 6: MICROBIOMA DIGITAL (Organismo Vivo)
-const microbiomeTemplate = {
-  id: 'digital-microbiome',
-  name: 'Microbioma Digital - Organismo Vivo de Página',
+// TEMPLATE 3: STARTUP TECH
+const startupTechTemplate = {
+  id: "startup-tech",
+  name: "Startup Tech - Inovação Disruptiva 2025",
   sections: [
     {
-      id: 'petri-dish',
-      type: 'microscopic',
-      title: '🧫 CULTIVO INICIAL 🧫',
-      subtitle: 'Colônia: Visitantes sazonais',
-      content: 'Observando sob aumento 400x. Note os padrões de navegação.',
-      buttonText: 'INOCULAR MEIO DE CULTURA',
-      buttonLink: '#culture',
-      backgroundColor: '#f8f8f8',
-      magnification: '400x',
-      stain: 'gram-positive',
-      agarType: 'blood-agar',
-      uniqueElements: {
-        liveCulture: true,
-        bacterialColonies: 'growing',
-        microscopeLight: 'kohler',
-        incubationTemp: '37°C'
-      }
-    },
-    {
-      id: 'culture-growth',
-      type: 'biological',
-      title: 'CRESCIMENTO EXPONENCIAL',
-      strain: 'CONVERSIO MAXIMA',
-      growthPhases: [
-        {
-          phase: 'Lag (0-2h)',
-          activity: 'Aclimatação ao ambiente',
-          colonies: 12
-        },
-        {
-          phase: 'Log (2-24h)',
-          activity: 'Divisão celular explosiva',
-          colonies: 10_000
-        },
-        {
-          phase: 'Stationary (1-7d)',
-          activity: 'Equilíbrio simbiótico',
-          colonies: 1_000_000
-        },
-        {
-          phase: 'Conversion (7d+)',
-          activity: 'Metabolismo de leads',
-          colonies: 'exponential'
-        }
-      ],
-      backgroundColor: '#f0f0f0',
-      nutrients: ['glucose', 'nitrogen', 'attention-traces'],
-      inhibitors: ['bounce-rate', 'distraction-toxins'],
+      id: "hero-disruptive",
+      type: "hero-disruptive",
+      title: "Revolucionando o futuro",
+      subtitle: "Tecnologia que transforma realidades",
+      content: "Somos uma startup de tecnologia criando soluções inovadoras.",
+      buttonText: "Juntar-se à Startup",
+      buttonLink: "#mission",
       enabled: true
     },
     {
-      id: 'symbiotic-ecosystem',
-      type: 'ecosystem',
-      title: 'ECOSSISTEMA SIMBIÓTICO',
-      microorganisms: [
-        {
-          species: 'CLICKUS PRIMARIUS',
-          role: 'Conversor primário',
-          habitat: 'Botões principais',
-          reproduction: 'Binary fission on hover'
-        },
-        {
-          species: 'SCROLLUS PROFUNDUS',
-          role: 'Engajador de profundidade',
-          habitat: 'Página abaixo do fold',
-          behavior: 'Migratory patterns follow cursor'
-        },
-        {
-          species: 'SHARUS VIRALIS',
-          role: 'Transmissor social',
-          habitat: 'Botões de compartilhamento',
-          spreadRate: 'R0 = 3.4'
-        },
-        {
-          species: 'CONVERSIO TERMINALIS',
-          role: 'Transformador final',
-          habitat: 'Formulários de contato',
-          lifeCycle: 'Complete upon submission'
-        }
-      ],
-      backgroundColor: '#e8e8e8',
-      ecosystemBalance: 'delicate',
-      mutualism: 'total',
+      id: "mission-vision",
+      type: "mission-vision",
+      title: "Nossa Missão",
+      subtitle: "Construindo o futuro da tecnologia",
+      mission: "Democratizar o acesso à tecnologia avançada para todos.",
+      vision: "Ser a referência global em soluções tecnológicas disruptivas.",
+      values: ["Inovação", "Transparência", "Impacto Social"],
       enabled: true
     },
     {
-      id: 'inoculation-cta',
-      type: 'cta',
-      title: 'INOCULAR SEU PRÓPRIO CULTIVO',
-      subtitle: 'Estéril não é natural',
-      content: 'Introduza seus visitantes no nosso meio de cultura perfeito.',
-      buttonText: 'INICIAR INFECÇÃO CONTROLADA',
-      buttonLink: '#contact',
-      buttonStyle: 'pipette-drop',
-      backgroundColor: '#f5f5f5',
-      labConditions: 'sterile',
-      growthGuarantee: '100% culture-take',
+      id: "team-showcase",
+      type: "team-showcase",
+      title: "Conheça o Time",
+      subtitle: "Mentes brilhantes por trás da inovação",
+      team: [
+        {
+          name: "João Silva",
+          role: "CEO & Fundador",
+          bio: "Ex-Google, especialista em IA e machine learning.",
+          avatar: "/api/placeholder/150/150"
+        },
+        {
+          name: "Maria Santos",
+          role: "CTO",
+          bio: "PhD em Ciência da Computação, pioneira em blockchain.",
+          avatar: "/api/placeholder/150/150"
+        }
+      ],
+      enabled: true
+    },
+    {
+      id: "cta-disruptive",
+      type: "cta-disruptive",
+      title: "Faça Parte da Revolução",
+      subtitle: "Junte-se a nós na construção do futuro",
+      buttonText: "Investir na Startup",
+      buttonLink: "#invest",
       enabled: true
     }
   ]
 };
 
-export async function initRadicalTemplates() {
-  const templates = [
-    { id: 'cinema-verite', data: cinemaVeriteTemplate },
-    { id: 'alchemy-manuscript', data: alchemyTemplate },
-    { id: 'lucid-dream', data: lucidDreamTemplate },
-    { id: 'clockwork-mechanism', data: clockworkTemplate },
-    { id: 'anarchist-manifesto', data: anarchistManifestoTemplate },
-    { id: 'digital-microbiome', data: microbiomeTemplate }
-  ];
+// TEMPLATE 4: CREATIVE AGENCY
+const creativeAgencyTemplate = {
+  id: "creative-agency",
+  name: "Creative Agency - Design Inovador 2025",
+  sections: [
+    {
+      id: "hero-creative",
+      type: "hero-creative",
+      title: "Criatividade sem limites",
+      subtitle: "Transformando ideias em experiências extraordinárias",
+      content: "Somos uma agência criativa que combina design excepcional com inovação digital.",
+      buttonText: "Ver Nosso Trabalho",
+      buttonLink: "#portfolio",
+      enabled: true
+    },
+    {
+      id: "portfolio-showcase",
+      type: "portfolio-showcase",
+      title: "Projetos em Destaque",
+      subtitle: "Criatividade que gera resultados",
+      projects: [
+        {
+          title: "Rebranding Corporativo",
+          category: "Branding",
+          image: "/api/placeholder/600/400",
+          description: "Renovação completa da identidade visual de uma empresa Fortune 500."
+        },
+        {
+          title: "App Mobile Inovador",
+          category: "UX/UI Design",
+          image: "/api/placeholder/600/400",
+          description: "Design de interface premiado para aplicativo de saúde mental."
+        }
+      ],
+      enabled: true
+    },
+    {
+      id: "services-creative",
+      type: "services-creative",
+      title: "Nossos Serviços",
+      subtitle: "Soluções criativas completas",
+      services: [
+        {
+          icon: "",
+          title: "Design Gráfico",
+          description: "Identidade visual, materiais impressos e digitais"
+        },
+        {
+          icon: "",
+          title: "Design Digital",
+          description: "Websites, apps e experiências interativas"
+        },
+        {
+          icon: "",
+          title: "Marketing Digital",
+          description: "Estratégias criativas para mídias sociais e publicidade"
+        }
+      ],
+      enabled: true
+    },
+    {
+      id: "cta-creative",
+      type: "cta-creative",
+      title: "Vamos Criar Juntos",
+      subtitle: "Transforme sua visão em realidade",
+      buttonText: "Iniciar Projeto",
+      buttonLink: "#contact",
+      enabled: true
+    }
+  ]
+};
 
-  for (const template of templates) {
-    const templateRef = db.collection('templates').doc(template.id);
-    await templateRef.set(template.data);
-    console.log(`🎬 Template "${template.data.name}" criado - Gênero Único!`);
+// TEMPLATE 5: HEALTH & WELLNESS
+const healthWellnessTemplate = {
+  id: "health-wellness",
+  name: "Health & Wellness - Bem-estar Moderno 2025",
+  sections: [
+    {
+      id: "hero-wellness",
+      type: "hero-wellness",
+      title: "Sua jornada para o bem-estar começa aqui",
+      subtitle: "Cuidados holísticos para corpo e mente",
+      content: "Descubra um novo jeito de cuidar de si mesmo.",
+      buttonText: "Agendar Consulta",
+      buttonLink: "#booking",
+      enabled: true
+    },
+    {
+      id: "services-wellness",
+      type: "services-wellness",
+      title: "Nossos Serviços",
+      subtitle: "Abordagem integrada ao bem-estar",
+      services: [
+        {
+          icon: "",
+          title: "Terapia Holística",
+          description: "Tratamentos que cuidam do corpo e da mente"
+        },
+        {
+          icon: "",
+          title: "Nutrição Personalizada",
+          description: "Planos alimentares adaptados ao seu estilo de vida"
+        },
+        {
+          icon: "",
+          title: "Treinamento Funcional",
+          description: "Exercícios que fortalecem corpo e mente"
+        }
+      ],
+      enabled: true
+    },
+    {
+      id: "testimonials-wellness",
+      type: "testimonials-wellness",
+      title: "Histórias de Transformação",
+      subtitle: "Resultados que falam por si",
+      testimonials: [
+        {
+          name: "Carla Mendes",
+          transformation: "Perdeu 15kg e ganhou vitalidade",
+          content: "O acompanhamento holístico mudou minha relação com meu corpo.",
+          avatar: "/api/placeholder/80/80"
+        },
+        {
+          name: "Pedro Lima",
+          transformation: "Reduziu estresse crônico",
+          content: "Encontrei equilíbrio e paz interior através dos tratamentos.",
+          avatar: "/api/placeholder/80/80"
+        }
+      ],
+      enabled: true
+    },
+    {
+      id: "cta-wellness",
+      type: "cta-wellness",
+      title: "Comece Sua Transformação",
+      subtitle: "Primeira consulta gratuita",
+      buttonText: "Agendar Agora",
+      buttonLink: "#booking",
+      enabled: true
+    }
+  ]
+};
+
+// TEMPLATE 6: FINANCIAL SERVICES
+const financialServicesTemplate = {
+  id: "financial-services",
+  name: "Financial Services - Finanças Inteligentes 2025",
+  sections: [
+    {
+      id: "hero-financial",
+      type: "hero-financial",
+      title: "Seu futuro financeiro começa agora",
+      subtitle: "Tecnologia e expertise para multiplicar seu patrimônio",
+      content: "Somos especialistas em investimentos inteligentes.",
+      buttonText: "Abrir Conta",
+      buttonLink: "#invest",
+      enabled: true
+    },
+    {
+      id: "investment-options",
+      type: "investment-options",
+      title: "Oportunidades de Investimento",
+      subtitle: "Diversifique seu portfólio com segurança",
+      options: [
+        {
+          type: "Renda Fixa",
+          description: "Investimentos seguros com retorno garantido",
+          risk: "Baixo",
+          return: "8-12% a.a.",
+          icon: ""
+        },
+        {
+          type: "Renda Variável",
+          description: "Ações e fundos com alto potencial de retorno",
+          risk: "Médio-Alto",
+          return: "15-25% a.a.",
+          icon: ""
+        },
+        {
+          type: "Criptoativos",
+          description: "Investimentos em blockchain e moedas digitais",
+          risk: "Alto",
+          return: "20-100% a.a.",
+          icon: ""
+        }
+      ],
+      enabled: true
+    },
+    {
+      id: "success-stories",
+      type: "success-stories",
+      title: "Histórias de Sucesso",
+      subtitle: "Resultados comprovados",
+      stories: [
+        {
+          name: "Roberto Carvalho",
+          achievement: "Multiplicou patrimônio em 300%",
+          content: "Com estratégia personalizada, alcancei meus objetivos financeiros.",
+          avatar: "/api/placeholder/70/70"
+        },
+        {
+          name: "Ana Paula Silva",
+          achievement: "Aposentou-se aos 45 anos",
+          content: "Planejamento inteligente me deu liberdade financeira.",
+          avatar: "/api/placeholder/70/70"
+        }
+      ],
+      enabled: true
+    },
+    {
+      id: "cta-financial",
+      type: "cta-financial",
+      title: "Invista no Seu Futuro",
+      subtitle: "Consultoria gratuita e sem compromisso",
+      buttonText: "Falar com Especialista",
+      buttonLink: "#consultation",
+      enabled: true
+    }
+  ]
+};
+
+async function createTemplates() {
+  try {
+    console.log(" Criando templates modernos 2025...");
+
+    const templates = [
+      saasModernTemplate,
+      ecommercePremiumTemplate,
+      startupTechTemplate,
+      creativeAgencyTemplate,
+      healthWellnessTemplate,
+      financialServicesTemplate
+    ];
+
+    for (const template of templates) {
+      await db.collection("templates").doc(template.id).set(template);
+      console.log(` Template criado: ${template.name}`);
+    }
+
+    console.log(" Todos os templates modernos foram criados com sucesso!");
+  } catch (error) {
+    console.error(" Erro ao criar templates:", error);
   }
-
-  console.log('\n🎭 TEMPLATES RADICALMENTE DIFERENTES CRIADOS:');
-  console.log('1. 🎥 Cinema Vérité - Documentário interativo estilo anos 70');
-  console.log('2. 📜 Alquimia Medieval - Manuscrito iluminado com receitas secretas');
-  console.log('3. 💭 Sonho Lúcido - Interface que questiona a própria realidade');
-  console.log('4. ⚙️  Mecanismo de Relógio - Precisão suíça em engrenagens digitais');
-  console.log('5. ⚑ Manifesto Anarquista - Propaganda revolucionária tipográfica');
-  console.log('6. 🧫 Microbioma Digital - Página como organismo vivo em crescimento');
-  
-  console.log('\n🚨 CARACTERÍSTICAS ABSOLUTAMENTE ÚNICAS:');
-  console.log('• Cada template tem sua própria linguagem visual e conceitual');
-  console.log('• Zero elementos compartilhados entre templates');
-  console.log('• Metáforas completamente distintas');
-  console.log('• Interações únicas para cada um');
-  console.log('• Narrativas não-repetidas');
-  console.log('• Referências culturais específicas por template');
 }
 
-initRadicalTemplates().catch(console.error);
+createTemplates();
