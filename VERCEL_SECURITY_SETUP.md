@@ -21,10 +21,14 @@ Para que a funcionalidade de domínios personalizados funcione corretamente, voc
 
 ## Como Configurar no Vercel
 
-1. Acesse seu projeto no [Vercel Dashboard](https://vercel.com/dashboard)
-2. Vá para Settings → Environment Variables
-3. Adicione as variáveis acima
-4. Certifique-se de marcar "Production", "Preview" e "Development" conforme necessário
+1. **Acesse** [Vercel Dashboard](https://vercel.com/dashboard) → Seu Projeto → Settings → Environment Variables
+2. **Adicione** as variáveis:
+   - `VITE_VERCEL_ACCESS_TOKEN`: Seu token pessoal do Vercel
+   - `VERCEL_TEAM_ID`: ID do time (opcional, se usar time)
+3. **Marque** "Production", "Preview" e "Development"
+4. **Re-deploy** o projeto
+
+⚠️ **IMPORTANTE**: Use o prefixo `VITE_` para que a variável fique disponível no frontend durante o runtime.
 
 ## Segurança Importante
 
