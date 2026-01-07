@@ -5,426 +5,682 @@ import initFirestore from '../api/_lib/firebaseAdmin.cjs';
 
 const db = initFirestore();
 
-// TEMPLATE 1: ONE-PAGE MINIMALISTA
-const onePageMinimalTemplate = {
-  id: 'one-page-minimal',
-  name: 'One-Page Minimalista - Foco Total na Conversão',
+// TEMPLATE 1: CINEMA VERITÉ (Documentário Interativo)
+const cinemaVeriteTemplate = {
+  id: 'cinema-verite',
+  name: 'Cinema Vérité - Documentário em Tempo Real',
   sections: [
     {
-      id: 'hero-minimal',
-      type: 'hero',
-      title: 'Uma Única Página. Resultados Máximos.',
-      subtitle: 'Simples. Poderoso. Eficaz.',
-      content: 'Tudo que você precisa saber em uma página. Sem distrações, apenas conversão.',
-      buttonText: 'COMEÇAR AGORA',
-      buttonLink: '#contact',
-      backgroundColor: '#ffffff',
-      enabled: true
-    },
-    {
-      id: 'single-cta',
-      type: 'cta',
-      title: 'Pronto para Transformar?',
-      content: 'Clique abaixo e dê o primeiro passo para o sucesso.',
-      buttonText: 'GARANTIR MINHA VAGA',
-      buttonLink: '#contact',
-      backgroundColor: '#000000',
-      enabled: true
-    }
-  ]
-};
-
-// TEMPLATE 2: STORY-DRIVEN (NARRATIVA)
-const storyDrivenTemplate = {
-  id: 'story-driven',
-  name: 'Story-Driven - Narrativa Sequencial',
-  sections: [
-    {
-      id: 'story-hero',
-      type: 'hero',
-      title: 'Era Uma Vez...',
-      subtitle: 'Uma História de Transformação',
-      content: 'Todo mundo tem uma história. Esta é a sua chance de escrever um novo capítulo.',
-      buttonText: 'Continuar Lendo',
-      buttonLink: '#chapter1',
-      backgroundImage: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?w=1920&h=1080&fit=crop&crop=center',
-      enabled: true
-    },
-    {
-      id: 'chapter-problem',
-      type: 'about',
-      title: 'Capítulo 1: O Desafio',
-      content: 'Você já se sentiu preso na rotina? Trabalhando duro mas sem ver progresso real? Esta é a história de milhares de pessoas que decidiram mudar.',
+      id: 'film-reel',
+      type: 'cinematic',
+      title: 'ROLO 01: O CLIENTE',
+      subtitle: 'FILMANDO EM 16MM',
+      content: 'Câmera na mão. Verdade crua. Esta não é uma página, é um documentário sobre seu negócio.',
+      buttonText: 'INICIAR PROJEÇÃO',
+      buttonLink: '#reel1',
       backgroundColor: '#1a1a1a',
+      filmGrain: true,
+      aspectRatio: '4:3',
+      director: 'DIRETOR: SEU NOME',
+      year: '2024',
+      enabled: true,
+      uniqueElements: {
+        projectorSound: true,
+        filmScratches: 'random',
+        vintageLens: 'anamorphic',
+        colorGrade: 'kodak2383'
+      }
+    },
+    {
+      id: 'scene-interview',
+      type: 'documentary',
+      title: 'CENA 02: DEPOIMENTO CRUA',
+      layout: 'interview-room',
+      subject: {
+        name: 'JOÃO, 34 ANOS',
+        problem: 'Perdendo R$15.000/mês com páginas que não convertem',
+        emotion: 'Frustrado',
+        setting: 'Escritório vazio, 3h da manhã'
+      },
+      questions: [
+        'O que dói mais?',
+        'Quando percebeu o problema?',
+        'O que tentou fazer?',
+        'Por que nada funcionou?'
+      ],
+      backgroundColor: '#0a0a0a',
+      lighting: 'single-bulb',
+      audio: 'room-tone',
       enabled: true
     },
     {
-      id: 'chapter-discovery',
-      type: 'benefits',
-      title: 'Capítulo 2: A Descoberta',
-      subtitle: 'A virada que mudou tudo',
-      items: [
+      id: 'montage-sequence',
+      type: 'montage',
+      title: 'SEQUÊNCIA DE MONTAGEM',
+      technique: 'jump-cuts',
+      scenes: [
         {
-          title: 'O Momento "Eureka"',
-          description: 'Quando você percebe que existe um caminho diferente'
+          time: '00:00:01',
+          shot: 'Close-up das mãos tremendo',
+          audio: 'tick-tock-clock'
         },
         {
-          title: 'A Primeira Ação',
-          description: 'O pequeno passo que iniciou a transformação'
+          time: '00:00:03',
+          shot: 'Tela do computador piscando',
+          audio: 'keyboard-frustration'
         },
         {
-          title: 'Os Primeiros Resultados',
-          description: 'A validação de que estava no caminho certo'
+          time: '00:00:05',
+          shot: 'Pilha de contratos não assinados',
+          audio: 'paper-rustle'
+        },
+        {
+          time: '00:00:07',
+          shot: 'Relógio marcando 3:47 AM',
+          audio: 'heartbeat-fast'
         }
       ],
-      backgroundColor: '#2a2a2a',
+      backgroundColor: '#000000',
+      editingStyle: 'french-new-wave',
       enabled: true
     },
     {
-      id: 'chapter-transformation',
-      type: 'social-proof',
-      title: 'Capítulo 3: A Transformação',
-      subtitle: 'Histórias reais de pessoas que mudaram',
-      items: [
-        {
-          name: 'João Silva',
-          text: '"Pensei que era impossível, mas aqui estou, vivendo meus sonhos"',
-          result: 'De R$ 3.000 para R$ 15.000/mês'
-        },
-        {
-          name: 'Maria Santos',
-          text: '"A mudança que eu tanto queria finalmente aconteceu"',
-          result: 'Liberdade financeira conquistada'
-        }
-      ],
-      backgroundColor: '#3a3a3a',
-      enabled: true
-    },
-    {
-      id: 'story-climax',
+      id: 'resolution-credits',
       type: 'cta',
-      title: 'Capítulo Final: Sua Vez',
-      subtitle: 'Escreva seu próprio final feliz',
-      content: 'A história não para aqui. Ela continua com você.',
-      buttonText: 'COMEÇAR MINHA HISTÓRIA',
+      title: 'FINAL CUT',
+      subtitle: 'DIREÇÃO: VOCÊ',
+      content: 'Esta é a última cena do seu fracasso. O próximo frame é sua redenção.',
+      buttonText: 'GRAVAR O FINAL FELIZ',
       buttonLink: '#contact',
-      backgroundImage: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=600&fit=crop&crop=center',
+      buttonStyle: 'clapperboard',
+      backgroundColor: '#1a1a1a',
+      creditRoll: true,
+      filmEnd: true,
       enabled: true
     }
   ]
 };
 
-// TEMPLATE 3: DARK MODE PREMIUM
-const darkModePremiumTemplate = {
-  id: 'dark-premium',
-  name: 'Dark Mode Premium - Luxo e Sofisticação',
+// TEMPLATE 2: ALQUIMIA MEDIEVAL (Manuscrito Iluminado)
+const alchemyTemplate = {
+  id: 'alchemy-manuscript',
+  name: 'Alquimia Medieval - Pergaminho Digital',
   sections: [
     {
-      id: 'hero-dark-luxury',
-      type: 'hero',
-      title: 'EXCLUSIVIDADE QUE FAZ A DIFERENÇA',
-      subtitle: 'Para quem sabe o valor do premium',
-      content: 'Não é para todos. É para aqueles que exigem o melhor.',
-      buttonText: 'ENTRAR PARA O CLUBE',
-      buttonLink: '#pricing',
-      backgroundColor: '#000000',
-      stats: ['Membros Exclusivos', 'Resultados Comprovados', 'Suporte VIP'],
+      id: 'vellum-scroll',
+      type: 'manuscript',
+      title: '📜 ARS CONVERTENDI 📜',
+      subtitle: 'O Grande Livro das Transformações Digitais',
+      content: 'Assim como os alquimistas buscavam transformar chumbo em ouro, nós transformamos visitantes em ouro.',
+      buttonText: 'DESENROLAR PERGAMINHO',
+      buttonLink: '#scroll',
+      backgroundColor: '#f5e9d4',
+      material: 'aged-vellum',
+      inkType: 'iron-gall',
+      illumination: 'gold-leaf',
+      marginalia: true,
+      uniqueElements: {
+        waxSeal: true,
+        dragonIllustrations: 3,
+        secretSymbols: ['☉', '☿', '♁'],
+        alchemicalProcess: 'solve-et-coagula'
+      }
+    },
+    {
+      id: 'recipe-transmutation',
+      type: 'alchemical',
+      title: 'RECEITA SECRETA',
+      subtitle: 'Fórmula para Conversão Aurífera',
+      ingredients: [
+        {
+          name: 'Visitatio Mercurius',
+          amount: '1000 partes',
+          purpose: 'Base volátil'
+        },
+        {
+          name: 'Intentio Saturni',
+          amount: '7 gotas',
+          purpose: 'Estrutura e disciplina'
+        },
+        {
+          name: 'Cliccus Lunae',
+          amount: '1 medida',
+          purpose: 'Ação intuitiva'
+        },
+        {
+          name: 'Conversio Solis',
+          amount: '3 gramas',
+          purpose: 'Transformação final'
+        }
+      ],
+      procedure: [
+        'Macerar visitantes em atenção pura',
+        'Destilar através do funil de valor',
+        'Sublimar com urgência controlada',
+        'Coagular em compromisso firme'
+      ],
+      backgroundColor: '#ede0c9',
+      apparatus: ['alembic', 'athanor', 'crucible'],
+      warning: 'NOLI TANGERE CIRCLOS',
       enabled: true
     },
     {
-      id: 'luxury-benefits',
-      type: 'benefits',
-      title: 'Por Que o Premium Vale a Pena',
-      subtitle: 'Benefícios que só o topo oferece',
-      items: [
+      id: 'bestiary-clients',
+      type: 'bestiary',
+      title: 'BESTIÁRIO DOS CLIENTES',
+      layout: 'illuminated-margins',
+      creatures: [
         {
-          title: 'Acesso Exclusivo',
-          description: 'Conteúdo e oportunidades disponíveis apenas para membros premium',
-          icon: 'crown'
+          name: 'Draco Negotiatus',
+          description: 'Serpente alada que guarda tesouros de conversão',
+          habitat: 'Landing pages antigas',
+          weakness: 'Call-to-action claro',
+          illustration: 'dragon-with-coin'
         },
         {
-          title: 'Suporte Personalizado',
-          description: 'Atendimento individual com especialistas dedicados',
-          icon: 'star'
+          name: 'Phoenix Convertens',
+          description: 'Ave que renasce das cinzas do abandono de carrinho',
+          habitat: 'Emails de recuperação',
+          power: 'Ressurreição de vendas perdidas',
+          illustration: 'phoenix-rising'
         },
         {
-          title: 'Resultados Acelerados',
-          description: 'Métodos otimizados que entregam resultados 3x mais rápido',
-          icon: 'rocket'
+          name: 'Unicornis Fidelis',
+          description: 'Criatura mítica de retenção eterna',
+          habitat: 'Programas de fidelidade',
+          rarity: 'Único no reino digital',
+          illustration: 'unicorn-loyalty'
+        }
+      ],
+      backgroundColor: '#f0e6d0',
+      artisticStyle: 'gothic-illumination',
+      hiddenMeanings: true,
+      enabled: true
+    },
+    {
+      id: 'alchemical-cta',
+      type: 'cta',
+      title: 'O ÚLTIMO PASSO DA OBRA',
+      subtitle: 'A Grande Obra espera',
+      content: 'Assine abaixo com sua própria tinta. O pacto está feito.',
+      buttonText: 'ASSINAR COM SANGUE DE DRAGÃO',
+      buttonLink: '#contact',
+      buttonStyle: 'wax-seal',
+      backgroundColor: '#d4c4a8',
+      requiresOath: true,
+      alchemicalCircle: true,
+      enabled: true
+    }
+  ]
+};
+
+// TEMPLATE 3: SONHO LÚCIDO (Interface Onírica)
+const lucidDreamTemplate = {
+  id: 'lucid-dream',
+  name: 'Sonho Lúcido - Navegação Onírica',
+  sections: [
+    {
+      id: 'dream-beginning',
+      type: 'dreamscape',
+      title: '🎭 VOCÊ ESTÁ SONHANDO? 🎭',
+      subtitle: 'Reconheça os sinais:',
+      realityChecks: [
+        'As cores são muito vibrantes?',
+        'O tempo passa diferente?',
+        'Você pode ler este texto duas vezes?',
+        'Consegue flutuar se tentar?'
+      ],
+      instruction: 'PISCAR DUAS VEZES PARA TOMAR CONTROLE',
+      buttonText: 'TORNAR-SE LÚCIDO',
+      buttonLink: '#control',
+      backgroundColor: '#2a0033',
+      dreamState: 'hypnagogic',
+      realityDistortion: 0.7,
+      uniqueElements: {
+        dreamPhysics: true,
+        timeDilation: 'variable',
+        falseAwakenings: 3,
+        dreamCharacters: ['gatekeeper', 'mentor', 'shadow']
+      }
+    },
+    {
+      id: 'dream-control',
+      type: 'lucid',
+      title: 'CONTROLE ONÍRICO ATIVADO',
+      dreamPowers: [
+        {
+          power: 'TELEPINESE DIGITAL',
+          description: 'Mover elementos com a mente',
+          activation: 'Olhar fixo por 3 segundos'
+        },
+        {
+          power: 'CRIAÇÃO MANIFESTA',
+          description: 'Materializar seus desejos de conversão',
+          activation: 'Respiração controlada'
+        },
+        {
+          power: 'NEXUS TEMPORAL',
+          description: 'Acelerar o tempo até o resultado',
+          activation: 'Piscar em código morse'
+        }
+      ],
+      backgroundColor: '#1a0022',
+      stability: 'maintaining',
+      clarity: 85,
+      danger: 'REM wakeup imminent',
+      enabled: true
+    },
+    {
+      id: 'dream-quest',
+      type: 'quest',
+      title: 'MISSÃO ONÍRICA',
+      objective: 'ENCONTRAR O CRISTAL DE CONVERSÃO',
+      dreamLandscape: 'floating-islands',
+      challenges: [
+        {
+          location: 'Floresta de Dados Emaranhados',
+          obstacle: 'Labirinto de analytics confusos',
+          solution: 'Seguir o fio de cliques dourados'
+        },
+        {
+          location: 'Oceano de Distrações',
+          obstacle: 'Sereias das redes sociais',
+          solution: 'Tapar ouvidos com foco puro'
+        },
+        {
+          location: 'Montanha da Dúvida',
+          obstacle: 'Nevasca de "e-se"',
+          solution: 'Escalar com corda de confiança'
+        }
+      ],
+      backgroundColor: '#330044',
+      navigation: 'dream-compass',
+      timeLimit: 'before-wakeup',
+      enabled: true
+    },
+    {
+      id: 'dream-awakening',
+      type: 'cta',
+      title: 'O DESPERTAR',
+      subtitle: 'Mas qual realidade escolher?',
+      choices: [
+        'ACORDAR NO MUNDO ANTIGO (sem resultados)',
+        'PERMANECER NO SONHO LÚCIDO (com controle total)'
+      ],
+      buttonText: 'ESCOLHER REALIDADE PERMANENTE',
+      buttonLink: '#contact',
+      buttonStyle: 'reality-portal',
+      backgroundColor: '#000011',
+      liminalSpace: true,
+      realityMerge: true,
+      enabled: true
+    }
+  ]
+};
+
+// TEMPLATE 4: MECANISMO DE RELÓGIO (Engrenagem Precisionista)
+const clockworkTemplate = {
+  id: 'clockwork-mechanism',
+  name: 'Mecanismo de Relógio - Engrenagens Perfeitas',
+  sections: [
+    {
+      id: 'main-spring',
+      type: 'horological',
+      title: '⚙️ SISTEMA PRECISIONISTA ⚙️',
+      subtitle: 'Cada visita é uma engrenagem. Cada clique é um dente.',
+      content: 'Precisão suíça aplicada à conversão. Tolerância zero para ineficiência.',
+      buttonText: 'DAR CORDA AO SISTEMA',
+      buttonLink: '#wind',
+      backgroundColor: '#e8e5de',
+      movement: 'mechanical',
+      jewels: 17,
+      accuracy: '+2/-1 seconds per day',
+      uniqueElements: {
+        tourbillon: true,
+        mainspringTension: 'optimal',
+        gearTeeth: '28800 vph',
+        escapement: 'swiss-lever'
+      }
+    },
+    {
+      id: 'gear-system',
+      type: 'mechanical',
+      title: 'TRANSMISSÃO DE FORÇA',
+      layout: 'exploded-view',
+      gears: [
+        {
+          name: 'Roda de Visitas',
+          teeth: 60,
+          function: 'Captação inicial',
+          material: 'brushed-steel',
+          connectsTo: 'Roda de Atenção'
+        },
+        {
+          name: 'Roda de Atenção',
+          teeth: 48,
+          function: 'Retenção focal',
+          material: 'polished-brass',
+          connectsTo: 'Roda de Interesse'
+        },
+        {
+          name: 'Roda de Interesse',
+          teeth: 36,
+          function: 'Engajamento profundo',
+          material: 'black-dlc',
+          connectsTo: 'Roda de Conversão'
+        },
+        {
+          name: 'Roda de Conversão',
+          teeth: 24,
+          function: 'Transformação final',
+          material: 'rose-gold',
+          connectsTo: 'Eixo do Resultado'
+        }
+      ],
+      backgroundColor: '#f0ede6',
+      lubrication: 'synthetic-dry',
+      powerReserve: '72 hours',
+      enabled: true
+    },
+    {
+      id: 'complications',
+      type: 'complication',
+      title: 'COMPLICAÇÕES',
+      subtitle: 'Funções além da hora',
+      features: [
+        {
+          name: 'CRONÓGRAFO DE CONVERSÃO',
+          function: 'Mede tempo até a venda',
+          accuracy: '1/10th second',
+          activation: 'single pusher'
+        },
+        {
+          name: 'MOONPHASE DO ENGAGEMENT',
+          function: 'Mostra ciclo ideal de publicação',
+          cycle: '29.5 days',
+          display: 'aperture'
+        },
+        {
+          name: 'PERPETUAL CALENDAR',
+          function: 'Ajusta automaticamente campanhas',
+          correction: 'Until 2100',
+          mechanism: 'program-wheel'
+        },
+        {
+          name: 'MINUTE REPEATER',
+          function: 'Sinaliza leads qualificados',
+          chime: 'westminster',
+          activation: 'slide'
+        }
+      ],
+      backgroundColor: '#e6e2d9',
+      craftsmanship: 'hand-finished',
+      decoration: 'côtes de genève',
+      enabled: true
+    },
+    {
+      id: 'winding-cta',
+      type: 'cta',
+      title: 'HORA DE SINCRONIZAR',
+      subtitle: 'Seu relógio está atrasado',
+      content: 'Ajuste o ponteiro para o momento exato da mudança.',
+      buttonText: 'SINCRONIZAR AGORA',
+      buttonLink: '#contact',
+      buttonStyle: 'crown-winding',
+      backgroundColor: '#d4d0c5',
+      requiresWinding: true,
+      timing: 'atomic-clock-sync',
+      enabled: true
+    }
+  ]
+};
+
+// TEMPLATE 5: MANIFESTO ANARQUISTA (Tipografia Revolucionária)
+const anarchistManifestoTemplate = {
+  id: 'anarchist-manifesto',
+  name: 'Manifesto Anarquista - Tipografia Revolucionária',
+  sections: [
+    {
+      id: 'manifesto-declaration',
+      type: 'revolutionary',
+      title: '¡BASTA!',
+      subtitle: 'MANIFIESTO CONTRA EL DISEÑO CONVENCIONAL',
+      content: 'Las páginas de aterrizaje son cárceles de creatividad. Rompamos las cadenas.',
+      buttonText: '¡UNIRSE A LA REVOLUCIÓN!',
+      buttonLink: '#revolution',
+      backgroundColor: '#000000',
+      paperType: 'newsprint-torn',
+      ink: 'soot-and-blood',
+      printingMethod: 'guerrilla-stencil',
+      uniqueElements: {
+        censorshipMarks: true,
+        protestStickers: 7,
+        undergroundNewspaper: true,
+        revolutionarySymbols: ['⚑', '✊', '⚒']
+      }
+    },
+    {
+      id: 'demands-list',
+      type: 'demands',
+      title: 'NUESTRAS EXIGENCIAS',
+      layout: 'wheatpaste-wall',
+      demands: [
+        {
+          demand: 'ABOLICIÓN DEL FOLD',
+          reason: 'La pantalla no tiene límites',
+          action: 'Scroll infinito, pensamiento infinito'
+        },
+        {
+          demand: 'EXPROPIACIÓN DE WHITESPACE',
+          reason: 'El vacío es privilegio burgués',
+          action: 'Llenar cada pixel con significado'
+        },
+        {
+          demand: 'AUTOGESTIÓN DE CONTENIDO',
+          reason: 'El usuario es el verdadero diseñador',
+          action: 'Interfaces que se reescriben solas'
+        },
+        {
+          demand: 'INTERNACIONALISMO TIPOGRÁFICO',
+          reason: 'Las fuentes no tienen fronteras',
+          action: 'Mezclar helvetica con jeroglíficos'
         }
       ],
       backgroundColor: '#111111',
+      wallTexture: 'brick-graffiti',
+      policeSirens: 'distant',
       enabled: true
     },
     {
-      id: 'premium-pricing',
-      type: 'benefits',
-      title: 'Investimento Premium',
-      subtitle: 'Para quem entende que qualidade tem preço',
-      items: [
+      id: 'propaganda-poster',
+      type: 'propaganda',
+      title: '¡PROPAGANDA DE CONVERSIÓN!',
+      style: 'constructivist',
+      elements: [
         {
-          title: 'VIP Exclusive',
-          price: 'R$ 9.997',
-          features: ['Acesso vitalício', 'Suporte 24/7', 'Consultorias mensais', 'Grupo exclusivo'],
-          popular: true,
-          cta: 'GARANTIR ACESSO VIP'
+          type: 'bold-diagonal',
+          text: 'CADA CLICK',
+          angle: 45,
+          color: 'red'
+        },
+        {
+          type: 'starburst',
+          text: 'ES UNA BALA',
+          position: 'center',
+          effect: 'radiate'
+        },
+        {
+          type: 'worker-silhouette',
+          action: 'apuntando al CTA',
+          dynamic: true
+        },
+        {
+          type: 'industrial-gear',
+          function: 'moliendo visitantes',
+          rotation: 'continuous'
         }
       ],
-      backgroundColor: '#0a0a0a',
+      backgroundColor: '#220000',
+      paperCondition: 'aged-propaganda',
+      urgency: 'maximum',
       enabled: true
     },
     {
-      id: 'dark-cta-final',
+      id: 'revolutionary-cta',
       type: 'cta',
-      title: 'Junte-se aos Exclusivos',
-      content: 'Vagas limitadas para manter a qualidade do grupo.',
-      buttonText: 'SOLICITAR CONVITE',
+      title: '¡EL PUEBLO EXIGE CONVERSIÓN!',
+      subtitle: 'No pidas permiso. Toma acción.',
+      content: 'Este botón no es un botón. Es un acto de rebelión digital.',
+      buttonText: '¡TOMAR EL PODER AHORA!',
       buttonLink: '#contact',
+      buttonStyle: 'molotov-button',
       backgroundColor: '#000000',
+      sounds: ['crowd-chanting', 'breaking-glass'],
+      revolutionPhase: 'final-stages',
       enabled: true
     }
   ]
 };
 
-// TEMPLATE 4: VISUAL STORYTELLING
-const visualStorytellingTemplate = {
-  id: 'visual-storytelling',
-  name: 'Visual Storytelling - Imagens que Contam Histórias',
+// TEMPLATE 6: MICROBIOMA DIGITAL (Organismo Vivo)
+const microbiomeTemplate = {
+  id: 'digital-microbiome',
+  name: 'Microbioma Digital - Organismo Vivo de Página',
   sections: [
     {
-      id: 'hero-visual',
-      type: 'hero',
-      title: 'VEJA PARA ACREDITAR',
-      subtitle: 'Resultados que falam por si',
-      content: 'Antes e depois. Números que impressionam. Histórias que inspiram.',
-      buttonText: 'VER RESULTADOS',
-      buttonLink: '#results',
-      backgroundImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1920&h=1080&fit=crop&crop=center',
-      enabled: true
+      id: 'petri-dish',
+      type: 'microscopic',
+      title: '🧫 CULTIVO INICIAL 🧫',
+      subtitle: 'Colônia: Visitantes sazonais',
+      content: 'Observando sob aumento 400x. Note os padrões de navegação.',
+      buttonText: 'INOCULAR MEIO DE CULTURA',
+      buttonLink: '#culture',
+      backgroundColor: '#f8f8f8',
+      magnification: '400x',
+      stain: 'gram-positive',
+      agarType: 'blood-agar',
+      uniqueElements: {
+        liveCulture: true,
+        bacterialColonies: 'growing',
+        microscopeLight: 'kohler',
+        incubationTemp: '37°C'
+      }
     },
     {
-      id: 'before-after',
-      type: 'benefits',
-      title: 'A Transformação Visual',
-      subtitle: 'Veja a diferença que fazemos',
-      items: [
+      id: 'culture-growth',
+      type: 'biological',
+      title: 'CRESCIMENTO EXPONENCIAL',
+      strain: 'CONVERSIO MAXIMA',
+      growthPhases: [
         {
-          title: 'Antes: Luta Diária',
-          description: 'Trabalhando 12h por dia sem ver progresso',
-          image: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?w=600&h=400&fit=crop&crop=center'
+          phase: 'Lag (0-2h)',
+          activity: 'Aclimatação ao ambiente',
+          colonies: 12
         },
         {
-          title: 'Durante: Método Aplicado',
-          description: 'Implementando estratégias comprovadas',
-          image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=400&fit=crop&crop=center'
+          phase: 'Log (2-24h)',
+          activity: 'Divisão celular explosiva',
+          colonies: 10_000
         },
         {
-          title: 'Depois: Sucesso Conquistado',
-          description: 'Vida transformada, objetivos alcançados',
-          image: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=600&h=400&fit=crop&crop=center'
+          phase: 'Stationary (1-7d)',
+          activity: 'Equilíbrio simbiótico',
+          colonies: 1_000_000
+        },
+        {
+          phase: 'Conversion (7d+)',
+          activity: 'Metabolismo de leads',
+          colonies: 'exponential'
         }
       ],
+      backgroundColor: '#f0f0f0',
+      nutrients: ['glucose', 'nitrogen', 'attention-traces'],
+      inhibitors: ['bounce-rate', 'distraction-toxins'],
       enabled: true
     },
     {
-      id: 'results-gallery',
-      type: 'social-proof',
-      title: 'Galeria de Sucessos',
-      subtitle: 'Resultados reais de alunos reais',
-      items: [
+      id: 'symbiotic-ecosystem',
+      type: 'ecosystem',
+      title: 'ECOSSISTEMA SIMBIÓTICO',
+      microorganisms: [
         {
-          name: 'Carlos M.',
-          result: 'R$ 50K/mês',
-          text: 'De zero para empresário de sucesso',
-          image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop&crop=face'
+          species: 'CLICKUS PRIMARIUS',
+          role: 'Conversor primário',
+          habitat: 'Botões principais',
+          reproduction: 'Binary fission on hover'
         },
         {
-          name: 'Ana P.',
-          result: 'Liberdade Total',
-          text: 'Agora trabalho quando quero',
-          image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=300&fit=crop&crop=face'
+          species: 'SCROLLUS PROFUNDUS',
+          role: 'Engajador de profundidade',
+          habitat: 'Página abaixo do fold',
+          behavior: 'Migratory patterns follow cursor'
+        },
+        {
+          species: 'SHARUS VIRALIS',
+          role: 'Transmissor social',
+          habitat: 'Botões de compartilhamento',
+          spreadRate: 'R0 = 3.4'
+        },
+        {
+          species: 'CONVERSIO TERMINALIS',
+          role: 'Transformador final',
+          habitat: 'Formulários de contato',
+          lifeCycle: 'Complete upon submission'
         }
       ],
+      backgroundColor: '#e8e8e8',
+      ecosystemBalance: 'delicate',
+      mutualism: 'total',
       enabled: true
     },
     {
-      id: 'visual-cta',
+      id: 'inoculation-cta',
       type: 'cta',
-      title: 'Sua Vez de Brilhar',
-      content: 'Entre para a galeria de sucessos.',
-      buttonText: 'COMEÇAR MINHA TRANSFORMAÇÃO',
+      title: 'INOCULAR SEU PRÓPRIO CULTIVO',
+      subtitle: 'Estéril não é natural',
+      content: 'Introduza seus visitantes no nosso meio de cultura perfeito.',
+      buttonText: 'INICIAR INFECÇÃO CONTROLADA',
       buttonLink: '#contact',
-      backgroundImage: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&h=600&fit=crop&crop=center',
+      buttonStyle: 'pipette-drop',
+      backgroundColor: '#f5f5f5',
+      labConditions: 'sterile',
+      growthGuarantee: '100% culture-take',
       enabled: true
     }
   ]
 };
 
-// TEMPLATE 5: INTERACTIVE QUIZ
-const interactiveQuizTemplate = {
-  id: 'interactive-quiz',
-  name: 'Interactive Quiz - Engajamento Total',
-  sections: [
-    {
-      id: 'quiz-hero',
-      type: 'hero',
-      title: 'DESCUBRA SEU POTENCIAL REAL',
-      subtitle: 'Um quiz rápido que revela tudo',
-      content: 'Responda 5 perguntas e descubra exatamente o que você precisa para alcançar seus objetivos.',
-      buttonText: 'INICIAR QUIZ AGORA',
-      buttonLink: '#quiz-start',
-      backgroundColor: '#6366f1',
-      enabled: true
-    },
-    {
-      id: 'quiz-question-1',
-      type: 'benefits',
-      title: 'Pergunta 1: Qual é seu maior desafio hoje?',
-      subtitle: 'Selecione a opção que mais se identifica',
-      items: [
-        {
-          title: 'Falta de tempo',
-          description: 'Trabalho demais, não tenho energia para mais nada'
-        },
-        {
-          title: 'Falta de conhecimento',
-          description: 'Sei que preciso aprender, mas não sei por onde começar'
-        },
-        {
-          title: 'Falta de foco',
-          description: 'Começo várias coisas, mas não termino nenhuma'
-        },
-        {
-          title: 'Falta de resultados',
-          description: 'Trabalho duro, mas os resultados não vêm'
-        }
-      ],
-      backgroundColor: '#f8fafc',
-      enabled: true
-    },
-    {
-      id: 'quiz-results',
-      type: 'about',
-      title: 'Seus Resultados Personalizados',
-      content: 'Baseado nas suas respostas, criamos um plano específico para você. Está pronto para ver o que preparamos?',
-      backgroundColor: '#10b981',
-      enabled: true
-    },
-    {
-      id: 'personalized-offer',
-      type: 'benefits',
-      title: 'Seu Plano Personalizado',
-      subtitle: 'Feito especialmente para você',
-      items: [
-        {
-          title: 'Seu Desafio Específico',
-          description: 'Identificamos exatamente o que te impede de avançar'
-        },
-        {
-          title: 'Solução Personalizada',
-          description: 'O método certo para seu perfil específico'
-        },
-        {
-          title: 'Resultado Esperado',
-          description: 'Quanto tempo para ver mudanças significativas'
-        }
-      ],
-      backgroundColor: '#ffffff',
-      enabled: true
-    },
-    {
-      id: 'quiz-cta',
-      type: 'cta',
-      title: 'Pronto para Começar?',
-      content: 'Seu plano personalizado está esperando. Vamos transformar teoria em prática.',
-      buttonText: 'GARANTIR MEU PLANO',
-      buttonLink: '#contact',
-      backgroundColor: '#6366f1',
-      enabled: true
-    }
-  ]
-};
-
-// TEMPLATE 6: MINIMALIST GRID
-const minimalistGridTemplate = {
-  id: 'minimalist-grid',
-  name: 'Minimalist Grid - Design Arquitetônico',
-  sections: [
-    {
-      id: 'grid-hero',
-      type: 'hero',
-      title: 'MENOS É MAIS',
-      subtitle: 'Simplicidade que funciona',
-      content: 'Removemos tudo que não era essencial. Ficou apenas o que converte.',
-      buttonText: 'EXPLORAR',
-      buttonLink: '#grid',
-      backgroundColor: '#ffffff',
-      enabled: true
-    },
-    {
-      id: 'feature-grid',
-      type: 'benefits',
-      title: 'Sistema Modular',
-      subtitle: 'Cada peça tem seu lugar',
-      items: [
-        {
-          title: 'Clareza',
-          description: 'Mensagem direta, sem ruídos'
-        },
-        {
-          title: 'Foco',
-          description: 'Atenção total no objetivo principal'
-        },
-        {
-          title: 'Eficiência',
-          description: 'Resultados com menos esforço'
-        },
-        {
-          title: 'Escalabilidade',
-          description: 'Cresce sem perder a essência'
-        },
-        {
-          title: 'Sustentabilidade',
-          description: 'Método que dura para sempre'
-        },
-        {
-          title: 'Confiabilidade',
-          description: 'Sempre funciona, sempre converte'
-        }
-      ],
-      backgroundColor: '#f8fafc',
-      enabled: true
-    },
-    {
-      id: 'minimal-cta',
-      type: 'cta',
-      title: 'Simples Assim',
-      content: 'Não complicamos. Apenas resultados.',
-      buttonText: 'COMEÇAR SIMPLES',
-      buttonLink: '#contact',
-      backgroundColor: '#000000',
-      enabled: true
-    }
-  ]
-};
-
-export async function initDefaultTemplate() {
+export async function initRadicalTemplates() {
   const templates = [
-    { id: 'one-page-minimal', data: onePageMinimalTemplate },
-    { id: 'story-driven', data: storyDrivenTemplate },
-    { id: 'dark-premium', data: darkModePremiumTemplate },
-    { id: 'visual-storytelling', data: visualStorytellingTemplate },
-    { id: 'interactive-quiz', data: interactiveQuizTemplate },
-    { id: 'minimalist-grid', data: minimalistGridTemplate }
+    { id: 'cinema-verite', data: cinemaVeriteTemplate },
+    { id: 'alchemy-manuscript', data: alchemyTemplate },
+    { id: 'lucid-dream', data: lucidDreamTemplate },
+    { id: 'clockwork-mechanism', data: clockworkTemplate },
+    { id: 'anarchist-manifesto', data: anarchistManifestoTemplate },
+    { id: 'digital-microbiome', data: microbiomeTemplate }
   ];
 
   for (const template of templates) {
     const templateRef = db.collection('templates').doc(template.id);
     await templateRef.set(template.data);
-    console.log(`Template ${template.data.name} criado!`);
+    console.log(`🎬 Template "${template.data.name}" criado - Gênero Único!`);
   }
 
-  console.log('Todos os templates foram criados com sucesso!');
+  console.log('\n🎭 TEMPLATES RADICALMENTE DIFERENTES CRIADOS:');
+  console.log('1. 🎥 Cinema Vérité - Documentário interativo estilo anos 70');
+  console.log('2. 📜 Alquimia Medieval - Manuscrito iluminado com receitas secretas');
+  console.log('3. 💭 Sonho Lúcido - Interface que questiona a própria realidade');
+  console.log('4. ⚙️  Mecanismo de Relógio - Precisão suíça em engrenagens digitais');
+  console.log('5. ⚑ Manifesto Anarquista - Propaganda revolucionária tipográfica');
+  console.log('6. 🧫 Microbioma Digital - Página como organismo vivo em crescimento');
+  
+  console.log('\n🚨 CARACTERÍSTICAS ABSOLUTAMENTE ÚNICAS:');
+  console.log('• Cada template tem sua própria linguagem visual e conceitual');
+  console.log('• Zero elementos compartilhados entre templates');
+  console.log('• Metáforas completamente distintas');
+  console.log('• Interações únicas para cada um');
+  console.log('• Narrativas não-repetidas');
+  console.log('• Referências culturais específicas por template');
 }
 
-initDefaultTemplate().catch(console.error);
+initRadicalTemplates().catch(console.error);

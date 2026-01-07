@@ -1,6 +1,6 @@
 export interface LeadPageSection {
   id: string;
-  type: 'hero' | 'about' | 'benefits' | 'social-proof' | 'cta' | 'contact' | 'features';
+  type: 'hero' | 'about' | 'benefits' | 'social-proof' | 'cta' | 'contact' | 'features' | 'cinematic' | 'documentary' | 'montage' | 'manuscript' | 'alchemical' | 'bestiary' | 'dreamscape' | 'lucid' | 'quest' | 'horological' | 'mechanical' | 'complication' | 'revolutionary' | 'demands' | 'propaganda';
   title?: string;
   content?: string;
   image?: string;
@@ -30,6 +30,36 @@ export interface LeadPageSection {
     phone?: string;
     email?: string;
   };
+  // New template properties
+  filmGrain?: boolean;
+  aspectRatio?: string;
+  director?: string;
+  year?: string;
+  uniqueElements?: any;
+  subject?: any;
+  questions?: string[];
+  clips?: any[];
+  inkType?: string;
+  signature?: string;
+  elements?: any[];
+  transmutation?: string;
+  creatures?: any[];
+  dreamElements?: any[];
+  lucidControls?: any[];
+  questStages?: any[];
+  callToAdventure?: string;
+  time?: string;
+  date?: string;
+  timepieces?: any[];
+  mechanisms?: any[];
+  grandMechanism?: string;
+  complications?: any[];
+  resolution?: string;
+  manifesto?: string;
+  revolutionaryElements?: any[];
+  demands?: any[];
+  slogan?: string;
+  propagandaElements?: any[];
 }
 
 export interface LeadPageTemplate {

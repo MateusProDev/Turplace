@@ -223,6 +223,418 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
         </section>
       );
 
+    case 'cinematic':
+      return (
+        <section className="relative min-h-[400px] flex items-center bg-black text-white overflow-hidden" style={{ backgroundColor: merged.backgroundColor || '#1a1a1a' }}>
+          {merged.filmGrain && (
+            <div className="absolute inset-0 opacity-20" style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+              backgroundSize: '100px 100px'
+            }}></div>
+          )}
+          <div className={`relative z-10 container mx-auto ${isMobilePreview ? '' : 'px-4'} py-8`}>
+            <div className="max-w-4xl mx-auto text-center">
+              {merged.subtitle && (
+                <p className="text-sm mb-2 text-gray-400 font-mono uppercase tracking-wider">{merged.subtitle}</p>
+              )}
+              <h1 className="text-2xl md:text-4xl font-black mb-4 leading-tight" style={{ fontFamily: 'Courier New, monospace' }}>{merged.title}</h1>
+              <p className="text-base md:text-lg mb-6 max-w-3xl mx-auto text-gray-300">{merged.content}</p>
+              {merged.director && (
+                <p className="text-xs text-gray-500 mb-4 font-mono">{merged.director}</p>
+              )}
+              {merged.year && (
+                <p className="text-xs text-gray-500 mb-6 font-mono">{merged.year}</p>
+              )}
+              <a href={merged.buttonLink} className="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded font-bold text-lg transition-all transform hover:scale-105 shadow-2xl inline-block border-2 border-red-500">
+                {merged.buttonText}
+              </a>
+            </div>
+          </div>
+        </section>
+      );
+
+    case 'documentary':
+      return (
+        <section className="py-16 bg-gray-900 text-white">
+          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-2xl font-bold mb-8 text-center text-white">{merged.title}</h2>
+              {merged.subject && (
+                <div className="bg-gray-800 rounded-lg p-6 mb-8">
+                  <div className="flex items-center mb-4">
+                    <div className="w-12 h-12 bg-gray-600 rounded-full flex items-center justify-center mr-4">
+                      <span className="text-white font-bold">{(merged.subject as any).name?.charAt(0)}</span>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">{(merged.subject as any).name}</h3>
+                      <p className="text-gray-400 text-sm">{(merged.subject as any).emotion} • {(merged.subject as any).setting}</p>
+                    </div>
+                  </div>
+                  <p className="text-gray-300 mb-4">{(merged.subject as any).problem}</p>
+                  {merged.questions && (
+                    <div className="space-y-2">
+                      {merged.questions.map((question: string, idx: number) => (
+                        <p key={idx} className="text-yellow-400 font-semibold">• {question}</p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      );
+
+    case 'montage':
+      return (
+        <section className="py-16 bg-gradient-to-r from-purple-900 to-blue-900 text-white">
+          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+            <div className="max-w-6xl mx-auto">
+              <h2 className="text-3xl font-bold text-center mb-12">{merged.title}</h2>
+              <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-3'} gap-6`}>
+                {merged.clips?.map((clip: any, idx: number) => (
+                  <div key={idx} className="bg-black bg-opacity-50 rounded-lg p-4 border border-white border-opacity-20">
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <span className="text-2xl">🎬</span>
+                      </div>
+                      <h3 className="font-semibold mb-2">{clip.title}</h3>
+                      <p className="text-sm text-gray-300">{clip.description}</p>
+                      <p className="text-xs text-gray-500 mt-2">{clip.duration}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+
+    case 'manuscript':
+      return (
+        <section className="py-16 bg-yellow-50">
+          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-white rounded-lg shadow-2xl p-8 border-4 border-yellow-800" style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23f59e0b' fill-opacity='0.1'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E")`,
+                fontFamily: 'serif'
+              }}>
+                <h2 className="text-2xl font-bold text-center mb-6 text-yellow-900" style={{ fontFamily: 'serif' }}>{merged.title}</h2>
+                <div className="text-lg leading-relaxed text-gray-800 whitespace-pre-line" style={{ fontFamily: 'serif' }}>
+                  {merged.content}
+                </div>
+                {merged.signature && (
+                  <div className="mt-8 text-right">
+                    <p className="text-lg italic text-yellow-800" style={{ fontFamily: 'serif' }}>{merged.signature}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+
+    case 'alchemical':
+      return (
+        <section className="py-16 bg-gradient-to-b from-purple-900 via-indigo-900 to-black text-white">
+          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+            <div className="max-w-6xl mx-auto text-center">
+              <h2 className="text-4xl font-bold mb-8 text-yellow-400" style={{ fontFamily: 'serif' }}>{merged.title}</h2>
+              <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-3'} gap-8 mb-12`}>
+                {merged.elements?.map((element: any, idx: number) => (
+                  <div key={idx} className="bg-gray-800 bg-opacity-50 rounded-lg p-6 border border-yellow-500 border-opacity-50">
+                    <div className="text-4xl mb-4">{element.symbol}</div>
+                    <h3 className="text-xl font-semibold mb-2 text-yellow-400">{element.name}</h3>
+                    <p className="text-gray-300">{element.description}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="bg-yellow-600 bg-opacity-20 rounded-lg p-8 border-2 border-yellow-500">
+                <h3 className="text-2xl font-bold mb-4 text-yellow-400">A Transmutação</h3>
+                <p className="text-lg text-gray-200">{merged.transmutation}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+
+    case 'bestiary':
+      return (
+        <section className="py-16 bg-gradient-to-r from-green-900 to-teal-900 text-white">
+          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+            <div className="max-w-6xl mx-auto">
+              <h2 className="text-3xl font-bold text-center mb-12">{merged.title}</h2>
+              <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-2'} gap-8`}>
+                {merged.creatures?.map((creature: any, idx: number) => (
+                  <div key={idx} className="bg-black bg-opacity-50 rounded-lg p-6 border border-green-500 border-opacity-50">
+                    <div className="flex items-center mb-4">
+                      <div className="text-4xl mr-4">{creature.icon}</div>
+                      <div>
+                        <h3 className="text-xl font-semibold text-green-400">{creature.name}</h3>
+                        <p className="text-sm text-gray-400">{creature.type}</p>
+                      </div>
+                    </div>
+                    <p className="text-gray-300 mb-4">{creature.description}</p>
+                    <div className="text-sm">
+                      <strong className="text-green-400">Habilidades:</strong> {creature.abilities?.join(', ')}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+
+    case 'dreamscape':
+      return (
+        <section className="py-16 bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white relative overflow-hidden">
+          <div className="absolute inset-0 opacity-20">
+            <div className="absolute top-10 left-10 w-32 h-32 bg-white rounded-full opacity-10 animate-pulse"></div>
+            <div className="absolute top-32 right-20 w-24 h-24 bg-yellow-400 rounded-full opacity-10 animate-pulse" style={{ animationDelay: '1s' }}></div>
+            <div className="absolute bottom-20 left-1/4 w-20 h-20 bg-pink-400 rounded-full opacity-10 animate-pulse" style={{ animationDelay: '2s' }}></div>
+          </div>
+          <div className={`relative z-10 container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+            <div className="max-w-4xl mx-auto text-center">
+              <h2 className="text-4xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-pink-400">{merged.title}</h2>
+              <p className="text-xl mb-8 text-gray-200">{merged.content}</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                {merged.dreamElements?.map((element: any, idx: number) => (
+                  <div key={idx} className="bg-white bg-opacity-10 rounded-lg p-4 backdrop-blur-sm">
+                    <div className="text-3xl mb-2">{element.icon}</div>
+                    <h3 className="font-semibold text-yellow-400">{element.title}</h3>
+                    <p className="text-sm text-gray-300">{element.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+
+    case 'lucid':
+      return (
+        <section className="py-16 bg-black text-white">
+          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+            <div className="max-w-4xl mx-auto">
+              <div className="text-center mb-12">
+                <h2 className="text-4xl font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">{merged.title}</h2>
+                <p className="text-lg text-gray-300">{merged.content}</p>
+              </div>
+              <div className="bg-gray-900 rounded-lg p-8 border border-cyan-500 border-opacity-50">
+                <h3 className="text-2xl font-semibold mb-6 text-cyan-400 text-center">Controle dos Sonhos</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {merged.lucidControls?.map((control: any, idx: number) => (
+                    <div key={idx} className="text-center">
+                      <div className="text-3xl mb-2">{control.icon}</div>
+                      <h4 className="font-semibold text-cyan-400 mb-2">{control.title}</h4>
+                      <p className="text-sm text-gray-300">{control.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+
+    case 'quest':
+      return (
+        <section className="py-16 bg-gradient-to-r from-orange-900 to-red-900 text-white">
+          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+            <div className="max-w-6xl mx-auto">
+              <h2 className="text-4xl font-bold text-center mb-12">{merged.title}</h2>
+              <div className="bg-black bg-opacity-50 rounded-lg p-8 border-2 border-yellow-500 mb-8">
+                <h3 className="text-2xl font-semibold mb-4 text-yellow-400 text-center">A Jornada do Herói</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {merged.questStages?.map((stage: any, idx: number) => (
+                    <div key={idx} className="text-center">
+                      <div className="text-4xl mb-3">{stage.icon}</div>
+                      <h4 className="font-bold text-yellow-400 mb-2">{stage.title}</h4>
+                      <p className="text-sm text-gray-300">{stage.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="text-center">
+                <p className="text-xl text-gray-200 mb-6">{merged.callToAdventure}</p>
+                <a href={merged.buttonLink} className="bg-yellow-600 hover:bg-yellow-500 text-black px-8 py-4 rounded-lg font-bold text-lg transition-all transform hover:scale-105 shadow-2xl inline-block">
+                  {merged.buttonText}
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+
+    case 'horological':
+      return (
+        <section className="py-16 bg-gradient-to-b from-gray-900 to-black text-white">
+          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+            <div className="max-w-4xl mx-auto text-center">
+              <h2 className="text-4xl font-bold mb-8 text-gray-300" style={{ fontFamily: 'serif' }}>{merged.title}</h2>
+              <div className="bg-gray-800 rounded-full w-64 h-64 mx-auto mb-8 flex items-center justify-center border-4 border-gray-600">
+                <div className="text-center">
+                  <div className="text-6xl font-bold text-yellow-400 mb-2">{merged.time || '12:00'}</div>
+                  <p className="text-sm text-gray-400">{merged.date || '2024'}</p>
+                </div>
+              </div>
+              <p className="text-lg text-gray-300 mb-6">{merged.content}</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {merged.timepieces?.map((timepiece: any, idx: number) => (
+                  <div key={idx} className="bg-gray-800 rounded-lg p-4">
+                    <div className="text-3xl mb-2">{timepiece.icon}</div>
+                    <h4 className="font-semibold text-yellow-400">{timepiece.name}</h4>
+                    <p className="text-sm text-gray-300">{timepiece.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+
+    case 'mechanical':
+      return (
+        <section className="py-16 bg-gradient-to-r from-gray-800 to-gray-900 text-white">
+          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+            <div className="max-w-6xl mx-auto">
+              <h2 className="text-4xl font-bold text-center mb-12 text-gray-300">{merged.title}</h2>
+              <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-2'} gap-8 mb-12`}>
+                {merged.mechanisms?.map((mechanism: any, idx: number) => (
+                  <div key={idx} className="bg-gray-700 rounded-lg p-6 border border-gray-600">
+                    <div className="flex items-center mb-4">
+                      <div className="text-4xl mr-4">{mechanism.icon}</div>
+                      <div>
+                        <h3 className="text-xl font-semibold text-blue-400">{mechanism.name}</h3>
+                        <p className="text-sm text-gray-400">{mechanism.type}</p>
+                      </div>
+                    </div>
+                    <p className="text-gray-300 mb-4">{mechanism.description}</p>
+                    <div className="text-sm">
+                      <strong className="text-blue-400">Função:</strong> {mechanism.function}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="bg-blue-900 bg-opacity-50 rounded-lg p-8 border-2 border-blue-500 text-center">
+                <h3 className="text-2xl font-bold mb-4 text-blue-400">O Grande Mecanismo</h3>
+                <p className="text-lg text-gray-200">{merged.grandMechanism}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+
+    case 'complication':
+      return (
+        <section className="py-16 bg-gradient-to-r from-red-900 to-orange-900 text-white">
+          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-3xl font-bold text-center mb-8 text-yellow-400">{merged.title}</h2>
+              <div className="bg-black bg-opacity-50 rounded-lg p-8 border-2 border-red-500 mb-8">
+                <h3 className="text-xl font-semibold mb-6 text-red-400 text-center">As Complicações</h3>
+                <div className="space-y-4">
+                  {merged.complications?.map((complication: any, idx: number) => (
+                    <div key={idx} className="flex items-start">
+                      <div className="text-red-500 mr-3 mt-1">⚠️</div>
+                      <div>
+                        <h4 className="font-semibold text-red-400">{complication.title}</h4>
+                        <p className="text-gray-300">{complication.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="text-center">
+                <p className="text-lg text-gray-200 mb-6">{merged.resolution}</p>
+                <a href={merged.buttonLink} className="bg-yellow-600 hover:bg-yellow-500 text-black px-8 py-4 rounded-lg font-bold text-lg transition-all transform hover:scale-105 shadow-2xl inline-block">
+                  {merged.buttonText}
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+
+    case 'revolutionary':
+      return (
+        <section className="py-16 bg-red-900 text-white">
+          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+            <div className="max-w-6xl mx-auto">
+              <h2 className="text-4xl font-bold text-center mb-8 text-yellow-400" style={{ fontFamily: 'serif' }}>{merged.title}</h2>
+              <div className="bg-black bg-opacity-70 rounded-lg p-8 border-4 border-red-600 mb-8">
+                <div className="text-center mb-6">
+                  <p className="text-xl text-red-300 italic" style={{ fontFamily: 'serif' }}>{merged.manifesto}</p>
+                </div>
+                <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-2'} gap-6`}>
+                  {merged.revolutionaryElements?.map((element: any, idx: number) => (
+                    <div key={idx} className="text-center">
+                      <div className="text-4xl mb-3">{element.icon}</div>
+                      <h4 className="font-bold text-yellow-400 mb-2">{element.title}</h4>
+                      <p className="text-gray-300">{element.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+
+    case 'demands':
+      return (
+        <section className="py-16 bg-gradient-to-r from-red-800 to-red-900 text-white">
+          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-3xl font-bold text-center mb-8 text-yellow-400">{merged.title}</h2>
+              <div className="bg-black bg-opacity-50 rounded-lg p-8 border-2 border-yellow-500">
+                <h3 className="text-xl font-semibold mb-6 text-yellow-400 text-center">Nossas Exigências</h3>
+                <div className="space-y-4">
+                  {merged.demands?.map((demand: any, idx: number) => (
+                    <div key={idx} className="flex items-start bg-red-900 bg-opacity-50 rounded p-4">
+                      <div className="text-yellow-400 mr-3 font-bold text-lg">{idx + 1}.</div>
+                      <div>
+                        <h4 className="font-semibold text-yellow-400 mb-1">{demand.title}</h4>
+                        <p className="text-gray-300">{demand.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+
+    case 'propaganda':
+      return (
+        <section className="py-16 bg-gradient-to-r from-red-700 to-red-800 text-white">
+          <div className={`container mx-auto ${isMobilePreview ? '' : 'px-4'}`}>
+            <div className="max-w-6xl mx-auto">
+              <div className="text-center mb-12">
+                <h2 className="text-4xl font-bold mb-4 text-yellow-400">{merged.title}</h2>
+                <p className="text-xl text-gray-200">{merged.slogan}</p>
+              </div>
+              <div className={`grid ${isMobilePreview ? 'grid-cols-1' : 'grid-cols-3'} gap-8`}>
+                {merged.propagandaElements?.map((element: any, idx: number) => (
+                  <div key={idx} className="bg-black bg-opacity-70 rounded-lg p-6 border-2 border-yellow-500 text-center">
+                    <div className="text-5xl mb-4">{element.icon}</div>
+                    <h3 className="text-xl font-bold text-yellow-400 mb-2">{element.title}</h3>
+                    <p className="text-gray-300">{element.description}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="text-center mt-12">
+                <a href={merged.buttonLink} className="bg-yellow-600 hover:bg-yellow-500 text-black px-8 py-4 rounded-lg font-bold text-lg transition-all transform hover:scale-105 shadow-2xl inline-block">
+                  {merged.buttonText}
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+
     default:
       return null;
   }
