@@ -42,6 +42,7 @@ const getFieldPlaceholder = (field: string): string => {
   }
 };
 
+// @ts-ignore - Temporarily disabled function
 const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPage | null) => {
   const custom = userLeadPage?.customData?.[section.id] || {};
   const merged = { ...section, ...custom };
@@ -2156,22 +2157,13 @@ const LeadPageEditor = () => {
                         </button>
                       </div>
                     </div>
-                    <div className="[&>*]:!rounded-none [&_section]:!py-6 [&_section]:!px-6 [&_.container]:!px-0">
-                      {(() => {
-                        const { template: currentTemplate, userLeadPage: currentData } = getCurrentTemplateAndData();
-                        return currentTemplate ? currentTemplate.sections
-                          .filter(section => {
-                            const custom = currentData?.customData?.[section.id] || {};
-                            const merged = { ...section, ...custom };
-                            return merged.enabled !== false;
-                          })
-                          .map(section => (
-                            <div key={section.id}>
-                              {renderPreviewSection(section, currentData)}
-                            </div>
-                          )) : null;
-                      })()}
-                    </div>
+                    {/* Iframe with real lead page */}
+                    <iframe
+                      src={user && userData ? `${window.location.origin}/${userData.slug || user.uid}` : ''}
+                      className="w-full h-[600px] border-0"
+                      title="Lead Page Preview"
+                      sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
+                    />
                   </div>
                 </div>
 
