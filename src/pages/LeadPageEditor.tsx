@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { getUserLeadPage, getTemplate, getAllTemplates, saveUserLeadPage, updateLeadPageSection, getLeadPageStats, calculateLeadPageMetrics } from '../utils/leadpage';
+import { getUserLeadPage, getTemplate, getAllTemplates, saveUserLeadPage, updateLeadPageSection, getLeadPageStats, calculateLeadPageMetrics, generateCustomDomainUrl } from '../utils/leadpage';
 import { addVercelDomain, checkVercelDomain } from '../utils/vercel';
 import type { LeadPageTemplate, UserLeadPage } from '../types/leadpage';
 import { 
@@ -1251,6 +1251,7 @@ const LeadPageEditor = () => {
   const [leadPageStats, setLeadPageStats] = useState<any>(null);
   const [loadingLeadStats, setLoadingLeadStats] = useState(false);
   const [domainInstructionsExpanded, setDomainInstructionsExpanded] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
 
   // Draft/Publish system
   const [viewMode, setViewMode] = useState<'draft' | 'published'>('draft'); // What we're currently viewing
@@ -1299,10 +1300,8 @@ const LeadPageEditor = () => {
     if (!user || !userData) return;
 
     try {
-      // Generate the URL for the lead page
-      const baseUrl = window.location.origin;
-      const slug = userData.slug || user.uid;
-      const leadPageUrl = `${baseUrl}/${slug}`;
+      // Generate the URL for the lead page (uses custom domain if configured)
+      const leadPageUrl = await generateCustomDomainUrl(user.uid, userData.slug || user.uid);
 
       // Open in new tab/window
       window.open(leadPageUrl, '_blank');
@@ -1480,6 +1479,21 @@ const LeadPageEditor = () => {
       handleLoadLeadStats();
     }
   }, [user]);
+
+  useEffect(() => {
+    const generatePreviewUrl = async () => {
+      if (user && userData) {
+        try {
+          const url = await generateCustomDomainUrl(user.uid, userData.slug || user.uid);
+          setPreviewUrl(url);
+        } catch (error) {
+          console.error('Erro ao gerar URL de preview:', error);
+          setPreviewUrl(`${window.location.origin}/${userData.slug || user.uid}`);
+        }
+      }
+    };
+    generatePreviewUrl();
+  }, [user, userData]);
 
   const handleLoadLeadStats = async () => {
     if (!user) return;
@@ -2130,7 +2144,7 @@ const LeadPageEditor = () => {
                     </div>
                     <div className="flex-1 bg-gray-700 rounded-lg px-3 py-1">
                       <div className="text-white text-sm font-mono truncate">
-                        {user && userData ? `${window.location.origin}/${userData.slug || user.uid}` : 'Carregando...'}
+                        {previewUrl || (user && userData ? `${window.location.origin}/${userData.slug || user.uid}` : 'Carregando...')}
                       </div>
                     </div>
                   </div>
@@ -2138,9 +2152,9 @@ const LeadPageEditor = () => {
 
                 <div className="bg-gray-100 rounded-b-2xl p-4 mx-auto max-w-lg">
                   <div className="bg-white rounded-xl overflow-hidden shadow-lg min-h-[600px] max-h-[700px]">
-                    {user && userData ? (
+                    {user && userData && previewUrl ? (
                       <iframe
-                        src={`${window.location.origin}/${userData.slug || user.uid}`}
+                        src={previewUrl}
                         className="w-full h-full border-0"
                         sandbox="allow-scripts allow-forms allow-popups allow-same-origin"
                         title="Preview da Lead Page"
