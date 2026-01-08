@@ -212,6 +212,12 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
 
         setTemplate(tmpl);
         setUserData(displayData);
+
+        // Redirect to custom domain if configured and accessing via main domain
+        if (displayData?.domain && window.location.hostname === 'lucrazi.com.br') {
+          window.location.href = `https://${displayData.domain}`;
+          return; // Prevent further execution
+        }
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
       } finally {
