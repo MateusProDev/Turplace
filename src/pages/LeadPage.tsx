@@ -31,8 +31,8 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
     try {
       // Primeiro, buscar diretamente na coleção leadPages (nova estrutura)
       const leadPagesRef = collection(db, "leadPages");
-      const leadPageQuery = query(leadPagesRef, where("domain", "==", hostname));
-      const leadPageSnapshot = await getDocs(leadPageQuery);
+      let leadPageQuery = query(leadPagesRef, where("domain", "==", hostname));
+      let leadPageSnapshot = await getDocs(leadPageQuery);
 
       if (!leadPageSnapshot.empty) {
         const leadPageDoc = leadPageSnapshot.docs[0];
@@ -42,6 +42,25 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
         const userDoc = await getDoc(doc(db, "users", userId));
         if (userDoc.exists()) {
           return { uid: userId, ...userDoc.data() };
+        }
+      }
+
+      // Tentar remover subdomínios comuns (www, lead, etc.)
+      const domainParts = hostname.split('.');
+      if (domainParts.length > 2) {
+        const domainWithoutSubdomain = domainParts.slice(-2).join('.');
+        leadPageQuery = query(leadPagesRef, where("domain", "==", domainWithoutSubdomain));
+        leadPageSnapshot = await getDocs(leadPageQuery);
+
+        if (!leadPageSnapshot.empty) {
+          const leadPageDoc = leadPageSnapshot.docs[0];
+          const userId = leadPageDoc.id;
+
+          // Buscar dados do usuário
+          const userDoc = await getDoc(doc(db, "users", userId));
+          if (userDoc.exists()) {
+            return { uid: userId, ...userDoc.data() };
+          }
         }
       }
 
@@ -212,12 +231,6 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
 
         setTemplate(tmpl);
         setUserData(displayData);
-
-        // Redirect to custom domain if configured and accessing via main domain
-        if (displayData?.domain && window.location.hostname === 'lucrazi.com.br') {
-          window.location.href = `https://${displayData.domain}`;
-          return; // Prevent further execution
-        }
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
       } finally {

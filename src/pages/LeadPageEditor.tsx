@@ -1252,6 +1252,7 @@ const LeadPageEditor = () => {
   const [loadingLeadStats, setLoadingLeadStats] = useState(false);
   const [domainInstructionsExpanded, setDomainInstructionsExpanded] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [iframeKey, setIframeKey] = useState<number>(0); // Key to force iframe reload
 
   // Draft/Publish system
   const [viewMode, setViewMode] = useState<'draft' | 'published'>('draft'); // What we're currently viewing
@@ -1346,6 +1347,8 @@ const LeadPageEditor = () => {
 
       await saveUserLeadPage(user.uid, updated);
       setUserLeadPage(updated);
+      // Force iframe reload after domain save
+      setIframeKey(prev => prev + 1);
       
       if (domainExists) {
         alert('Domínio salvo com sucesso! Ele já estava configurado no Vercel.');
@@ -1374,6 +1377,8 @@ const LeadPageEditor = () => {
         setUserLeadPage(updated);
         await saveUserLeadPage(user.uid, updated);
         setExpandedSections(new Set());
+        // Force iframe reload after template change
+        setIframeKey(prev => prev + 1);
       }
     } catch (error) {
       console.error('Erro ao mudar template:', error);
@@ -1395,6 +1400,8 @@ const LeadPageEditor = () => {
       };
       await saveUserLeadPage(user.uid, published);
       setUserLeadPage(published);
+      // Force iframe reload after publish
+      setIframeKey(prev => prev + 1);
     } catch (error) {
       console.error('Erro ao publicar:', error);
       alert('Erro ao publicar mudanças. Tente novamente.');
@@ -1450,6 +1457,8 @@ const LeadPageEditor = () => {
               };
               await saveUserLeadPage(user.uid, updated);
               setUserLeadPage(updated);
+              // Force iframe reload after save
+              setIframeKey(prev => prev + 1);
             }
           }
         } else {
@@ -1462,6 +1471,8 @@ const LeadPageEditor = () => {
             };
             await saveUserLeadPage(user.uid, initial);
             setUserLeadPage(initial);
+            // Force iframe reload after initial save
+            setIframeKey(prev => prev + 1);
           }
         }
       } catch (err) {
@@ -1523,6 +1534,8 @@ const LeadPageEditor = () => {
       setSaving(true);
       await updateLeadPageSection(user.uid, sectionId, updated);
       setTimeout(() => setSaving(false), 500);
+      // Force iframe reload after successful save
+      setIframeKey(prev => prev + 1);
     } catch (err) {
       console.error('Erro ao salvar:', err);
       setSaving(false);
@@ -2154,9 +2167,9 @@ const LeadPageEditor = () => {
                   <div className="bg-white rounded-xl overflow-hidden shadow-lg min-h-[600px] max-h-[700px]">
                     {user && userData && previewUrl ? (
                       <iframe
+                        key={iframeKey}
                         src={previewUrl}
                         className="w-full h-full border-0"
-                        sandbox="allow-scripts allow-forms allow-popups allow-same-origin"
                         title="Preview da Lead Page"
                       />
                     ) : (
