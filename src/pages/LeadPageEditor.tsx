@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { getUserLeadPage, getTemplate, getAllTemplates, saveUserLeadPage, updateLeadPageSection, getLeadPageStats, calculateLeadPageMetrics, generateCustomDomainUrl } from '../utils/leadpage';
+import { getUserLeadPage, getTemplate, getAllTemplates, saveUserLeadPage, updateLeadPageSection, getLeadPageStats, calculateLeadPageMetrics } from '../utils/leadpage';
 import { addVercelDomain, checkVercelDomain } from '../utils/vercel';
-import type { LeadPageTemplate, UserLeadPage, LeadPageSection } from '../types/leadpage';
+import type { LeadPageTemplate, UserLeadPage } from '../types/leadpage';
 import { 
   Eye, 
   ArrowLeft, 
@@ -21,7 +21,8 @@ import {
   AlignLeft,
   Layout,
   Share,
-  Globe
+  Globe,
+  ExternalLink
 } from 'lucide-react';
 import { uploadToCloudinary } from '../utils/cloudinary';
 
@@ -42,8 +43,9 @@ const getFieldPlaceholder = (field: string): string => {
   }
 };
 
-// @ts-ignore - Temporarily disabled function
-const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPage | null) => {
+// Função não utilizada - preview agora usa iframe
+// const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPage | null) => {
+  /*
   const custom = userLeadPage?.customData?.[section.id] || {};
   const merged = { ...section, ...custom };
   if (merged.enabled === false) return null; // Only hide if explicitly set to false
@@ -1234,7 +1236,7 @@ const renderPreviewSection = (section: LeadPageSection, userLeadPage: UserLeadPa
       return null;
   }
 };
-
+*/
 const LeadPageEditor = () => {
   const { user, userData } = useAuth();
   const [template, setTemplate] = useState<LeadPageTemplate | null>(null);
@@ -1249,7 +1251,6 @@ const LeadPageEditor = () => {
   const [leadPageStats, setLeadPageStats] = useState<any>(null);
   const [loadingLeadStats, setLoadingLeadStats] = useState(false);
   const [domainInstructionsExpanded, setDomainInstructionsExpanded] = useState(false);
-  const [leadPageUrl, setLeadPageUrl] = useState<string>('');
 
   // Draft/Publish system
   const [viewMode, setViewMode] = useState<'draft' | 'published'>('draft'); // What we're currently viewing
@@ -1291,6 +1292,23 @@ const LeadPageEditor = () => {
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Erro ao copiar link:', err);
+    }
+  };
+
+  const handleOpenInBrowser = async () => {
+    if (!user || !userData) return;
+
+    try {
+      // Generate the URL for the lead page
+      const baseUrl = window.location.origin;
+      const slug = userData.slug || user.uid;
+      const leadPageUrl = `${baseUrl}/${slug}`;
+
+      // Open in new tab/window
+      window.open(leadPageUrl, '_blank');
+    } catch (error) {
+      console.error('Erro ao abrir no navegador:', error);
+      alert('Erro ao abrir a página no navegador. Tente novamente.');
     }
   };
 
@@ -1462,21 +1480,6 @@ const LeadPageEditor = () => {
       handleLoadLeadStats();
     }
   }, [user]);
-
-  useEffect(() => {
-    const generateUrl = async () => {
-      if (user) {
-        try {
-          const url = await generateCustomDomainUrl(user.uid);
-          setLeadPageUrl(url);
-        } catch (error) {
-          console.error('Erro ao gerar URL da lead page:', error);
-          setLeadPageUrl(`${window?.location?.origin || 'https://lucrazi.com.br'}/${userData?.slug || user.uid}`);
-        }
-      }
-    };
-    generateUrl();
-  }, [user, userData]);
 
   const handleLoadLeadStats = async () => {
     if (!user) return;
@@ -2106,64 +2109,47 @@ const LeadPageEditor = () => {
                       Ao Vivo
                     </span>
                   )}
+                  <button
+                    onClick={() => handleOpenInBrowser()}
+                    className="ml-auto flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 text-sm font-medium rounded-lg hover:bg-blue-100 transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Ver no Navegador
+                  </button>
                 </div>
               </div>
 
               <div className="p-6">
-                <div className="bg-gray-100 rounded-2xl p-4 mx-auto max-w-lg">
-                  <div className="bg-white rounded-xl overflow-hidden shadow-lg min-h-[600px] max-h-[700px] overflow-y-auto">
-                    {/* Browser URL Bar */}
-                    <div className="bg-gray-100 px-3 py-2 border-b border-gray-300">
-                      {/* Browser Controls */}
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="flex gap-1">
-                          <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                          <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                        </div>
-                        {/* Navigation Buttons */}
-                        <div className="flex items-center gap-1 ml-2">
-                          <button className="w-6 h-6 flex items-center justify-center text-gray-500 hover:bg-gray-200 rounded">
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                            </svg>
-                          </button>
-                          <button className="w-6 h-6 flex items-center justify-center text-gray-500 hover:bg-gray-200 rounded">
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </button>
-                          <button className="w-6 h-6 flex items-center justify-center text-gray-500 hover:bg-gray-200 rounded">
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                      {/* Address Bar */}
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 bg-white rounded-lg px-3 py-2 text-sm text-gray-700 border border-gray-300 shadow-sm flex items-center gap-2">
-                          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                          </svg>
-                          <span className="truncate text-gray-600">
-                            {leadPageUrl || 'Carregando URL...'}
-                          </span>
-                        </div>
-                        <button className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-200 rounded">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                          </svg>
-                        </button>
+                {/* Browser-like interface */}
+                <div className="bg-gray-800 rounded-t-2xl p-3 mx-auto max-w-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="flex gap-1">
+                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                      <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    </div>
+                    <div className="flex-1 bg-gray-700 rounded-lg px-3 py-1">
+                      <div className="text-white text-sm font-mono truncate">
+                        {user && userData ? `${window.location.origin}/${userData.slug || user.uid}` : 'Carregando...'}
                       </div>
                     </div>
-                    {/* Iframe with real lead page */}
-                    <iframe
-                      src={user && userData ? `${window.location.origin}/${userData.slug || user.uid}` : ''}
-                      className="w-full h-[600px] border-0"
-                      title="Lead Page Preview"
-                      sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
-                    />
+                  </div>
+                </div>
+
+                <div className="bg-gray-100 rounded-b-2xl p-4 mx-auto max-w-lg">
+                  <div className="bg-white rounded-xl overflow-hidden shadow-lg min-h-[600px] max-h-[700px]">
+                    {user && userData ? (
+                      <iframe
+                        src={`${window.location.origin}/${userData.slug || user.uid}`}
+                        className="w-full h-full border-0"
+                        sandbox="allow-scripts allow-forms allow-popups allow-same-origin"
+                        title="Preview da Lead Page"
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full">
+                        <div className="text-gray-500">Carregando preview...</div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
