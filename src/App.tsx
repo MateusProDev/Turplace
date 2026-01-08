@@ -26,6 +26,7 @@ import Checkout from './pages/Checkout';
 import ServiceDiagnostics from './pages/ServiceDiagnostics';
 import Success from './pages/Success';
 import ResetPassword from './pages/ResetPassword';
+import RequireProvider from './components/Auth/RequireProvider';
 import RequireAdmin from './components/Auth/RequireAdmin';
 import ActionHandler from './pages/auth/action';
 import Privacy from './pages/Privacy';
@@ -69,7 +70,7 @@ function App() {
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/profile" element={<Navigate to="/profile/settings" replace />} />
         <Route path="/profile/settings" element={<ProfileSettings />} />
-        <Route path="/profile/leadpage" element={<RequireAuth><LeadPageEditor /></RequireAuth>} />
+        <Route path="/profile/leadpage" element={<RequireProvider><LeadPageEditor /></RequireProvider>} />
         <Route path="/lead/:userSlug" element={<LeadPage />} />
         <Route path="/custom/:domain" element={<LeadPage />} />
         <Route path="/login" element={<Login />} />
