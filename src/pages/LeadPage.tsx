@@ -7,9 +7,25 @@ import type { LeadPageTemplate, UserLeadPage, LeadPageSection } from '../types/l
 
 interface LeadPageProps {
   customDomain?: string;
+  previewMode?: boolean;
+  previewTemplate?: LeadPageTemplate;
+  previewUserData?: UserLeadPage;
+  previewUser?: any;
+  forceMobile?: boolean;
+  selectedSectionId?: string | null;
+  onSectionSelect?: (sectionId: string | null) => void;
 }
 
-const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
+const LeadPage: React.FC<LeadPageProps> = ({ 
+  customDomain, 
+  previewMode = false, 
+  previewTemplate, 
+  previewUserData, 
+  previewUser,
+  forceMobile = false,
+  selectedSectionId,
+  onSectionSelect
+}) => {
   const { userSlug } = useParams<{ userSlug: string }>();
   const { domain: routeDomain } = useParams<{ domain: string }>();
 
@@ -164,6 +180,12 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
   // Detecta se é mobile baseado no tamanho da tela
   useEffect(() => {
     const checkMobile = () => {
+      if (previewMode && forceMobile !== undefined) {
+        setIsMobile(forceMobile);
+        setForceMobilePreview(forceMobile);
+        return;
+      }
+
       const width = window.innerWidth;
       // Mobile: < 768px (1 coluna)
       // Desktop: >= 768px (3 colunas)
@@ -176,11 +198,20 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  }, [previewMode, forceMobile]);
 
   useEffect(() => {
     const loadData = async () => {
       try {
+        // Se estiver em modo preview, usar dados passados via props
+        if (previewMode) {
+          setTemplate(previewTemplate || null);
+          setUserData(previewUserData || null);
+          setUser(previewUser || null);
+          setLoading(false);
+          return;
+        }
+
         let foundUser = null;
 
         // Primeiro, verificar se é acesso via domínio personalizado
@@ -238,7 +269,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
       }
     };
     loadData();
-  }, [actualSlug, domain]);
+  }, [actualSlug, domain, previewMode, previewTemplate, previewUserData, previewUser]);
 
   // Tracking de visualizações
   useEffect(() => {
@@ -301,141 +332,181 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
     const merged = { ...section, ...custom };
     if (!merged.enabled) return null;
 
+    // Wrapper para preview mode com seções clicáveis
+    const SectionWrapper = ({ children }: { children: React.ReactNode }) => {
+      if (!previewMode) return <>{children}</>;
+
+      const isSelected = selectedSectionId === section.id;
+
+      return (
+        <div
+          className={`relative group cursor-pointer transition-all duration-200 ${
+            isSelected 
+              ? 'border-2 border-blue-500 bg-blue-50 bg-opacity-10' 
+              : 'border-2 border-transparent hover:border-blue-500 hover:bg-blue-50 hover:bg-opacity-10'
+          }`}
+          onClick={() => {
+            onSectionSelect?.(section.id);
+          }}
+        >
+          {/* Indicador visual de seção editável */}
+          <div className={`absolute -top-2 -left-2 text-xs px-2 py-1 rounded-full font-medium transition-opacity duration-200 z-10 ${
+            isSelected 
+              ? 'bg-blue-500 text-white opacity-100' 
+              : 'bg-blue-500 text-white opacity-0 group-hover:opacity-100'
+          }`}>
+            {section.type}
+          </div>
+
+          {/* Overlay sutil para indicar interatividade */}
+          <div className="absolute inset-0 bg-blue-500 bg-opacity-0 group-hover:bg-opacity-5 transition-all duration-200 pointer-events-none" />
+
+          {children}
+        </div>
+      );
+    };
+
     switch (merged.type) {
       case 'hero':
         // Hero Moderno com Stats (Versão Mobile First)
         if (merged.stats) {
           return (
-            <section className="relative min-h-[90vh] md:min-h-screen flex items-center bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-white overflow-hidden">
-              {merged.image && (
-                <div className="absolute inset-0">
-                  <img 
-                    src={merged.image} 
-                    alt="Hero Background" 
-                    className="w-full h-full object-cover opacity-20" 
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-black bg-opacity-40"></div>
-                </div>
-              )}
-              <div className="relative z-10 container mx-auto px-4 py-12 md:py-20">
-                <div className="max-w-4xl mx-auto text-center">
-                  {merged.subtitle && (
-                    <p className="text-lg md:text-2xl mb-3 md:mb-4 text-blue-200 font-light">
-                      {merged.subtitle}
+            <SectionWrapper>
+              <section className="relative min-h-[90vh] md:min-h-screen flex items-center bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-white overflow-hidden">
+                {merged.image && (
+                  <div className="absolute inset-0">
+                    <img 
+                      src={merged.image} 
+                      alt="Hero Background" 
+                      className="w-full h-full object-cover opacity-20" 
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+                  </div>
+                )}
+                <div className="relative z-10 container mx-auto px-4 py-12 md:py-20">
+                  <div className="max-w-4xl mx-auto text-center">
+                    {merged.subtitle && (
+                      <p className="text-sm md:text-base mb-3 md:mb-4 text-blue-200 font-light">
+                        {merged.subtitle}
+                      </p>
+                    )}
+                    
+                    <h1 className="text-lg sm:text-xl md:text-2xl lg:text-4xl font-black mb-4 md:mb-6 leading-tight break-words">
+                      {merged.title}
+                    </h1>
+                    
+                    <p className="text-xs md:text-sm lg:text-base mb-6 md:mb-8 max-w-3xl mx-auto text-blue-100 px-2">
+                      {merged.content}
                     </p>
-                  )}
-                  
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-black mb-4 md:mb-6 leading-tight">
-                    {merged.title}
-                  </h1>
-                  
-                  <p className="text-base md:text-xl lg:text-2xl mb-6 md:mb-8 max-w-3xl mx-auto text-blue-100 px-2">
-                    {merged.content}
-                  </p>
 
-                  {/* Stats Grid - Empilhado em mobile */}
-                  {merged.stats && (
-                    <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-4 md:gap-8 mb-8 md:mb-12`}>
-                      {merged.stats.map((stat: string, idx: number) => (
-                        <div 
-                          key={idx} 
-                          className="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-4 md:p-6 border border-white border-opacity-20 hover:bg-opacity-20 transition-all duration-300"
-                        >
-                          <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1">
-                            {stat.split(' ')[0]}
+                    {/* Stats Grid - Empilhado em mobile */}
+                    {merged.stats && (
+                      <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-4 md:gap-8 mb-8 md:mb-12`}>
+                        {merged.stats.map((stat: string, idx: number) => (
+                          <div 
+                            key={idx} 
+                            className="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-4 md:p-6 border border-white border-opacity-20 hover:bg-opacity-20 transition-all duration-300"
+                          >
+                            <div className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-1">
+                              {stat.split(' ')[0]}
+                            </div>
+                            <div className="text-blue-200 text-sm md:text-base">
+                              {stat.split(' ').slice(1).join(' ')}
+                            </div>
                           </div>
-                          <div className="text-blue-200 text-sm md:text-base">
-                            {stat.split(' ').slice(1).join(' ')}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* CTA Button com responsividade */}
-                  <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center">
-                    <a
-                      href={merged.buttonLink}
-                      onClick={(e) => merged.buttonLink && handleButtonClick(e, merged.buttonLink)}
-                      className="w-full sm:w-auto bg-yellow-500 hover:bg-yellow-400 text-black px-6 py-3 md:px-8 md:py-4 rounded-full font-bold text-base md:text-lg transition-all transform hover:scale-105 active:scale-95 shadow-2xl"
-                    >
-                      {merged.buttonText}
-                    </a>
-                    {merged.urgencyText && (
-                      <div className="text-red-300 font-semibold animate-pulse text-sm md:text-base">
-                        {merged.urgencyText}
+                        ))}
                       </div>
                     )}
+
+                    {/* CTA Button com responsividade */}
+                    <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center">
+                      <a
+                        href={merged.buttonLink}
+                        onClick={(e) => merged.buttonLink && handleButtonClick(e, merged.buttonLink)}
+                        className="w-full sm:w-auto bg-yellow-500 hover:bg-yellow-400 text-black px-6 py-3 md:px-8 md:py-4 rounded-full font-bold text-sm md:text-base transition-all transform hover:scale-105 active:scale-95 shadow-2xl"
+                      >
+                        {merged.buttonText}
+                      </a>
+                      {merged.urgencyText && (
+                        <div className="text-red-300 font-semibold animate-pulse text-sm md:text-base">
+                          {merged.urgencyText}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </section>
+              </section>
+            </SectionWrapper>
           );
         }
 
         // Hero Padrão
         return (
-          <section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-12 md:py-20">
-            <div className="container mx-auto px-4">
-              <div className="max-w-3xl mx-auto text-center">
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 md:mb-6">
-                  {merged.title}
-                </h1>
-                <p className="text-lg md:text-xl mb-6 md:mb-8 max-w-2xl mx-auto">
-                  {merged.content}
-                </p>
-                {merged.image && (
-                  <img
-                    src={merged.image}
-                    alt="Hero"
-                    className="mx-auto mb-6 md:mb-8 rounded-lg shadow-lg w-full max-w-md object-cover"
-                    loading="lazy"
-                  />
-                )}
-                <a
-                  href={merged.buttonLink}
-                  onClick={(e) => merged.buttonLink && handleButtonClick(e, merged.buttonLink)}
-                  className="inline-block bg-white text-blue-600 px-6 py-3 md:px-8 md:py-4 rounded-lg font-semibold hover:bg-gray-100 active:bg-gray-200 transition-colors text-base md:text-lg"
-                >
-                  {merged.buttonText}
-                </a>
+          <SectionWrapper>
+            <section className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-12 md:py-20">
+              <div className="container mx-auto px-4">
+                <div className="max-w-3xl mx-auto text-center">
+                  <h1 className="text-lg sm:text-xl md:text-2xl font-bold mb-4 md:mb-6 break-words">
+                    {merged.title}
+                  </h1>
+                  <p className="text-sm md:text-base mb-6 md:mb-8 max-w-2xl mx-auto">
+                    {merged.content}
+                  </p>
+                  {merged.image && (
+                    <img
+                      src={merged.image}
+                      alt="Hero"
+                      className="mx-auto mb-6 md:mb-8 rounded-lg shadow-lg w-full max-w-md object-cover"
+                      loading="lazy"
+                    />
+                  )}
+                  <a
+                    href={merged.buttonLink}
+                    onClick={(e) => merged.buttonLink && handleButtonClick(e, merged.buttonLink)}
+                    className="inline-block bg-white text-blue-600 px-6 py-3 md:px-8 md:py-4 rounded-lg font-semibold hover:bg-gray-100 active:bg-gray-200 transition-colors text-sm md:text-base"
+                  >
+                    {merged.buttonText}
+                  </a>
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          </SectionWrapper>
         );
 
       case 'about':
         return (
-          <section className="py-12 md:py-16 bg-gray-50">
-            <div className="container mx-auto px-4">
-              <div className="max-w-6xl mx-auto">
-                <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-center">
-                  {/* Imagem acima em mobile, ao lado em desktop */}
-                  {merged.image && (
-                    <div className="w-full md:w-1/2 order-1 md:order-2">
-                      <img
-                        src={merged.image}
-                        alt="About"
-                        className="w-full rounded-xl shadow-lg object-cover aspect-square md:aspect-video"
-                        loading="lazy"
-                      />
-                    </div>
-                  )}
-                  <div className={`w-full ${merged.image ? 'md:w-1/2' : 'md:w-full'} order-2 md:order-1`}>
-                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 md:mb-6 text-gray-900">
-                      {merged.title}
-                    </h2>
-                    <div className="prose prose-lg max-w-none">
-                      <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                        {merged.content}
-                      </p>
+          <SectionWrapper>
+            <section className="py-12 md:py-16 bg-gray-50">
+              <div className="container mx-auto px-4">
+                <div className="max-w-6xl mx-auto">
+                  <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-center">
+                    {/* Imagem acima em mobile, ao lado em desktop */}
+                    {merged.image && (
+                      <div className="w-full md:w-1/2 order-1 md:order-2">
+                        <img
+                          src={merged.image}
+                          alt="About"
+                          className="w-full rounded-xl shadow-lg object-cover aspect-square md:aspect-video"
+                          loading="lazy"
+                        />
+                      </div>
+                    )}
+                    <div className={`w-full ${merged.image ? 'md:w-1/2' : 'md:w-full'} order-2 md:order-1`}>
+                      <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-900">
+                        {merged.title}
+                      </h2>
+                      <div className="prose prose-lg max-w-none">
+                        <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                          {merged.content}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </section>
+            </section>
+          </SectionWrapper>
         );
 
       case 'benefits':
@@ -445,7 +516,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
             <section className="py-12 md:py-20 bg-gradient-to-b from-gray-50 to-white">
               <div className="container mx-auto px-4">
                 <div className="text-center mb-8 md:mb-16">
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4">
+                  <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">
                     {merged.title}
                   </h2>
                   {merged.subtitle && (
@@ -533,7 +604,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
             <section className="py-12 md:py-20 bg-white">
               <div className="container mx-auto px-4">
                 <div className="text-center mb-8 md:mb-16">
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4">
+                  <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">
                     {merged.title}
                   </h2>
                   {merged.subtitle && (
@@ -605,7 +676,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
               <div className="max-w-6xl mx-auto">
                 <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-center">
                   <div className="w-full md:w-1/2">
-                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 md:mb-8 text-gray-900">
+                    <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-6 md:mb-8 text-gray-900">
                       {merged.title}
                     </h2>
                     
@@ -618,7 +689,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
                             </svg>
                           </div>
                           <div>
-                            <p className="text-gray-700 text-base md:text-lg leading-relaxed">
+                            <p className="text-gray-700 text-sm md:text-base leading-relaxed">
                               {typeof item === 'string' ? item : (item as any).title || (item as any).description || item}
                             </p>
                           </div>
@@ -653,7 +724,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
             <section className="py-12 md:py-20 bg-gradient-to-b from-gray-50 to-white">
               <div className="container mx-auto px-4">
                 <div className="text-center mb-8 md:mb-16">
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4">
+                  <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4">
                     {merged.title}
                   </h2>
                   {merged.subtitle && (
@@ -678,7 +749,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
                           loading="lazy"
                         />
                         <div>
-                          <h4 className="font-bold text-gray-900 text-base md:text-lg">
+                          <h4 className="font-bold text-gray-900 text-sm md:text-base">
                             {(item as any).name}
                           </h4>
                           <p className="text-gray-600 text-sm">
@@ -692,7 +763,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
                       </p>
                       
                       <div className="flex items-center justify-between">
-                        <span className="text-green-600 font-bold text-base md:text-lg">
+                        <span className="text-green-600 font-bold text-sm md:text-base">
                           {(item as any).result}
                         </span>
                         <div className="flex">
@@ -722,7 +793,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
               <div className="max-w-6xl mx-auto">
                 <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-center">
                   <div className="w-full md:w-1/2">
-                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-6 md:mb-8 text-gray-900">
+                    <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-6 md:mb-8 text-gray-900">
                       {merged.title}
                     </h2>
                     
@@ -736,7 +807,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
                             <svg className="w-6 h-6 md:w-8 md:h-8 text-blue-500 mr-3 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
                               <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
                             </svg>
-                            <blockquote className="text-gray-700 text-base md:text-lg leading-relaxed italic">
+                            <blockquote className="text-gray-700 text-sm md:text-base leading-relaxed italic">
                               "{typeof item === 'string' ? item : ((item as any).text || (item as any).title || (item as any).description || JSON.stringify(item))}"
                             </blockquote>
                           </div>
@@ -789,7 +860,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
               <div className="max-w-4xl mx-auto">
                 <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-center">
                   <div className="w-full md:w-1/2 text-center md:text-left">
-                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 md:mb-4">
+                    <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-3 md:mb-4">
                       {merged.title}
                     </h2>
                     
@@ -799,7 +870,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
                       </p>
                     )}
                     
-                    <p className="text-base md:text-lg mb-6 md:mb-8 text-white/90">
+                    <p className="text-sm md:text-base mb-6 md:mb-8 text-white/90">
                       {merged.content}
                     </p>
                     
@@ -807,7 +878,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
                       <a 
                         href={merged.buttonLink}
                         onClick={(e) => merged.buttonLink && handleButtonClick(e, merged.buttonLink)}
-                        className="w-full sm:w-auto bg-yellow-500 hover:bg-yellow-400 text-black px-6 py-3 md:px-8 md:py-4 rounded-full font-bold text-base md:text-lg transition-all transform hover:scale-105 active:scale-95 shadow-2xl"
+                        className="w-full sm:w-auto bg-yellow-500 hover:bg-yellow-400 text-black px-6 py-3 md:px-8 md:py-4 rounded-full font-bold text-sm md:text-base transition-all transform hover:scale-105 active:scale-95 shadow-2xl"
                       >
                         {merged.buttonText}
                       </a>
@@ -847,7 +918,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
               <div className="max-w-4xl mx-auto">
                 <div className="flex flex-col md:flex-row gap-8 md:gap-12 items-center">
                   <div className="w-full md:w-1/2">
-                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 md:mb-6 text-gray-900">
+                    <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-4 md:mb-6 text-gray-900">
                       {merged.title}
                     </h2>
 
@@ -887,17 +958,17 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
             <div className="hidden md:block absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse" style={{ animationDelay: '4s' }}></div>
             <div className="relative z-10 container mx-auto px-4 py-16 md:py-20">
               <div className="max-w-4xl mx-auto text-center">
-                <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black mb-4 md:mb-6 leading-tight bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent">
+                <h1 className="text-lg sm:text-xl md:text-2xl lg:text-4xl font-black mb-4 md:mb-6 leading-tight bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent break-words">
                   {merged.title}
                 </h1>
-                <p className="text-base sm:text-lg md:text-xl mb-3 md:mb-4 text-blue-200 font-light max-w-2xl mx-auto px-2">
+                <p className="text-sm sm:text-base md:text-xl mb-3 md:mb-4 text-blue-200 font-light max-w-2xl mx-auto px-2">
                   {merged.subtitle}
                 </p>
-                <p className="text-sm sm:text-base md:text-lg mb-6 md:mb-8 text-slate-300 max-w-3xl mx-auto leading-relaxed px-2">
+                <p className="text-sm sm:text-sm md:text-base mb-6 md:mb-8 text-slate-300 max-w-3xl mx-auto leading-relaxed px-2">
                   {merged.content}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center px-4">
-                  <a href={merged.buttonLink} className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-base sm:text-lg transition-all transform hover:scale-105 shadow-2xl hover:shadow-blue-500/25 text-center">
+                  <a href={merged.buttonLink} className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-sm sm:text-base transition-all transform hover:scale-105 shadow-2xl hover:shadow-blue-500/25 text-center">
                     {merged.buttonText}
                   </a>
                 </div>
@@ -911,8 +982,8 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
           <section className="py-12 md:py-20 bg-white">
             <div className="container mx-auto px-4">
               <div className="text-center mb-12 md:mb-16">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
-                <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
+                <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
               </div>
               <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-6 md:gap-8`}>
                 {merged.features?.map((feature: any, idx: number) => (
@@ -934,8 +1005,8 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
           <section className="py-12 md:py-20 bg-gradient-to-br from-slate-50 to-blue-50">
             <div className="container mx-auto px-4">
               <div className="text-center mb-12 md:mb-16">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
-                <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
+                <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
               </div>
               <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-6 md:gap-8 max-w-6xl mx-auto`}>
                 {merged.plans?.map((plan: any, idx: number) => (
@@ -980,9 +1051,9 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
               <div className="absolute bottom-10 right-10 w-24 h-24 bg-white rounded-full opacity-5 animate-pulse" style={{ animationDelay: '1s' }}></div>
             </div>
             <div className="relative z-10 container mx-auto text-center px-4">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 md:mb-4 px-2">{merged.title}</h2>
-              <p className="text-base sm:text-lg md:text-xl mb-6 md:mb-8 max-w-2xl mx-auto text-blue-100 px-2">{merged.subtitle}</p>
-              <a href={merged.buttonLink} className="bg-white text-blue-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-base sm:text-lg hover:bg-blue-50 transition-all transform hover:scale-105 shadow-2xl inline-block">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-3 md:mb-4 px-2">{merged.title}</h2>
+              <p className="text-sm sm:text-base md:text-xl mb-6 md:mb-8 max-w-2xl mx-auto text-blue-100 px-2">{merged.subtitle}</p>
+              <a href={merged.buttonLink} className="bg-white text-blue-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-sm sm:text-base hover:bg-blue-50 transition-all transform hover:scale-105 shadow-2xl inline-block">
                 {merged.buttonText}
               </a>
             </div>
@@ -995,17 +1066,17 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
             <div className="absolute inset-0 bg-gradient-to-br from-amber-100/20 via-orange-100/20 to-yellow-100/20"></div>
             <div className="relative z-10 container mx-auto px-4 py-16 md:py-20">
               <div className="max-w-4xl mx-auto text-center">
-                <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black mb-4 md:mb-6 leading-tight text-gray-900 px-2">
+                <h1 className="text-lg sm:text-xl md:text-2xl lg:text-4xl font-black mb-4 md:mb-6 leading-tight text-gray-900 px-2 break-words">
                   {merged.title}
                 </h1>
-                <p className="text-base sm:text-lg md:text-xl mb-3 md:mb-4 text-amber-700 font-medium max-w-2xl mx-auto px-2">
+                <p className="text-sm sm:text-base md:text-xl mb-3 md:mb-4 text-amber-700 font-medium max-w-2xl mx-auto px-2">
                   {merged.subtitle}
                 </p>
-                <p className="text-sm sm:text-base md:text-lg mb-6 md:mb-8 text-gray-700 max-w-3xl mx-auto leading-relaxed px-2">
+                <p className="text-sm sm:text-sm md:text-base mb-6 md:mb-8 text-gray-700 max-w-3xl mx-auto leading-relaxed px-2">
                   {merged.content}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center px-4">
-                  <a href={merged.buttonLink} className="w-full sm:w-auto bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-base sm:text-lg transition-all transform hover:scale-105 shadow-2xl hover:shadow-amber-500/25 text-center">
+                  <a href={merged.buttonLink} className="w-full sm:w-auto bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-sm sm:text-base transition-all transform hover:scale-105 shadow-2xl hover:shadow-amber-500/25 text-center">
                     {merged.buttonText}
                   </a>
                 </div>
@@ -1019,8 +1090,8 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
           <section className="py-12 md:py-20 bg-white">
             <div className="container mx-auto px-4">
               <div className="text-center mb-12 md:mb-16">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
-                <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
+                <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
               </div>
               <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-6 md:gap-8`}>
                 {merged.products?.map((product: any, idx: number) => (
@@ -1032,7 +1103,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
                     <p className="text-sm md:text-base text-gray-600 mb-3">{product.description}</p>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div className="flex flex-col">
-                        <span className="text-base md:text-lg font-bold text-amber-600">{product.price}</span>
+                        <span className="text-sm md:text-base font-bold text-amber-600">{product.price}</span>
                         {product.originalPrice && (
                           <span className="text-xs md:text-sm text-gray-500 line-through">{product.originalPrice}</span>
                         )}
@@ -1053,8 +1124,8 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
           <section className="py-12 md:py-20 bg-gradient-to-br from-amber-50 to-orange-50">
             <div className="container mx-auto px-4">
               <div className="text-center mb-12 md:mb-16">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
-                <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
+                <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
               </div>
               <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-6 md:gap-8 max-w-4xl mx-auto`}>
                 {merged.testimonials?.map((testimonial: any, idx: number) => (
@@ -1079,9 +1150,9 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
           <section className="py-12 md:py-20 bg-gradient-to-r from-amber-600 via-orange-600 to-amber-800 text-white relative overflow-hidden">
             <div className="absolute inset-0 bg-black bg-opacity-10"></div>
             <div className="relative z-10 container mx-auto text-center px-4">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 md:mb-4 px-2">{merged.title}</h2>
-              <p className="text-base sm:text-lg md:text-xl mb-6 md:mb-8 max-w-2xl mx-auto text-amber-100 px-2">{merged.subtitle}</p>
-              <a href={merged.buttonLink} className="bg-white text-amber-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-base sm:text-lg hover:bg-amber-50 transition-all transform hover:scale-105 shadow-2xl inline-block">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-3 md:mb-4 px-2">{merged.title}</h2>
+              <p className="text-sm sm:text-base md:text-xl mb-6 md:mb-8 max-w-2xl mx-auto text-amber-100 px-2">{merged.subtitle}</p>
+              <a href={merged.buttonLink} className="bg-white text-amber-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-sm sm:text-base hover:bg-amber-50 transition-all transform hover:scale-105 shadow-2xl inline-block">
                 {merged.buttonText}
               </a>
             </div>
@@ -1097,17 +1168,17 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
             <div className="hidden md:block absolute bottom-20 left-20 w-96 h-96 bg-cyan-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '3s' }}></div>
             <div className="relative z-10 container mx-auto px-4 py-16 md:py-20">
               <div className="max-w-4xl mx-auto text-center">
-                <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black mb-4 md:mb-6 leading-tight bg-gradient-to-r from-white via-emerald-100 to-cyan-100 bg-clip-text text-transparent px-2">
+                <h1 className="text-lg sm:text-xl md:text-2xl lg:text-4xl font-black mb-4 md:mb-6 leading-tight bg-gradient-to-r from-white via-emerald-100 to-cyan-100 bg-clip-text text-transparent px-2 break-words">
                   {merged.title}
                 </h1>
-                <p className="text-base sm:text-lg md:text-xl mb-3 md:mb-4 text-emerald-200 font-light max-w-2xl mx-auto px-2">
+                <p className="text-sm sm:text-base md:text-xl mb-3 md:mb-4 text-emerald-200 font-light max-w-2xl mx-auto px-2">
                   {merged.subtitle}
                 </p>
-                <p className="text-sm sm:text-base md:text-lg mb-6 md:mb-8 text-slate-300 max-w-3xl mx-auto leading-relaxed px-2">
+                <p className="text-sm sm:text-sm md:text-base mb-6 md:mb-8 text-slate-300 max-w-3xl mx-auto leading-relaxed px-2">
                   {merged.content}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center px-4">
-                  <a href={merged.buttonLink} className="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-base sm:text-lg transition-all transform hover:scale-105 shadow-2xl hover:shadow-emerald-500/25 text-center">
+                  <a href={merged.buttonLink} className="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-sm sm:text-base transition-all transform hover:scale-105 shadow-2xl hover:shadow-emerald-500/25 text-center">
                     {merged.buttonText}
                   </a>
                 </div>
@@ -1121,8 +1192,8 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
           <section className="py-12 md:py-20 bg-white">
             <div className="container mx-auto px-4">
               <div className="text-center mb-12 md:mb-16">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
-                <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
+                <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
               </div>
               <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-8 md:gap-12 max-w-6xl mx-auto`}>
                 <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-6 md:p-8 rounded-2xl border border-emerald-200">
@@ -1153,8 +1224,8 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
           <section className="py-12 md:py-20 bg-gradient-to-br from-slate-50 to-gray-50">
             <div className="container mx-auto px-4">
               <div className="text-center mb-12 md:mb-16">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
-                <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
+                <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
               </div>
               <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-6 md:gap-8 max-w-4xl mx-auto`}>
                 {merged.team?.map((member: any, idx: number) => (
@@ -1179,9 +1250,9 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
           <section className="py-12 md:py-20 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-800 text-white relative overflow-hidden">
             <div className="absolute inset-0 bg-black bg-opacity-10"></div>
             <div className="relative z-10 container mx-auto text-center px-4">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 md:mb-4 px-2">{merged.title}</h2>
-              <p className="text-base sm:text-lg md:text-xl mb-6 md:mb-8 max-w-2xl mx-auto text-emerald-100 px-2">{merged.subtitle}</p>
-              <a href={merged.buttonLink} className="bg-white text-emerald-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-base sm:text-lg hover:bg-emerald-50 transition-all transform hover:scale-105 shadow-2xl inline-block">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-3 md:mb-4 px-2">{merged.title}</h2>
+              <p className="text-sm sm:text-base md:text-xl mb-6 md:mb-8 max-w-2xl mx-auto text-emerald-100 px-2">{merged.subtitle}</p>
+              <a href={merged.buttonLink} className="bg-white text-emerald-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-sm sm:text-base hover:bg-emerald-50 transition-all transform hover:scale-105 shadow-2xl inline-block">
                 {merged.buttonText}
               </a>
             </div>
@@ -1198,17 +1269,17 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
             <div className="hidden md:block absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse" style={{ animationDelay: '4s' }}></div>
             <div className="relative z-10 container mx-auto px-4 py-16 md:py-20">
               <div className="max-w-4xl mx-auto text-center">
-                <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black mb-4 md:mb-6 leading-tight bg-gradient-to-r from-white via-violet-100 to-fuchsia-100 bg-clip-text text-transparent px-2">
+                <h1 className="text-lg sm:text-xl md:text-2xl lg:text-4xl font-black mb-4 md:mb-6 leading-tight bg-gradient-to-r from-white via-violet-100 to-fuchsia-100 bg-clip-text text-transparent px-2 break-words">
                   {merged.title}
                 </h1>
-                <p className="text-base sm:text-lg md:text-xl mb-3 md:mb-4 text-violet-200 font-light max-w-2xl mx-auto px-2">
+                <p className="text-sm sm:text-base md:text-xl mb-3 md:mb-4 text-violet-200 font-light max-w-2xl mx-auto px-2">
                   {merged.subtitle}
                 </p>
-                <p className="text-sm sm:text-base md:text-lg mb-6 md:mb-8 text-slate-300 max-w-3xl mx-auto leading-relaxed px-2">
+                <p className="text-sm sm:text-sm md:text-base mb-6 md:mb-8 text-slate-300 max-w-3xl mx-auto leading-relaxed px-2">
                   {merged.content}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center px-4">
-                  <a href={merged.buttonLink} className="w-full sm:w-auto bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-base sm:text-lg transition-all transform hover:scale-105 shadow-2xl hover:shadow-violet-500/25 text-center">
+                  <a href={merged.buttonLink} className="w-full sm:w-auto bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-sm sm:text-base transition-all transform hover:scale-105 shadow-2xl hover:shadow-violet-500/25 text-center">
                     {merged.buttonText}
                   </a>
                 </div>
@@ -1222,8 +1293,8 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
           <section className="py-12 md:py-20 bg-white">
             <div className="container mx-auto px-4">
               <div className="text-center mb-12 md:mb-16">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
-                <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
+                <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
               </div>
               <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-6 md:gap-8`}>
                 {merged.projects?.map((project: any, idx: number) => (
@@ -1252,8 +1323,8 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
           <section className="py-12 md:py-20 bg-gradient-to-br from-slate-50 to-violet-50">
             <div className="container mx-auto px-4">
               <div className="text-center mb-12 md:mb-16">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
-                <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
+                <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
               </div>
               <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-6 md:gap-8`}>
                 {merged.services?.map((service: any, idx: number) => (
@@ -1275,9 +1346,9 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
           <section className="py-12 md:py-20 bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-800 text-white relative overflow-hidden">
             <div className="absolute inset-0 bg-black bg-opacity-10"></div>
             <div className="relative z-10 container mx-auto text-center px-4">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 md:mb-4 px-2">{merged.title}</h2>
-              <p className="text-base sm:text-lg md:text-xl mb-6 md:mb-8 max-w-2xl mx-auto text-violet-100 px-2">{merged.subtitle}</p>
-              <a href={merged.buttonLink} className="bg-white text-violet-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-base sm:text-lg hover:bg-violet-50 transition-all transform hover:scale-105 shadow-2xl inline-block">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-3 md:mb-4 px-2">{merged.title}</h2>
+              <p className="text-sm sm:text-base md:text-xl mb-6 md:mb-8 max-w-2xl mx-auto text-violet-100 px-2">{merged.subtitle}</p>
+              <a href={merged.buttonLink} className="bg-white text-violet-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-sm sm:text-base hover:bg-violet-50 transition-all transform hover:scale-105 shadow-2xl inline-block">
                 {merged.buttonText}
               </a>
             </div>
@@ -1290,17 +1361,17 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
             <div className="absolute inset-0 bg-gradient-to-br from-rose-100/20 via-pink-100/20 to-purple-100/20"></div>
             <div className="relative z-10 container mx-auto px-4 py-16 md:py-20">
               <div className="max-w-4xl mx-auto text-center">
-                <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black mb-4 md:mb-6 leading-tight text-gray-900 px-2">
+                <h1 className="text-lg sm:text-xl md:text-2xl lg:text-4xl font-black mb-4 md:mb-6 leading-tight text-gray-900 px-2 break-words">
                   {merged.title}
                 </h1>
-                <p className="text-base sm:text-lg md:text-xl mb-3 md:mb-4 text-rose-700 font-medium max-w-2xl mx-auto px-2">
+                <p className="text-sm sm:text-base md:text-xl mb-3 md:mb-4 text-rose-700 font-medium max-w-2xl mx-auto px-2">
                   {merged.subtitle}
                 </p>
-                <p className="text-sm sm:text-base md:text-lg mb-6 md:mb-8 text-gray-700 max-w-3xl mx-auto leading-relaxed px-2">
+                <p className="text-sm sm:text-sm md:text-base mb-6 md:mb-8 text-gray-700 max-w-3xl mx-auto leading-relaxed px-2">
                   {merged.content}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center px-4">
-                  <a href={merged.buttonLink} className="w-full sm:w-auto bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-base sm:text-lg transition-all transform hover:scale-105 shadow-2xl hover:shadow-rose-500/25 text-center">
+                  <a href={merged.buttonLink} className="w-full sm:w-auto bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-700 hover:to-pink-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-sm sm:text-base transition-all transform hover:scale-105 shadow-2xl hover:shadow-rose-500/25 text-center">
                     {merged.buttonText}
                   </a>
                 </div>
@@ -1314,8 +1385,8 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
           <section className="py-12 md:py-20 bg-white">
             <div className="container mx-auto px-4">
               <div className="text-center mb-12 md:mb-16">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
-                <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
+                <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
               </div>
               <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-6 md:gap-8`}>
                 {merged.services?.map((service: any, idx: number) => (
@@ -1337,8 +1408,8 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
           <section className="py-12 md:py-20 bg-gradient-to-br from-rose-50 to-pink-50">
             <div className="container mx-auto px-4">
               <div className="text-center mb-12 md:mb-16">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
-                <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
+                <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
               </div>
               <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-6 md:gap-8 max-w-4xl mx-auto`}>
                 {merged.testimonials?.map((testimonial: any, idx: number) => (
@@ -1363,9 +1434,9 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
           <section className="py-12 md:py-20 bg-gradient-to-r from-rose-600 via-pink-600 to-rose-800 text-white relative overflow-hidden">
             <div className="absolute inset-0 bg-black bg-opacity-10"></div>
             <div className="relative z-10 container mx-auto text-center px-4">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 md:mb-4 px-2">{merged.title}</h2>
-              <p className="text-base sm:text-lg md:text-xl mb-6 md:mb-8 max-w-2xl mx-auto text-rose-100 px-2">{merged.subtitle}</p>
-              <a href={merged.buttonLink} className="bg-white text-rose-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-base sm:text-lg hover:bg-rose-50 transition-all transform hover:scale-105 shadow-2xl inline-block">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-3 md:mb-4 px-2">{merged.title}</h2>
+              <p className="text-sm sm:text-base md:text-xl mb-6 md:mb-8 max-w-2xl mx-auto text-rose-100 px-2">{merged.subtitle}</p>
+              <a href={merged.buttonLink} className="bg-white text-rose-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-sm sm:text-base hover:bg-rose-50 transition-all transform hover:scale-105 shadow-2xl inline-block">
                 {merged.buttonText}
               </a>
             </div>
@@ -1381,17 +1452,17 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
             <div className="hidden md:block absolute bottom-20 left-20 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse" style={{ animationDelay: '3s' }}></div>
             <div className="relative z-10 container mx-auto px-4 py-16 md:py-20">
               <div className="max-w-4xl mx-auto text-center">
-                <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black mb-4 md:mb-6 leading-tight bg-gradient-to-r from-white via-emerald-100 to-blue-100 bg-clip-text text-transparent px-2">
+                <h1 className="text-lg sm:text-xl md:text-2xl lg:text-4xl font-black mb-4 md:mb-6 leading-tight bg-gradient-to-r from-white via-emerald-100 to-blue-100 bg-clip-text text-transparent px-2 break-words">
                   {merged.title}
                 </h1>
-                <p className="text-base sm:text-lg md:text-xl mb-3 md:mb-4 text-emerald-200 font-light max-w-2xl mx-auto px-2">
+                <p className="text-sm sm:text-base md:text-xl mb-3 md:mb-4 text-emerald-200 font-light max-w-2xl mx-auto px-2">
                   {merged.subtitle}
                 </p>
-                <p className="text-sm sm:text-base md:text-lg mb-6 md:mb-8 text-slate-300 max-w-3xl mx-auto leading-relaxed px-2">
+                <p className="text-sm sm:text-sm md:text-base mb-6 md:mb-8 text-slate-300 max-w-3xl mx-auto leading-relaxed px-2">
                   {merged.content}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center px-4">
-                  <a href={merged.buttonLink} className="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-base sm:text-lg transition-all transform hover:scale-105 shadow-2xl hover:shadow-emerald-500/25 text-center">
+                  <a href={merged.buttonLink} className="w-full sm:w-auto bg-gradient-to-r from-emerald-600 to-blue-600 hover:from-emerald-700 hover:to-blue-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-sm sm:text-base transition-all transform hover:scale-105 shadow-2xl hover:shadow-emerald-500/25 text-center">
                     {merged.buttonText}
                   </a>
                 </div>
@@ -1405,8 +1476,8 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
           <section className="py-12 md:py-20 bg-white">
             <div className="container mx-auto px-4">
               <div className="text-center mb-12 md:mb-16">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
-                <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
+                <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
               </div>
               <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-3'} gap-6 md:gap-8`}>
                 {merged.options?.map((option: any, idx: number) => (
@@ -1442,8 +1513,8 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
           <section className="py-12 md:py-20 bg-gradient-to-br from-slate-50 to-emerald-50">
             <div className="container mx-auto px-4">
               <div className="text-center mb-12 md:mb-16">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
-                <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
+                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-3 md:mb-4 px-2">{merged.title}</h2>
+                <p className="text-sm sm:text-base text-gray-600 max-w-2xl mx-auto px-2">{merged.subtitle}</p>
               </div>
               <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-6 md:gap-8 max-w-4xl mx-auto`}>
                 {merged.stories?.map((story: any, idx: number) => (
@@ -1468,9 +1539,9 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
           <section className="py-12 md:py-20 bg-gradient-to-r from-emerald-600 via-blue-600 to-emerald-800 text-white relative overflow-hidden">
             <div className="absolute inset-0 bg-black bg-opacity-10"></div>
             <div className="relative z-10 container mx-auto text-center px-4">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 md:mb-4 px-2">{merged.title}</h2>
-              <p className="text-base sm:text-lg md:text-xl mb-6 md:mb-8 max-w-2xl mx-auto text-emerald-100 px-2">{merged.subtitle}</p>
-              <a href={merged.buttonLink} className="bg-white text-emerald-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-base sm:text-lg hover:bg-emerald-50 transition-all transform hover:scale-105 shadow-2xl inline-block">
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold mb-3 md:mb-4 px-2">{merged.title}</h2>
+              <p className="text-sm sm:text-base md:text-xl mb-6 md:mb-8 max-w-2xl mx-auto text-emerald-100 px-2">{merged.subtitle}</p>
+              <a href={merged.buttonLink} className="bg-white text-emerald-600 px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold text-sm sm:text-base hover:bg-emerald-50 transition-all transform hover:scale-105 shadow-2xl inline-block">
                 {merged.buttonText}
               </a>
             </div>
@@ -1483,7 +1554,7 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
   };
 
   return (
-    <div className="min-h-screen">
+    <div className={previewMode ? "w-full" : "min-h-screen"}>
       {/* Indicador de Preview Mobile */}
       {forceMobilePreview && (
         <div className="fixed top-4 right-4 z-50 bg-blue-600 text-white px-3 py-2 rounded-lg shadow-lg flex items-center gap-2">
@@ -1499,8 +1570,8 @@ const LeadPage: React.FC<LeadPageProps> = ({ customDomain }) => {
       {/* Footer Padrão */}
       <footer className="bg-gray-900 text-white py-8 md:py-12">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-4 md:mb-0">
+          <div className="flex flex-col items-center text-center">
+            <div className="mb-4">
               <p className="text-sm md:text-base">
                 © {new Date().getFullYear()} Lead Page. Todos os direitos reservados.
               </p>

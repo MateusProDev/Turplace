@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { getUserLeadPage, getTemplate, getAllTemplates, saveUserLeadPage, updateLeadPageSection, getLeadPageStats, calculateLeadPageMetrics, generateCustomDomainUrl } from '../utils/leadpage';
 import { addVercelDomain, checkVercelDomain } from '../utils/vercel';
 import type { LeadPageTemplate, UserLeadPage } from '../types/leadpage';
+import LeadPage from './LeadPage';
 import { 
   Eye, 
   ArrowLeft, 
@@ -1251,8 +1252,14 @@ const LeadPageEditor = () => {
   const [leadPageStats, setLeadPageStats] = useState<any>(null);
   const [loadingLeadStats, setLoadingLeadStats] = useState(false);
   const [domainInstructionsExpanded, setDomainInstructionsExpanded] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState<string>('');
-  const [iframeKey, setIframeKey] = useState<number>(0); // Key to force iframe reload
+  const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
+
+  // Expandir automaticamente a seção selecionada
+  useEffect(() => {
+    if (selectedSectionId) {
+      setExpandedSections(prev => new Set([...prev, selectedSectionId]));
+    }
+  }, [selectedSectionId]);
 
   // Draft/Publish system
   const [viewMode, setViewMode] = useState<'draft' | 'published'>('draft'); // What we're currently viewing
@@ -1347,8 +1354,6 @@ const LeadPageEditor = () => {
 
       await saveUserLeadPage(user.uid, updated);
       setUserLeadPage(updated);
-      // Force iframe reload after domain save
-      setIframeKey(prev => prev + 1);
       
       if (domainExists) {
         alert('Domínio salvo com sucesso! Ele já estava configurado no Vercel.');
@@ -1377,8 +1382,6 @@ const LeadPageEditor = () => {
         setUserLeadPage(updated);
         await saveUserLeadPage(user.uid, updated);
         setExpandedSections(new Set());
-        // Force iframe reload after template change
-        setIframeKey(prev => prev + 1);
       }
     } catch (error) {
       console.error('Erro ao mudar template:', error);
@@ -1400,8 +1403,6 @@ const LeadPageEditor = () => {
       };
       await saveUserLeadPage(user.uid, published);
       setUserLeadPage(published);
-      // Force iframe reload after publish
-      setIframeKey(prev => prev + 1);
     } catch (error) {
       console.error('Erro ao publicar:', error);
       alert('Erro ao publicar mudanças. Tente novamente.');
@@ -1457,8 +1458,6 @@ const LeadPageEditor = () => {
               };
               await saveUserLeadPage(user.uid, updated);
               setUserLeadPage(updated);
-              // Force iframe reload after save
-              setIframeKey(prev => prev + 1);
             }
           }
         } else {
@@ -1471,8 +1470,6 @@ const LeadPageEditor = () => {
             };
             await saveUserLeadPage(user.uid, initial);
             setUserLeadPage(initial);
-            // Force iframe reload after initial save
-            setIframeKey(prev => prev + 1);
           }
         }
       } catch (err) {
@@ -1490,21 +1487,6 @@ const LeadPageEditor = () => {
       handleLoadLeadStats();
     }
   }, [user]);
-
-  useEffect(() => {
-    const generatePreviewUrl = async () => {
-      if (user && userData) {
-        try {
-          const url = await generateCustomDomainUrl(user.uid, userData.slug || user.uid);
-          setPreviewUrl(url);
-        } catch (error) {
-          console.error('Erro ao gerar URL de preview:', error);
-          setPreviewUrl(`${window.location.origin}/${userData.slug || user.uid}`);
-        }
-      }
-    };
-    generatePreviewUrl();
-  }, [user, userData]);
 
   const handleLoadLeadStats = async () => {
     if (!user) return;
@@ -1534,8 +1516,6 @@ const LeadPageEditor = () => {
       setSaving(true);
       await updateLeadPageSection(user.uid, sectionId, updated);
       setTimeout(() => setSaving(false), 500);
-      // Force iframe reload after successful save
-      setIframeKey(prev => prev + 1);
     } catch (err) {
       console.error('Erro ao salvar:', err);
       setSaving(false);
@@ -2148,37 +2128,42 @@ const LeadPageEditor = () => {
 
               <div className="p-6">
                 {/* Browser-like interface */}
-                <div className="bg-gray-800 rounded-t-2xl p-3 mx-auto max-w-lg">
+                <div className="bg-gray-800 rounded-t-2xl p-2 mx-auto max-w-lg">
                   <div className="flex items-center gap-2">
                     <div className="flex gap-1">
-                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                      <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                     </div>
-                    <div className="flex-1 bg-gray-700 rounded-lg px-3 py-1">
-                      <div className="text-white text-sm font-mono truncate">
-                        {previewUrl || (user && userData ? `${window.location.origin}/${userData.slug || user.uid}` : 'Carregando...')}
+                    <div className="flex-1 bg-gray-700 rounded-md px-2 py-0.5">
+                      <div className="text-white text-xs font-mono truncate">
+                        {user && userData ? (userLeadPage?.domain ? `https://${userLeadPage.domain}` : `${window.location.origin}/${userData.slug || user.uid}`) : 'Carregando...'}
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-gray-100 rounded-b-2xl p-4 mx-auto max-w-lg">
-                  <div className="bg-white rounded-xl overflow-hidden shadow-lg min-h-[600px] max-h-[700px]">
-                    {user && userData && previewUrl ? (
-                      <iframe
-                        key={iframeKey}
-                        src={previewUrl}
-                        className="w-full h-full border-0"
-                        title="Preview da Lead Page"
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center h-full">
-                        <div className="text-gray-500">Carregando preview...</div>
-                      </div>
-                    )}
+                  <div className="bg-gray-100 rounded-b-2xl p-4 mx-auto max-w-lg">
+                    <div className="bg-white rounded-xl overflow-hidden shadow-lg min-h-[600px]">
+                      {user && userData && template ? (
+                        <div className="w-full h-full overflow-auto max-h-[80vh]">
+                          <LeadPage 
+                            previewMode={true}
+                            previewTemplate={template}
+                            previewUserData={userLeadPage}
+                            previewUser={user}
+                            forceMobile={true}
+                            selectedSectionId={selectedSectionId}
+                            onSectionSelect={setSelectedSectionId}
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center h-full">
+                          <div className="text-gray-500">Carregando preview...</div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
 
                 {(() => {
                   const { template: currentTemplate, userLeadPage: currentData } = getCurrentTemplateAndData();
